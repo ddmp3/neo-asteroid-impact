@@ -4,6 +4,8 @@
  */
 
 const populationService = require('./populationService');
+const TerrainAnalysis = require('./terrainAnalysis');
+const USGSService = require('./usgsService');
 
 class PhysicsEngine {
     constructor() {
@@ -14,6 +16,10 @@ class PhysicsEngine {
         this.EARTH_SURFACE_GRAVITY = 9.81; // m/s²
         this.DEFAULT_ASTEROID_DENSITY = 3000; // kg/m³ (typical rocky asteroid)
         this.AU = 149597870700; // Astronomical Unit in meters
+
+        // Initialize terrain analysis
+        this.usgsService = new USGSService();
+        this.terrainAnalysis = new TerrainAnalysis(this.usgsService);
     }
 
     /**
@@ -242,6 +248,12 @@ class PhysicsEngine {
             impactLocation = { lat: 0, lon: 0, isOcean: false, depth: 0 }
         } = params;
 
+        // Get detailed terrain data for impact location
+        const terrainData = await this.usgsService.getElevation(
+            impactLocation.lat,
+            impactLocation.lon
+        );
+
         // Calculate mass
         const mass = this.calculateMass(diameter, density);
 
@@ -251,10 +263,13 @@ class PhysicsEngine {
         // Calculate impact energy
         const energy = this.calculateImpactEnergy(mass, finalVelocity);
 
-        // Calculate crater (if land impact)
-        const crater = !impactLocation.isOcean ?
-            this.calculateCraterSize(energy.joules, angle) :
-            null;
+        // Calculate terrain-modified crater
+        const baseCrater = this.calculateCraterSize(energy.joules, angle);
+        const crater = await this.terrainAnalysis.calculateTerrainModifiedCrater(
+            { lat: impactLocation.lat, lon: impactLocation.lon },
+            baseCrater.diameter,
+            baseCrater.depth
+        );
 
         // Calculate seismic effects
         const seismic = this.calculateSeismicEffects(energy.joules);
@@ -262,15 +277,18 @@ class PhysicsEngine {
         // Calculate blast effects
         const blast = this.calculateBlastRadius(energy.joules);
 
-        // Calculate tsunami (if ocean impact)
-        const tsunami = impactLocation.isOcean ?
-            this.calculateTsunamiEffects(energy.joules, impactLocation.depth) :
-            null;
+        // Enhanced tsunami calculation for ocean impacts
+        const tsunami = terrainData.isOcean ?
+            this.terrainAnalysis.calculateTsunamiEffects(
+                impactLocation,
+                energy.joules,
+                Math.abs(terrainData.elevation)
+            ) : null;
 
-        // Calculate casualties
-        const casualties = await this.calculateCasualties(
+        // Calculate casualties with terrain awareness
+        const casualties = await this.calculateCasualtiesWithTerrain(
             blast,
-            impactLocation,
+            { ...impactLocation, elevation: terrainData.elevation },
             crater
         );
 
@@ -288,7 +306,20 @@ class PhysicsEngine {
             blast,
             tsunami,
             casualties,
-            impactLocation
+            impactLocation: {
+                ...impactLocation,
+                elevation: terrainData.elevation,
+                terrainType: terrainData.terrainType,
+                isOcean: terrainData.isOcean,
+                waterDepth: terrainData.waterDepth
+            },
+            terrainEffects: {
+                craterModification: {
+                    original: baseCrater,
+                    modified: crater,
+                    terrainInfluence: crater.modifiers
+                }
+            }
         };
     }
 
@@ -375,6 +406,120 @@ class PhysicsEngine {
             note: impactLocation.isOcean ?
                 'Ocean impact - tsunami and coastal effects primary concern' :
                 `Direct land impact - ${largestZoneCities.length} major cities affected`
+        };
+    }
+
+    /**
+     * Calculate casualties with terrain-aware blast propagation
+     * @param {Object} blast - Blast zones
+     * @param {Object} impactLocation - Impact coordinates with elevation
+     * @param {Object} crater - Crater data
+     * @returns {Object} Casualties estimation with terrain effects
+     */
+    async calculateCasualtiesWithTerrain(blast, impactLocation, crater) {
+        // Get all cities in blast radius
+        const maxRadius = Math.max(
+            blast.fireball,
+            blast.thermalRadius,
+            blast.airblastRadius,
+            blast.radiationRadius
+        ) / 1000; // Convert to km
+
+        const citiesInRange = await populationService.getCitiesInRadius(
+            impactLocation.lat,
+            impactLocation.lon,
+            maxRadius
+        );
+
+        // Calculate terrain-modified effects for each city
+        const cityEffects = [];
+        let totalCasualties = 0;
+        let totalInjured = 0;
+        let totalProtected = 0;
+
+        for (const city of citiesInRange) {
+            // Calculate distance from impact
+            const distance = this.terrainAnalysis.calculateDistance(
+                impactLocation.lat,
+                impactLocation.lon,
+                city.lat,
+                city.lon
+            );
+
+            // Get city elevation (if not already present)
+            const cityElevation = city.elevation || (await this.usgsService.getElevation(city.lat, city.lon)).elevation;
+
+            // Calculate line-of-sight and terrain blocking
+            const terrainBlocking = await this.terrainAnalysis.calculateTerrainAttenuatedBlast(
+                { lat: impactLocation.lat, lon: impactLocation.lon, elevation: impactLocation.elevation },
+                { lat: city.lat, lon: city.lon, elevation: cityElevation },
+                1e6 // Base blast pressure in Pa
+            );
+
+            // Determine which zone this city is in
+            let zone = null;
+            let baseMultiplier = 0;
+
+            if (distance <= blast.fireball / 1000) {
+                zone = 'fireball';
+                baseMultiplier = 1.0;
+            } else if (distance <= blast.thermalRadius / 1000) {
+                zone = 'thermal';
+                baseMultiplier = 0.9;
+            } else if (distance <= blast.airblastRadius / 1000) {
+                zone = 'airblast';
+                baseMultiplier = 0.7;
+            } else if (distance <= blast.radiationRadius / 1000) {
+                zone = 'radiation';
+                baseMultiplier = 0.3;
+            }
+
+            if (zone) {
+                // Apply terrain attenuation
+                const terrainProtection = 1 - terrainBlocking.attenuationFactor;
+                const effectiveMultiplier = baseMultiplier * terrainBlocking.attenuationFactor;
+
+                const casualties = Math.round(city.population * effectiveMultiplier);
+                const protectedCount = Math.round(city.population * baseMultiplier * terrainProtection);
+                const injured = Math.round((city.population - casualties - protectedCount) * 0.8);
+
+                totalCasualties += casualties;
+                totalProtected += protectedCount;
+                totalInjured += injured;
+
+                cityEffects.push({
+                    city: city.name,
+                    population: city.population,
+                    distance: distance.toFixed(1),
+                    zone: zone,
+                    casualties: casualties,
+                    injured: injured,
+                    protectedByTerrain: protectedCount,
+                    terrainBlocking: terrainBlocking.terrainBlocking,
+                    blockingFactor: terrainBlocking.blockingFactor.toFixed(2),
+                    protectionPercentage: (terrainProtection * 100).toFixed(1)
+                });
+            }
+        }
+
+        // Sort cities by casualties
+        cityEffects.sort((a, b) => b.casualties - a.casualties);
+
+        return {
+            estimatedCasualties: totalCasualties,
+            estimatedInjured: totalInjured,
+            totalProtected: totalProtected,
+            totalAffected: totalCasualties + totalInjured,
+            affectedCities: cityEffects,
+            terrainProtectionSummary: {
+                citiesWithProtection: cityEffects.filter(c => c.protectedByTerrain > 0).length,
+                totalLivesSaved: totalProtected,
+                averageProtection: cityEffects.length > 0 ?
+                    (cityEffects.reduce((sum, c) => sum + parseFloat(c.protectionPercentage), 0) / cityEffects.length).toFixed(1) : 0
+            },
+            note: impactLocation.isOcean ?
+                'Ocean impact - tsunami effects calculated separately' :
+                `Terrain-aware simulation: ${totalProtected.toLocaleString()} lives potentially saved by topographic protection`
         };
     }
 
