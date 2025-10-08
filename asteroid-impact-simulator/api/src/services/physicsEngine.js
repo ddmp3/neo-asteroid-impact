@@ -312,10 +312,10 @@ class PhysicsEngine {
                 );
             }
         } else {
-            // Use stable legacy model
-            casualties = await this.calculateCasualtiesWithTerrain(
+            // Use simple, stable legacy model
+            casualties = await this.calculateCasualties(
                 blast,
-                { ...impactLocation, elevation: terrainData.elevation },
+                impactLocation,
                 crater
             );
         }
