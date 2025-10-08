@@ -4,6 +4,8 @@
  */
 
 const populationService = require('./populationService');
+const populationGridService = require('./populationGridService');
+const casualtyModel = require('./casualtyModel');
 const TerrainAnalysis = require('./terrainAnalysis');
 const USGSService = require('./usgsService');
 
@@ -285,8 +287,18 @@ class PhysicsEngine {
                 Math.abs(terrainData.elevation)
             ) : null;
 
-        // Calculate casualties with terrain awareness
-        const casualties = await this.calculateCasualtiesWithTerrain(
+        // Calculate casualties with SCIENTIFIC MODEL (Rumpf et al. 2017)
+        const scientificCasualties = await this.calculateScientificCasualties(
+            energy,
+            blast,
+            crater,
+            { ...impactLocation, elevation: terrainData.elevation },
+            seismic,
+            tsunami
+        );
+
+        // Also calculate legacy casualties for comparison
+        const legacyCasualties = await this.calculateCasualtiesWithTerrain(
             blast,
             { ...impactLocation, elevation: terrainData.elevation },
             crater
@@ -305,7 +317,8 @@ class PhysicsEngine {
             seismic,
             blast,
             tsunami,
-            casualties,
+            casualties: scientificCasualties, // Use scientific model as default
+            casualtiesLegacy: legacyCasualties, // Keep legacy for comparison
             impactLocation: {
                 ...impactLocation,
                 elevation: terrainData.elevation,
@@ -521,6 +534,220 @@ class PhysicsEngine {
                 'Ocean impact - tsunami effects calculated separately' :
                 `Terrain-aware simulation: ${totalProtected.toLocaleString()} lives potentially saved by topographic protection`
         };
+    }
+
+    /**
+     * Calculate casualties using scientific models (Rumpf et al. 2017)
+     * Implements seven impact effects with probit lethality functions
+     *
+     * @param {Object} energy - Impact energy object
+     * @param {Object} blast - Blast zones
+     * @param {Object} crater - Crater data
+     * @param {Object} impactLocation - Impact coordinates
+     * @param {Object} seismic - Seismic data
+     * @param {Object} tsunami - Tsunami data (if ocean impact)
+     * @returns {Promise<Object>} Scientific casualty estimation
+     */
+    async calculateScientificCasualties(energy, blast, crater, impactLocation, seismic, tsunami) {
+        // Get population data in affected area
+        const maxRadius = Math.max(
+            blast.thermalRadius,
+            blast.airblastRadius,
+            seismic.radiusKm
+        ) / 1000; // Convert to km
+
+        // Simplified: Use coarse grid sampling to avoid memory issues
+        const popData = await populationGridService.getPopulationInRadius(
+            impactLocation.lat,
+            impactLocation.lon,
+            maxRadius,
+            5.0 // 5km grid resolution (coarser for performance)
+        );
+
+        console.log(`Scientific casualty calculation: ${popData.totalPopulation.toLocaleString()} people in ${maxRadius.toFixed(1)}km radius`);
+
+        // Calculate effect severity and lethality at different distances
+        const casualties = {
+            byEffect: {},
+            total: 0,
+            totalInjured: 0,
+            affectedPopulation: popData.totalPopulation
+        };
+
+        // Sample points in concentric rings (limit to 20 rings max for performance)
+        const rings = [];
+        const ringSpacing = Math.max(2, maxRadius / 20); // Max 20 rings, min 2km spacing
+        const numRings = Math.min(20, Math.ceil(maxRadius / ringSpacing));
+
+        console.log(`Calculating casualties in ${numRings} rings, spacing: ${ringSpacing.toFixed(2)}km`);
+
+        //Get average density once (not in loop to save memory)
+        const avgDensity = popData.averageDensity || 100;
+
+        for (let i = 0; i < numRings; i++) {
+            const innerRadius = i * ringSpacing;
+            const outerRadius = (i + 1) * ringSpacing;
+            const midRadius = (innerRadius + outerRadius) / 2;
+
+            // Ring area
+            const ringAreaKm2 = Math.PI * (outerRadius * outerRadius - innerRadius * innerRadius);
+            const ringPop = Math.round(avgDensity * ringAreaKm2);
+
+            if (ringPop <= 0) continue;
+
+            // Calculate distance in meters for models
+            const distanceM = midRadius * 1000;
+
+            // 1. CRATER LETHALITY (immediate zone)
+            const craterRadius = crater.modifiedDiameter / 2000; // Convert to km
+            const craterLethality = casualtyModel.calculateCraterLethality(distanceM, crater.modifiedDiameter / 2);
+
+            // 2. THERMAL RADIATION LETHALITY
+            const thermalFlux = casualtyModel.calculateThermalFluxAtDistance(energy.joules, distanceM);
+            const thermalLethality = casualtyModel.calculateThermalLethality(thermalFlux);
+
+            // 3. OVERPRESSURE LETHALITY
+            const overpressure = casualtyModel.calculateOverpressureAtDistance(energy.joules, distanceM);
+            const overpressureLethality = casualtyModel.calculateOverpressureLethality(overpressure);
+
+            // 4. WIND BLAST LETHALITY
+            const windSpeed = casualtyModel.calculateWindSpeedFromOverpressure(overpressure);
+            const windLethality = casualtyModel.calculateWindLethality(windSpeed);
+
+            // 5. SEISMIC LETHALITY
+            const seismicLethality = casualtyModel.calculateSeismicLethality(seismic.magnitude, midRadius);
+
+            // 6. EJECTA LETHALITY
+            const ejectaThickness = casualtyModel.calculateEjectaThickness(
+                crater.modifiedDiameter,
+                crater.modifiedDepth,
+                distanceM
+            );
+            const ejectaLethality = casualtyModel.calculateEjectaLethality(ejectaThickness);
+
+            // 7. TSUNAMI LETHALITY (if ocean impact)
+            let tsunamiLethality = 0;
+            if (tsunami && tsunami.waveHeight > 0) {
+                // Estimate distance from coast (simplified)
+                const distanceFromCoast = 0; // Would need coastline data
+                tsunamiLethality = casualtyModel.calculateTsunamiLethality(tsunami.waveHeight, distanceFromCoast);
+            }
+
+            // Combine all lethalities using competitive risk model
+            const combinedLethality = casualtyModel.combineLethalities([
+                craterLethality,
+                thermalLethality,
+                overpressureLethality,
+                windLethality,
+                seismicLethality,
+                ejectaLethality,
+                tsunamiLethality
+            ]);
+
+            // Calculate casualties in this ring
+            const ringCasualties = Math.round(ringPop * combinedLethality);
+            const ringInjured = Math.round(ringPop * (1 - combinedLethality) * 0.7); // 70% of survivors injured
+
+            casualties.total += ringCasualties;
+            casualties.totalInjured += ringInjured;
+
+            // Track dominant effect (highest lethality)
+            const effects = [
+                { name: 'crater', lethality: craterLethality },
+                { name: 'thermal', lethality: thermalLethality },
+                { name: 'overpressure', lethality: overpressureLethality },
+                { name: 'wind', lethality: windLethality },
+                { name: 'seismic', lethality: seismicLethality },
+                { name: 'ejecta', lethality: ejectaLethality },
+                { name: 'tsunami', lethality: tsunamiLethality }
+            ];
+
+            const dominantEffect = effects.reduce((max, e) => e.lethality > max.lethality ? e : max);
+
+            rings.push({
+                distance: midRadius,
+                population: ringPop,
+                casualties: ringCasualties,
+                injured: ringInjured,
+                lethality: combinedLethality,
+                dominantEffect: dominantEffect.name,
+                effects: {
+                    crater: craterLethality,
+                    thermal: thermalLethality,
+                    overpressure: overpressureLethality,
+                    wind: windLethality,
+                    seismic: seismicLethality,
+                    ejecta: ejectaLethality,
+                    tsunami: tsunamiLethality
+                }
+            });
+        }
+
+        // Aggregate by effect type
+        const effectTypes = ['crater', 'thermal', 'overpressure', 'wind', 'seismic', 'ejecta', 'tsunami'];
+        for (const effect of effectTypes) {
+            const effectCasualties = rings.reduce((sum, ring) => {
+                if (ring.dominantEffect === effect) {
+                    return sum + ring.casualties;
+                }
+                return sum;
+            }, 0);
+
+            if (effectCasualties > 0) {
+                casualties.byEffect[effect] = effectCasualties;
+            }
+        }
+
+        return {
+            estimatedCasualties: casualties.total,
+            estimatedInjured: casualties.totalInjured,
+            totalAffected: casualties.total + casualties.totalInjured,
+            affectedPopulation: popData.affectedPopulation,
+            affectedCities: popData.affectedCities,
+            casualtiesByEffect: casualties.byEffect,
+            severity: this.getCasualtySeverity(casualties.total),
+            model: 'Rumpf et al. (2017) - Scientific vulnerability model',
+            rings: rings.slice(0, 10), // Return first 10 rings for debugging
+            note: `Based on ${popData.sampledPoints} grid points at ${popData.gridResolution}km resolution`
+        };
+    }
+
+    /**
+     * Get population in an annular ring
+     *
+     * @param {number} lat - Center latitude
+     * @param {number} lon - Center longitude
+     * @param {number} innerRadiusKm - Inner radius in km
+     * @param {number} outerRadiusKm - Outer radius in km
+     * @returns {Promise<number>} Population in ring
+     */
+    async getPopulationInRing(lat, lon, innerRadiusKm, outerRadiusKm) {
+        // Sample points in ring (simplified - in production use proper integration)
+        const numSamples = 12; // Sample at 12 angles
+        let totalPop = 0;
+
+        const midRadius = (innerRadiusKm + outerRadiusKm) / 2;
+
+        for (let i = 0; i < numSamples; i++) {
+            const angle = (i / numSamples) * 2 * Math.PI;
+
+            // Calculate point coordinates
+            const dLat = (midRadius * Math.cos(angle)) / 111; // 1° ≈ 111 km
+            const dLon = (midRadius * Math.sin(angle)) / (111 * Math.cos(lat * Math.PI / 180));
+
+            const sampleLat = lat + dLat;
+            const sampleLon = lon + dLon;
+
+            // Get density at this point
+            const density = await populationGridService.getPopulationDensity(sampleLat, sampleLon);
+
+            // Area of ring segment
+            const ringArea = Math.PI * (outerRadiusKm * outerRadiusKm - innerRadiusKm * innerRadiusKm) / numSamples;
+
+            totalPop += density * ringArea;
+        }
+
+        return Math.round(totalPop);
     }
 
     /**
