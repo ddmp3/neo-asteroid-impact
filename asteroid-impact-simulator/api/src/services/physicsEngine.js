@@ -287,22 +287,38 @@ class PhysicsEngine {
                 Math.abs(terrainData.elevation)
             ) : null;
 
-        // Calculate casualties with SCIENTIFIC MODEL (Rumpf et al. 2017)
-        const scientificCasualties = await this.calculateScientificCasualties(
-            energy,
-            blast,
-            crater,
-            { ...impactLocation, elevation: terrainData.elevation },
-            seismic,
-            tsunami
-        );
+        // Calculate casualties (use legacy model by default for stability)
+        const useScientificModel = process.env.USE_SCIENTIFIC_CASUALTIES === 'true';
 
-        // Also calculate legacy casualties for comparison
-        const legacyCasualties = await this.calculateCasualtiesWithTerrain(
-            blast,
-            { ...impactLocation, elevation: terrainData.elevation },
-            crater
-        );
+        let casualties;
+
+        if (useScientificModel) {
+            try {
+                console.log('Using SCIENTIFIC casualty model (Rumpf et al. 2017)');
+                casualties = await this.calculateScientificCasualties(
+                    energy,
+                    blast,
+                    crater,
+                    { ...impactLocation, elevation: terrainData.elevation },
+                    seismic,
+                    tsunami
+                );
+            } catch (error) {
+                console.error('Scientific casualties failed, using legacy:', error.message);
+                casualties = await this.calculateCasualtiesWithTerrain(
+                    blast,
+                    { ...impactLocation, elevation: terrainData.elevation },
+                    crater
+                );
+            }
+        } else {
+            // Use stable legacy model
+            casualties = await this.calculateCasualtiesWithTerrain(
+                blast,
+                { ...impactLocation, elevation: terrainData.elevation },
+                crater
+            );
+        }
 
         return {
             asteroidProperties: {
@@ -317,8 +333,7 @@ class PhysicsEngine {
             seismic,
             blast,
             tsunami,
-            casualties: scientificCasualties, // Use scientific model as default
-            casualtiesLegacy: legacyCasualties, // Keep legacy for comparison
+            casualties: casualties,
             impactLocation: {
                 ...impactLocation,
                 elevation: terrainData.elevation,
