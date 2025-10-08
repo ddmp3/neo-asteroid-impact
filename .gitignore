@@ -32,3 +32,4 @@ npm-debug.log*
 .terraform/
 *.tfstate
 *.tfstate.backup
+terraform/tfplan
