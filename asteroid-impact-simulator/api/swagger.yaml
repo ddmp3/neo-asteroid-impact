@@ -29,17 +29,17 @@ info:
 
     **⚠️ DISCLAIMER**: Simplified models for educational use. Not for actual planetary defense planning.
 
-  version: 1.5.0
+  version: 1.1-dev
   contact:
-    name: Meteor Madness Team
-    url: https://meteormadness.earth
+    name: Meteor Madness Team (Dev)
+    url: https://github.com/ddmp3/meteormadness
   license:
     name: MIT License (Educational Use)
     url: https://opensource.org/licenses/MIT
 
 servers:
-  - url: https://ca-api-92nppgw4.kinddesert-44c62b55.canadacentral.azurecontainerapps.io
-    description: Production API (Azure Container Apps)
+  - url: https://ca-api-lgfjbo72.ambitiousflower-98a4df12.canadacentral.azurecontainerapps.io
+    description: Development API (Azure Container Apps)
   - url: http://localhost:7071
     description: Local development server
 

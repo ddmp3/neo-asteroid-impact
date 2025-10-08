@@ -36,10 +36,8 @@ app.use(express.json());
 const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:5173',
-    'https://kind-plant-00c23d60f.1.azurestaticapps.net',
-    'https://kind-plant-00c23d60f-preview.eastus2.1.azurestaticapps.net',
-    'https://meteormadness.earth',
-    'https://www.meteormadness.earth'
+    'https://lively-water-02a3d060f.1.azurestaticapps.net',
+    'https://lively-water-02a3d060f-preview.eastus2.1.azurestaticapps.net'
 ];
 
 if (process.env.FRONTEND_URL) {
@@ -235,13 +233,13 @@ app.get('/', (req, res) => {
         <div class="section">
             <h2>🔗 Additional Resources</h2>
             <div class="links">
-                <a href="https://meteormadness.earth" class="btn btn-secondary" target="_blank">🌍 Live Demo</a>
-                <a href="https://github.com/TawbeBaker/Cyber-and-Space" class="btn btn-secondary" target="_blank">💻 GitHub</a>
+                <a href="https://lively-water-02a3d060f-preview.eastus2.1.azurestaticapps.net" class="btn btn-secondary" target="_blank">🌍 Frontend App</a>
+                <a href="https://github.com/ddmp3/meteormadness" class="btn btn-secondary" target="_blank">💻 GitHub</a>
             </div>
         </div>
 
         <div style="text-align: center; margin-top: 2rem; opacity: 0.8; font-size: 0.9rem;">
-            <p>Version 1.5.0 | Educational Use Only</p>
+            <p>Version 1.1-dev | Development Environment</p>
             <p style="margin-top: 0.5rem;">Data: NASA/JPL-Caltech, USGS | Rate Limit: 100 req/15min</p>
         </div>
     </div>
