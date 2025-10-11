@@ -101,6 +101,7 @@ class PopulationCityService {
 
         // Calculate precise distances and casualties
         const affectedCities = [];
+        const cityGroups = new Map(); // For deduplicating cities with arrondissements
         let totalCasualties = 0;
         let totalPopulation = 0;
 
@@ -131,36 +132,68 @@ class PopulationCityService {
 
                 const casualties = Math.round(city.pop * casualtyRate);
 
-                affectedCities.push({
-                    name: city.name,
-                    country: city.country,
-                    lat: city.lat,
-                    lon: city.lon,
-                    population: city.pop,
-                    distance: Math.round(distance * 10) / 10, // 1 decimal
-                    casualties: casualties,
-                    casualtyRate: Math.round(casualtyRate * 100) // percentage
-                });
+                // Deduplicate cities with arrondissements (e.g., "Paris 11e Arrondissement" → "Paris")
+                const baseName = this.getBaseCityName(city.name);
+                const cityKey = `${baseName}_${city.country}`;
+
+                if (cityGroups.has(cityKey)) {
+                    // Merge with existing entry
+                    const existing = cityGroups.get(cityKey);
+                    existing.population += city.pop;
+                    existing.casualties += casualties;
+                    existing.distance = Math.min(existing.distance, distance); // Use closest distance
+                    existing.casualtyRate = Math.round((existing.casualties / existing.population) * 100);
+                } else {
+                    // New city entry
+                    cityGroups.set(cityKey, {
+                        name: baseName,
+                        country: city.country,
+                        lat: city.lat,
+                        lon: city.lon,
+                        population: city.pop,
+                        distance: Math.round(distance * 10) / 10, // 1 decimal
+                        casualties: casualties,
+                        casualtyRate: Math.round(casualtyRate * 100) // percentage
+                    });
+                }
 
                 totalCasualties += casualties;
                 totalPopulation += city.pop;
             }
         }
 
-        // Sort by casualties (highest first)
-        affectedCities.sort((a, b) => b.casualties - a.casualties);
+        // Convert cityGroups map to array and sort by casualties (highest first)
+        const affectedCitiesArray = Array.from(cityGroups.values());
+        affectedCitiesArray.sort((a, b) => b.casualties - a.casualties);
 
         const elapsedMs = Date.now() - startTime;
-        console.log(`  Population calculation: ${elapsedMs}ms for ${affectedCities.length} affected cities`);
+        console.log(`  Population calculation: ${elapsedMs}ms for ${affectedCitiesArray.length} affected cities`);
 
         return {
             totalPopulation,
             estimatedCasualties: totalCasualties,
-            affectedCities: affectedCities.slice(0, 50), // Top 50 most affected
-            totalAffectedCities: affectedCities.length,
+            affectedCities: affectedCitiesArray.slice(0, 50), // Top 50 most affected
+            totalAffectedCities: affectedCitiesArray.length,
             calculationTimeMs: elapsedMs,
-            dataSource: 'GeoNames cities15000 (32,686 cities >15k pop)'
+            dataSource: 'GeoNames cities15000 (32,686 cities >15k pop, deduplicated)'
         };
+    }
+
+    /**
+     * Extract base city name (remove arrondissements, districts, etc.)
+     * @param {string} name - City name
+     * @returns {string} Base city name
+     */
+    getBaseCityName(name) {
+        // Remove arrondissement indicators (e.g., "Paris 11e Arrondissement" → "Paris")
+        return name
+            .replace(/\s+\d+e?\s+Arrondissement$/i, '')
+            .replace(/\s+\d+st\s+District$/i, '')
+            .replace(/\s+\d+nd\s+District$/i, '')
+            .replace(/\s+\d+rd\s+District$/i, '')
+            .replace(/\s+\d+th\s+District$/i, '')
+            .replace(/\s+District\s+\d+$/i, '')
+            .trim();
     }
 
     /**
