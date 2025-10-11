@@ -410,8 +410,8 @@ class PhysicsEngine {
 
         // Atlantic Ocean
         if (lon > -80 && lon < -10) {
-            // Exclude Caribbean and Northern Europe
-            if (lat < 10 || lat > 60) {
+            // Exclude Caribbean islands (narrow band)
+            if (!(lat > 10 && lat < 27 && lon > -85 && lon < -60)) {
                 return { isOcean: true, waterDepth: 4000, source: 'Atlantic Ocean (heuristic)' };
             }
         }
