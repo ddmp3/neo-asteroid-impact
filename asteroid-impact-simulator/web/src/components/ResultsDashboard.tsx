@@ -65,10 +65,11 @@ export default function ResultsDashboard() {
         </div>
 
         {/* Casualties by Zone */}
+        {casualties.zones && Object.keys(casualties.zones).length > 0 && (
         <div className="mt-4 p-4 bg-white/5 rounded-lg">
           <h4 className="text-sm font-semibold mb-3 text-white/80">Casualties by Blast Zone:</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-            {Object.entries(casualties.zones).map(([zoneName, zone]) => (
+            {Object.entries(casualties.zones).map(([zoneName, zone]: [string, any]) => (
               <div key={zoneName} className="p-3 bg-white/5 rounded border border-white/10">
                 <div className="font-semibold text-white capitalize mb-1">
                   {zoneName === 'fireball' && '🔴'}
@@ -88,6 +89,7 @@ export default function ResultsDashboard() {
             ))}
           </div>
         </div>
+        )}
 
         {/* Affected Cities */}
         {casualties.affectedCities && casualties.affectedCities.length > 0 && (
