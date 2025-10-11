@@ -206,13 +206,11 @@ export default function ImpactMapLeaflet() {
         )}
       </MapContainer>
 
-      {/* Instructions overlay */}
+      {/* Instructions overlay - Small centered at bottom */}
       {!impactLocation && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-lg pointer-events-none z-10">
-          <div className="text-center text-white bg-black/70 px-8 py-6 rounded-xl border border-white/20">
-            <div className="text-4xl mb-2">🎯</div>
-            <p className="text-lg font-semibold">Click anywhere on the map</p>
-            <p className="text-sm text-white/70 mt-1">Select asteroid impact location</p>
+        <div className="absolute bottom-4 left-0 right-0 flex justify-center pointer-events-none z-10">
+          <div className="text-center text-white bg-black/80 px-4 py-2 rounded-lg border border-white/20 backdrop-blur-sm">
+            <p className="text-xs font-medium">🎯 Click anywhere on the map to select impact location</p>
           </div>
         </div>
       )}
