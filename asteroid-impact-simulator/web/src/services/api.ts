@@ -13,7 +13,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:7071';
 
 const api = axios.create({
   baseURL: API_URL,
-  timeout: 30000,
+  timeout: 60000, // 60s pour gérer les cold starts Azure (11-12s) + simulation (4s max)
   headers: {
     'Content-Type': 'application/json',
   },
