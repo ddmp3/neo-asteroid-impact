@@ -32,6 +32,8 @@ export interface SimulationResult {
     diameter: number;
     depth: number;
     volume: number;
+    modifiedDiameter: number;
+    modifiedDepth: number;
   } | null;
   seismic: {
     magnitude: number;
@@ -67,18 +69,28 @@ export interface SimulationResult {
         description: string;
         affectedCities?: Array<{
           name: string;
+          country: string;
+          lat: number;
+          lon: number;
           distance: number;
           population: number;
-          affectedPopulation: number;
-          overlapFactor: number;
+          casualties: number;
+          casualtyRate: number;
+          affectedPopulation?: number;
+          overlapFactor?: number;
         }>;
       };
     };
     affectedCities?: Array<{
       name: string;
+      country: string;
+      lat: number;
+      lon: number;
       distance: number;
       population: number;
-      affectedPopulation: number;
+      casualties: number;
+      casualtyRate: number;
+      affectedPopulation?: number;
     }>;
     note: string;
   };

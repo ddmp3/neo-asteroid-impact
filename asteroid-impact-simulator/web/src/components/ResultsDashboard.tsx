@@ -100,7 +100,7 @@ export default function ResultsDashboard() {
                 <div key={city.name} className="p-2 bg-white/5 rounded border border-red-500/20">
                   <div className="font-semibold text-white">{city.name}</div>
                   <div className="text-white/60">Population: {(city.population / 1000000).toFixed(1)}M</div>
-                  <div className="text-red-300">Affected: {(city.affectedPopulation / 1000).toFixed(0)}K ({((city.affectedPopulation / city.population) * 100).toFixed(0)}%)</div>
+                  <div className="text-red-300">Casualties: {(city.casualties / 1000).toFixed(0)}K ({city.casualtyRate}%)</div>
                   <div className="text-white/50">{city.distance} km from impact</div>
                 </div>
               ))}
