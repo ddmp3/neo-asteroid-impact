@@ -477,6 +477,10 @@ class PhysicsEngine {
             baseCrater.depth
         );
 
+        // Add craterType and transientDiameter to modified crater
+        crater.craterType = baseCrater.craterType;
+        crater.transientDiameter = baseCrater.transientDiameter;
+
         // Calculate seismic effects
         const seismic = this.calculateSeismicEffects(energy.joules);
 
