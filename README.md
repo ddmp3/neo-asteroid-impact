@@ -3,7 +3,7 @@
 <div align="center">
 
 ![NASA Space Apps Challenge 2025](https://img.shields.io/badge/NASA%20Space%20Apps-2025-0B3D91?style=for-the-badge&logo=nasa)
-![Version](https://img.shields.io/badge/version-1.6.1-blue?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-1.6.2-blue?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT%20Educational-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/status-Live-success?style=for-the-badge)
 
