@@ -24,13 +24,15 @@ class USGSService {
         if (cached) return cached;
 
         try {
+            // Add timeout of 800ms to prevent slow USGS API from blocking
             const response = await axios.get(`${this.elevationAPI}/json`, {
                 params: {
                     x: longitude,
                     y: latitude,
                     units: 'Meters',
                     output: 'json'
-                }
+                },
+                timeout: 800 // 800ms timeout
             });
 
             const elevation = response.data.value;
@@ -49,18 +51,46 @@ class USGSService {
             this.cache.set(cacheKey, result);
             return result;
         } catch (error) {
-            console.error(`Error fetching elevation for ${latitude}, ${longitude}:`, error.message);
-            // Return approximate value if API fails
-            return {
+            if (error.code === 'ECONNABORTED') {
+                console.warn(`USGS API timeout for ${latitude}, ${longitude} - using fallback`);
+            } else {
+                console.error(`Error fetching elevation for ${latitude}, ${longitude}:`, error.message);
+            }
+
+            // Fast fallback: estimate ocean/land from coordinates
+            const estimatedIsOcean = this.estimateIfOcean(latitude, longitude);
+            const estimatedElevation = estimatedIsOcean ? -1000 : 100;
+
+            const result = {
                 latitude,
                 longitude,
-                elevation: 0,
-                isOcean: false,
-                waterDepth: 0,
-                terrainType: 'unknown',
-                error: 'API unavailable'
+                elevation: estimatedElevation,
+                isOcean: estimatedIsOcean,
+                waterDepth: estimatedIsOcean ? 1000 : 0,
+                terrainType: estimatedIsOcean ? 'Ocean' : 'Lowland/Plains',
+                estimated: true, // Flag pour indiquer estimation
+                error: error.code === 'ECONNABORTED' ? 'Timeout' : 'API unavailable'
             };
+
+            // Cache même les estimations (TTL plus court)
+            this.cache.set(cacheKey, result, 600); // 10 min cache pour estimations
+            return result;
         }
+    }
+
+    /**
+     * Estimate if coordinates are likely ocean based on geography
+     * Simple heuristic for fallback when USGS API is slow
+     * @private
+     */
+    estimateIfOcean(lat, lon) {
+        // Very rough ocean estimation
+        // Major ocean areas (approximate)
+        const pacificOcean = (lon >= 120 || lon <= -70) && Math.abs(lat) < 60;
+        const atlanticOcean = (lon >= -70 && lon <= -10) && Math.abs(lat) < 60;
+        const indianOcean = (lon >= 40 && lon <= 120) && (lat >= -60 && lat <= 30);
+
+        return pacificOcean || atlanticOcean || indianOcean;
     }
 
     /**
