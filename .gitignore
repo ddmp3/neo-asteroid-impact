@@ -33,3 +33,6 @@ npm-debug.log*
 *.tfstate
 *.tfstate.backup
 terraform/tfplan
+
+# Claude Code context (private)
+.claude/
