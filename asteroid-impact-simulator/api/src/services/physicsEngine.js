@@ -378,6 +378,69 @@ class PhysicsEngine {
     }
 
     /**
+     * Detect if location is in ocean using hybrid approach
+     * Combines USGS elevation data with geographic heuristics
+     *
+     * @param {number} lat - Latitude
+     * @param {number} lon - Longitude
+     * @param {number} elevation - Elevation from USGS (negative if below sea level)
+     * @param {boolean} usgsTimeout - True if USGS API timed out
+     * @returns {Object} Ocean detection result {isOcean, waterDepth, source}
+     */
+    detectOcean(lat, lon, elevation, usgsTimeout) {
+        // If USGS responded successfully and elevation < 0 → confirmed ocean
+        if (!usgsTimeout && elevation < 0) {
+            return {
+                isOcean: true,
+                waterDepth: Math.abs(elevation),
+                source: 'USGS (confirmed)'
+            };
+        }
+
+        // Geographic heuristics for major oceans
+        // Useful when USGS times out or doesn't detect ocean
+
+        // Pacific Ocean (largest ocean)
+        if ((lon < -100 && lon > -180) || (lon > 120 && lon < 180)) {
+            // Exclude western North America coast
+            if (!(lat > 30 && lat < 60 && lon > -130 && lon < -100)) {
+                return { isOcean: true, waterDepth: 4000, source: 'Pacific Ocean (heuristic)' };
+            }
+        }
+
+        // Atlantic Ocean
+        if (lon > -80 && lon < -10) {
+            // Exclude Caribbean and Northern Europe
+            if (lat < 10 || lat > 60) {
+                return { isOcean: true, waterDepth: 4000, source: 'Atlantic Ocean (heuristic)' };
+            }
+        }
+
+        // Indian Ocean
+        if (lon > 40 && lon < 100 && lat < 0 && lat > -60) {
+            return { isOcean: true, waterDepth: 4000, source: 'Indian Ocean (heuristic)' };
+        }
+
+        // Arctic Ocean
+        if (lat > 70) {
+            return { isOcean: true, waterDepth: 1000, source: 'Arctic Ocean (heuristic)' };
+        }
+
+        // Southern Ocean / Antarctic
+        if (lat < -60) {
+            return { isOcean: true, waterDepth: 4000, source: 'Southern Ocean (heuristic)' };
+        }
+
+        // Mediterranean Sea
+        if (lon > 0 && lon < 40 && lat > 30 && lat < 45) {
+            return { isOcean: true, waterDepth: 1500, source: 'Mediterranean Sea (heuristic)' };
+        }
+
+        // Not an ocean
+        return { isOcean: false, waterDepth: 0, source: 'land' };
+    }
+
+    /**
      * Simulate complete impact scenario
      * @param {Object} params - Impact parameters
      * @returns {Object} Complete impact analysis
@@ -420,12 +483,22 @@ class PhysicsEngine {
         // Calculate blast effects
         const blast = this.calculateBlastRadius(energy.joules);
 
-        // Enhanced tsunami calculation for ocean impacts
-        const tsunami = terrainData.isOcean ?
-            this.terrainAnalysis.calculateTsunamiEffects(
-                impactLocation,
+        // Detect ocean using hybrid approach (USGS + geographic heuristics)
+        const oceanData = this.detectOcean(
+            impactLocation.lat,
+            impactLocation.lon,
+            terrainData.elevation,
+            terrainData.estimated // true if USGS timed out
+        );
+
+        // Tsunami calculation for ocean impacts (Ward & Asphaug 2000)
+        const tsunami = oceanData.isOcean ?
+            this.calculateTsunamiEffects(
                 energy.joules,
-                Math.abs(terrainData.elevation)
+                oceanData.waterDepth,
+                diameter,
+                velocity,
+                angle
             ) : null;
 
         // Calculate casualties (use legacy model by default for stability)
@@ -479,8 +552,9 @@ class PhysicsEngine {
                 ...impactLocation,
                 elevation: terrainData.elevation,
                 terrainType: terrainData.terrainType,
-                isOcean: terrainData.isOcean,
-                waterDepth: terrainData.waterDepth
+                isOcean: oceanData.isOcean,
+                waterDepth: oceanData.waterDepth,
+                oceanDetectionSource: oceanData.source
             },
             terrainEffects: {
                 craterModification: {
