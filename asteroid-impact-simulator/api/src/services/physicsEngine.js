@@ -3,8 +3,9 @@
  * Implements Keplerian orbital mechanics and impact physics calculations
  */
 
-const populationService = require('./populationService');
-const populationGridService = require('./populationGridService');
+// Using advanced population grid service for better global coverage
+// Upgrade from 45 hardcoded cities to grid-based density model
+const populationService = require('./populationGridService');
 const casualtyModel = require('./casualtyModel');
 const TerrainAnalysis = require('./terrainAnalysis');
 const USGSService = require('./usgsService');
@@ -624,7 +625,7 @@ class PhysicsEngine {
         ) / 1000; // Convert to km
 
         // Simplified: Use coarse grid sampling to avoid memory issues
-        const popData = await populationGridService.getPopulationInRadius(
+        const popData = await populationService.getPopulationInRadius(
             impactLocation.lat,
             impactLocation.lon,
             maxRadius,
@@ -806,7 +807,7 @@ class PhysicsEngine {
             const sampleLon = lon + dLon;
 
             // Get density at this point
-            const density = await populationGridService.getPopulationDensity(sampleLat, sampleLon);
+            const density = await populationService.getPopulationDensity(sampleLat, sampleLon);
 
             // Area of ring segment
             const ringArea = Math.PI * (outerRadiusKm * outerRadiusKm - innerRadiusKm * innerRadiusKm) / numSamples;

@@ -409,6 +409,39 @@ class PopulationGridService {
         const nearest = this.findNearestCenter(lat, lon);
         return nearest.distance > 500; // >500km from major city = likely ocean
     }
+
+    /**
+     * Get cities within radius (for terrain-aware casualties)
+     * Compatible with populationService.js interface
+     *
+     * @param {number} lat - Center latitude
+     * @param {number} lon - Center longitude
+     * @param {number} radiusKm - Search radius in kilometers
+     * @returns {Array} Cities within radius with {name, lat, lon, population}
+     */
+    getCitiesInRadius(lat, lon, radiusKm) {
+        const citiesInRange = [];
+
+        for (const city of this.populationCenters) {
+            const distance = this.calculateDistance(lat, lon, city.lat, city.lon);
+
+            if (distance <= radiusKm) {
+                citiesInRange.push({
+                    name: city.name,
+                    lat: city.lat,
+                    lon: city.lon,
+                    population: city.population,
+                    distance: distance,
+                    type: city.type
+                });
+            }
+        }
+
+        // Sort by distance (closest first)
+        citiesInRange.sort((a, b) => a.distance - b.distance);
+
+        return citiesInRange;
+    }
 }
 
 module.exports = new PopulationGridService();
