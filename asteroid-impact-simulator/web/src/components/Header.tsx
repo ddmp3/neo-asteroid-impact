@@ -36,40 +36,46 @@ export default function Header({ apiHealth }: HeaderProps) {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex gap-1">
+          <nav className="hidden lg:flex gap-1" role="navigation" aria-label="Main navigation">
             <NavButton
               active={viewMode === 'simulation'}
               onClick={() => setViewMode('simulation')}
+              ariaLabel="Navigate to Simulation view"
             >
               Simulation
             </NavButton>
             <NavButton
               active={viewMode === '3d'}
               onClick={() => setViewMode('3d')}
+              ariaLabel="Navigate to 3D Trajectory view"
             >
               3D Trajectory
             </NavButton>
             <NavButton
               active={viewMode === 'scenario'}
               onClick={() => setViewMode('scenario')}
+              ariaLabel="Navigate to Scenarios view"
             >
               Scenarios
             </NavButton>
             <NavButton
               active={viewMode === 'mitigation'}
               onClick={() => setViewMode('mitigation')}
+              ariaLabel="Navigate to Mitigation strategies view"
             >
               Mitigation
             </NavButton>
             <NavButton
               active={viewMode === 'education'}
               onClick={() => setViewMode('education')}
+              ariaLabel="Navigate to Learn educational content"
             >
               Learn
             </NavButton>
             <NavButton
               active={viewMode === 'game'}
               onClick={() => setViewMode('game')}
+              ariaLabel="Navigate to Defend Earth Game"
             >
               Game
             </NavButton>
@@ -85,6 +91,7 @@ export default function Header({ apiHealth }: HeaderProps) {
             </div>
             <button
               onClick={resetSimulation}
+              aria-label="Reset simulation to default parameters"
               className="hidden sm:block px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors text-white"
             >
               Reset
@@ -168,14 +175,18 @@ function NavButton({
   active,
   onClick,
   children,
+  ariaLabel,
 }: {
   active: boolean;
   onClick: () => void;
   children: React.ReactNode;
+  ariaLabel?: string;
 }) {
   return (
     <button
       onClick={onClick}
+      aria-label={ariaLabel}
+      aria-current={active ? 'page' : undefined}
       className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
         active
           ? 'bg-blue-500 text-white'

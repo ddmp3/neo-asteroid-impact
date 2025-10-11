@@ -71,3 +71,87 @@ html {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
 }
+
+/* Keyboard Navigation Focus Styles - WCAG 2.1 Level AA Compliant */
+/* High-contrast, visible focus indicators for accessibility */
+
+/* Global focus style - 3px solid blue ring with offset */
+*:focus {
+  outline: 3px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Focus visible (only show on keyboard navigation, not mouse clicks) */
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 3px solid #3b82f6;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+/* Skip link - Hidden by default, visible on focus */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.sr-only:focus {
+  position: fixed;
+  width: auto;
+  height: auto;
+  padding: 1rem;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+  z-index: 9999;
+}
+
+/* Button focus styles */
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid #3b82f6;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);
+}
+
+/* Input/slider focus styles */
+input[type="range"]:focus-visible {
+  outline: 3px solid #3b82f6;
+  outline-offset: 4px;
+  box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.2);
+}
+
+/* Map container focus */
+.leaflet-container:focus-visible {
+  outline: 3px solid #3b82f6;
+  outline-offset: -3px;
+  box-shadow: inset 0 0 0 6px rgba(59, 130, 246, 0.3);
+}
+
+/* Interactive card focus */
+.glass-card:focus-within {
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* Tab order visual hint (optional, for debugging) */
+[tabindex]:not([tabindex="-1"]) {
+  position: relative;
+}
+
+/* Ensure focus is visible on dark backgrounds */
+*:focus-visible {
+  position: relative;
+  z-index: 10;
+}

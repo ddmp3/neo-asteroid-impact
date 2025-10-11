@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Circle, useMap, useMapEvents, Popup } from 'react-leaflet';
 import { useSimulationStore } from '../store/useSimulationStore';
 import L from 'leaflet';
@@ -75,17 +75,126 @@ function MapViewController() {
   return null;
 }
 
+// Keyboard navigation for map - Arrow keys to move marker
+function KeyboardMapNavigation() {
+  const map = useMap();
+  const { impactLocation, setImpactLocation } = useSimulationStore();
+  const [keyboardHintVisible, setKeyboardHintVisible] = useState(false);
+
+  useEffect(() => {
+    if (!map) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle keyboard when map container is focused
+      if (!document.activeElement?.classList.contains('leaflet-container')) return;
+
+      const moveStep = 0.5; // degrees (about 55km at equator)
+      let newLat = impactLocation?.lat || 0;
+      let newLon = impactLocation?.lon || 0;
+      let moved = false;
+
+      switch (e.key) {
+        case 'ArrowUp':
+          e.preventDefault();
+          newLat += moveStep;
+          moved = true;
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          newLat -= moveStep;
+          moved = true;
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          newLon -= moveStep;
+          moved = true;
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          newLon += moveStep;
+          moved = true;
+          break;
+        case 'Enter':
+        case ' ':
+          e.preventDefault();
+          // Set impact at center of current view if no location set
+          if (!impactLocation) {
+            const center = map.getCenter();
+            setImpactLocation({ lat: center.lat, lon: center.lng });
+            moved = true;
+          }
+          break;
+      }
+
+      if (moved) {
+        // Clamp latitude to valid range
+        newLat = Math.max(-90, Math.min(90, newLat));
+        // Wrap longitude
+        newLon = ((newLon + 180) % 360) - 180;
+
+        setImpactLocation({ lat: newLat, lon: newLon });
+        setKeyboardHintVisible(false);
+      }
+    };
+
+    const handleFocus = () => {
+      setKeyboardHintVisible(true);
+      // Hide hint after 3 seconds
+      setTimeout(() => setKeyboardHintVisible(false), 3000);
+    };
+
+    const mapContainer = map.getContainer();
+    mapContainer.addEventListener('keydown', handleKeyDown);
+    mapContainer.addEventListener('focus', handleFocus);
+
+    // Make map focusable
+    mapContainer.setAttribute('tabindex', '0');
+
+    return () => {
+      mapContainer.removeEventListener('keydown', handleKeyDown);
+      mapContainer.removeEventListener('focus', handleFocus);
+    };
+  }, [map, impactLocation, setImpactLocation]);
+
+  return (
+    <>
+      {keyboardHintVisible && (
+        <div
+          className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000] pointer-events-none"
+          role="status"
+          aria-live="polite"
+        >
+          <div className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium">
+            ⌨️ Use arrow keys to move • Enter/Space to place marker
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 export default function ImpactMapLeaflet() {
   const { impactLocation, simulationResult } = useSimulationStore();
 
   return (
     <div className="relative">
-      <MapContainer
-        center={impactLocation ? [impactLocation.lat, impactLocation.lon] : [20, 0]}
-        zoom={impactLocation ? 8 : 2}
-        style={{ height: '500px', width: '100%', borderRadius: '0.5rem' }}
-        className="z-0"
+      {/* Screen reader instructions */}
+      <div className="sr-only" role="status" aria-live="polite">
+        {!impactLocation
+          ? 'Interactive map: Click anywhere to select asteroid impact location'
+          : `Impact location selected at latitude ${impactLocation.lat.toFixed(4)}, longitude ${impactLocation.lon.toFixed(4)}`}
+      </div>
+
+      <div
+        role="application"
+        aria-label="Interactive world map for selecting asteroid impact location. Click anywhere to set impact coordinates."
       >
+        <MapContainer
+          center={impactLocation ? [impactLocation.lat, impactLocation.lon] : [20, 0]}
+          zoom={impactLocation ? 8 : 2}
+          style={{ height: '500px', width: '100%', borderRadius: '0.5rem' }}
+          className="z-0"
+        >
         {/* OpenStreetMap - Clear and readable, FREE */}
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -98,6 +207,9 @@ export default function ImpactMapLeaflet() {
 
         {/* Map click handler */}
         <MapClickHandler />
+
+        {/* Keyboard navigation */}
+        <KeyboardMapNavigation />
 
         {/* Impact marker and blast zones */}
         {impactLocation && (
@@ -128,7 +240,7 @@ export default function ImpactMapLeaflet() {
                   }}
                 >
                   <Popup>
-                    <div>
+                    <div role="region" aria-label="Fireball zone details">
                       <strong>🔴 Fireball Zone</strong>
                       <br />
                       Radius: {(simulationResult.blast.fireball / 1000).toFixed(1)} km
@@ -149,7 +261,7 @@ export default function ImpactMapLeaflet() {
                   }}
                 >
                   <Popup>
-                    <div>
+                    <div role="region" aria-label="Thermal radiation zone details">
                       <strong>🟠 Thermal Radiation Zone</strong>
                       <br />
                       Radius: {(simulationResult.blast.thermalRadius / 1000).toFixed(1)} km
@@ -170,7 +282,7 @@ export default function ImpactMapLeaflet() {
                   }}
                 >
                   <Popup>
-                    <div>
+                    <div role="region" aria-label="Air blast zone details">
                       <strong>🟡 Air Blast Zone</strong>
                       <br />
                       Radius: {(simulationResult.blast.airblastRadius / 1000).toFixed(1)} km
@@ -191,7 +303,7 @@ export default function ImpactMapLeaflet() {
                   }}
                 >
                   <Popup>
-                    <div>
+                    <div role="region" aria-label="Radiation zone details">
                       <strong>🟢 Radiation Zone</strong>
                       <br />
                       Radius: {(simulationResult.blast.radiationRadius / 1000).toFixed(1)} km
@@ -205,6 +317,7 @@ export default function ImpactMapLeaflet() {
           </>
         )}
       </MapContainer>
+      </div>
 
       {/* Instructions overlay - Small centered at bottom */}
       {!impactLocation && (
@@ -217,20 +330,20 @@ export default function ImpactMapLeaflet() {
 
       {/* Info panel */}
       {impactLocation && (
-        <div className="mt-4 p-4 bg-white/5 rounded-lg">
+        <div className="mt-4 p-4 bg-white/5 rounded-lg" role="region" aria-label="Impact location coordinates">
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-white/60">Latitude:</span>
-              <span className="ml-2 font-semibold">{impactLocation.lat.toFixed(4)}°</span>
+              <span className="ml-2 font-semibold" aria-label={`Latitude: ${impactLocation.lat.toFixed(4)} degrees`}>{impactLocation.lat.toFixed(4)}°</span>
             </div>
             <div>
               <span className="text-white/60">Longitude:</span>
-              <span className="ml-2 font-semibold">{impactLocation.lon.toFixed(4)}°</span>
+              <span className="ml-2 font-semibold" aria-label={`Longitude: ${impactLocation.lon.toFixed(4)} degrees`}>{impactLocation.lon.toFixed(4)}°</span>
             </div>
           </div>
 
           {simulationResult && (
-            <div className="mt-3 pt-3 border-t border-white/10">
+            <div className="mt-3 pt-3 border-t border-white/10" role="region" aria-label="Blast zones summary">
               <div className="text-xs text-white/70 mb-2">Blast Zones:</div>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="flex items-center gap-2">

@@ -8,11 +8,11 @@ export default function ResultsDashboard() {
   const { asteroidProperties, energy, crater, seismic, blast, tsunami, casualties } = simulationResult;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" role="region" aria-label="Simulation results dashboard">
       {/* Main Impact Stats */}
-      <div className="card">
-        <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-          <span>💥</span> Impact Analysis
+      <div className="card" role="region" aria-labelledby="impact-analysis-heading">
+        <h2 id="impact-analysis-heading" className="text-2xl font-bold mb-6 flex items-center gap-2">
+          <span aria-hidden="true">💥</span> Impact Analysis
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -38,9 +38,9 @@ export default function ResultsDashboard() {
       </div>
 
       {/* Human Casualties */}
-      <div className={`card ${casualties.severity === 'Extinction-Level Event' || casualties.severity === 'Mass Casualty Event' || casualties.severity === 'Catastrophic' ? 'glow-red border-2 border-red-500/50' : ''}`}>
-        <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-          <span>⚠️</span> Human Impact Assessment
+      <div className={`card ${casualties.severity === 'Extinction-Level Event' || casualties.severity === 'Mass Casualty Event' || casualties.severity === 'Catastrophic' ? 'glow-red border-2 border-red-500/50' : ''}`} role="region" aria-labelledby="casualties-heading" aria-live="polite">
+        <h2 id="casualties-heading" className="text-2xl font-bold mb-6 flex items-center gap-2">
+          <span aria-hidden="true">⚠️</span> Human Impact Assessment
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -66,8 +66,8 @@ export default function ResultsDashboard() {
 
         {/* Casualties by Zone */}
         {casualties.zones && Object.keys(casualties.zones).length > 0 && (
-        <div className="mt-4 p-4 bg-white/5 rounded-lg">
-          <h4 className="text-sm font-semibold mb-3 text-white/80">Casualties by Blast Zone:</h4>
+        <div className="mt-4 p-4 bg-white/5 rounded-lg" role="region" aria-labelledby="casualties-by-zone-heading">
+          <h4 id="casualties-by-zone-heading" className="text-sm font-semibold mb-3 text-white/80">Casualties by Blast Zone:</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
             {Object.entries(casualties.zones).map(([zoneName, zone]: [string, any]) => (
               <div key={zoneName} className="p-3 bg-white/5 rounded border border-white/10">
@@ -93,8 +93,8 @@ export default function ResultsDashboard() {
 
         {/* Affected Cities */}
         {casualties.affectedCities && casualties.affectedCities.length > 0 && (
-          <div className="mt-4 p-4 bg-red-900/20 border border-red-500/30 rounded-lg">
-            <h4 className="text-sm font-semibold mb-3 text-red-200">🏙️ Major Cities Affected:</h4>
+          <div className="mt-4 p-4 bg-red-900/20 border border-red-500/30 rounded-lg" role="region" aria-labelledby="affected-cities-heading">
+            <h4 id="affected-cities-heading" className="text-sm font-semibold mb-3 text-red-200"><span aria-hidden="true">🏙️</span> Major Cities Affected:</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-xs">
               {casualties.affectedCities.map((city) => (
                 <div key={city.name} className="p-2 bg-white/5 rounded border border-red-500/20">
@@ -115,9 +115,9 @@ export default function ResultsDashboard() {
 
       {/* Crater Data */}
       {crater && (
-        <div className="card">
-          <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <span>🕳️</span> Crater Formation
+        <div className="card" role="region" aria-labelledby="crater-heading">
+          <h3 id="crater-heading" className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <span aria-hidden="true">🕳️</span> Crater Formation
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <StatCard
@@ -143,9 +143,9 @@ export default function ResultsDashboard() {
       )}
 
       {/* Seismic Effects */}
-      <div className="card">
-        <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <span>📊</span> Seismic Effects
+      <div className="card" role="region" aria-labelledby="seismic-heading">
+        <h3 id="seismic-heading" className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <span aria-hidden="true">📊</span> Seismic Effects
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <StatCard
@@ -164,9 +164,9 @@ export default function ResultsDashboard() {
       </div>
 
       {/* Blast Effects */}
-      <div className="card">
-        <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <span>💨</span> Blast & Thermal Effects
+      <div className="card" role="region" aria-labelledby="blast-heading">
+        <h3 id="blast-heading" className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <span aria-hidden="true">💨</span> Blast & Thermal Effects
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard
@@ -202,9 +202,9 @@ export default function ResultsDashboard() {
 
       {/* Tsunami */}
       {tsunami && (
-        <div className="card glow-red">
-          <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <span>🌊</span> Tsunami Warning
+        <div className="card glow-red" role="alert" aria-labelledby="tsunami-heading">
+          <h3 id="tsunami-heading" className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <span aria-hidden="true">🌊</span> Tsunami Warning
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <StatCard
@@ -230,9 +230,9 @@ export default function ResultsDashboard() {
       )}
 
       {/* Zone Analysis */}
-      <div className="card">
-        <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <span>🗺️</span> Impact Zone Analysis
+      <div className="card" role="region" aria-labelledby="zone-analysis-heading">
+        <h3 id="zone-analysis-heading" className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <span aria-hidden="true">🗺️</span> Impact Zone Analysis
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <div>
@@ -271,9 +271,9 @@ function StatCard({
   size?: 'sm' | 'md';
 }) {
   return (
-    <div className="bg-white/5 rounded-lg p-4">
+    <div className="bg-white/5 rounded-lg p-4" role="region" aria-label={`${label}: ${value}, ${subtitle}`}>
       <div className="text-xs text-white/60 mb-1">{label}</div>
-      <div className={`${size === 'sm' ? 'text-xl' : 'text-2xl'} font-bold ${color}`}>
+      <div className={`${size === 'sm' ? 'text-xl' : 'text-2xl'} font-bold ${color}`} aria-live="polite">
         {value}
       </div>
       <div className="text-xs text-white/50 mt-1">{subtitle}</div>

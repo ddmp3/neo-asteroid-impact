@@ -15,7 +15,7 @@ import Simulation3D from './components/Simulation3D';
 
 function App() {
   const [apiHealth, setApiHealth] = useState<'checking' | 'healthy' | 'error'>('checking');
-  const { viewMode, simulationStep, isLoading, error } = useSimulationStore();
+  const { viewMode, simulationStep, isLoading, error, setError, setViewMode } = useSimulationStore();
 
   useEffect(() => {
     // Check API health on mount
@@ -25,15 +25,40 @@ function App() {
       .catch(() => setApiHealth('error'));
   }, []);
 
+  // Global keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Escape key - Clear error or return to simulation view
+      if (e.key === 'Escape') {
+        if (error) {
+          setError(null);
+        } else if (viewMode !== 'simulation') {
+          setViewMode('simulation');
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [error, viewMode, setError, setViewMode]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
+      {/* Skip to main content link for keyboard navigation */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded-lg focus:shadow-lg"
+      >
+        Skip to main content
+      </a>
+
       <Header apiHealth={apiHealth} />
 
       {error && <ErrorBanner message={error} />}
 
       {isLoading && <LoadingScreen />}
 
-      <main>
+      <main id="main-content" role="main" aria-label="Main application content">
         {/* Show different views based on viewMode */}
         {viewMode === 'scenario' ? (
           <div className="container mx-auto px-4 py-6">
