@@ -173,10 +173,26 @@ class PhysicsEngine {
             description = 'Great - Catastrophic destruction';
         }
 
+        // Realistic felt radius based on empirical earthquake data
+        // M7: ~400km, M8: ~1000km, M9: ~3000km, M10+: ~8000km (global but attenuated)
+        // Using logarithmic scaling with realistic upper bound
+        let radiusKm;
+        if (magnitude < 4) {
+            radiusKm = 10; // Very local
+        } else if (magnitude < 6) {
+            radiusKm = 50 * Math.pow(10, (magnitude - 5) / 2); // 50-150 km
+        } else if (magnitude < 8) {
+            radiusKm = 150 * Math.pow(10, (magnitude - 6) / 2); // 150-1500 km
+        } else {
+            // For extreme magnitudes (8+), cap at realistic global distances
+            // Even M9+ doesn't exceed ~10,000 km felt radius due to attenuation
+            radiusKm = Math.min(10000, 1500 * Math.pow(10, (magnitude - 8) / 3));
+        }
+
         return {
             magnitude: Math.max(0, magnitude),
             description: description,
-            radiusKm: Math.pow(10, magnitude - 1) // Approximate felt radius in km
+            radiusKm: radiusKm
         };
     }
 
