@@ -122,14 +122,14 @@ export default function ResultsDashboard() {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <StatCard
               label="Diameter"
-              value={`${(crater.diameter / 1000).toFixed(2)} km`}
-              subtitle={`${crater.diameter.toFixed(0)}m`}
+              value={`${(crater.modifiedDiameter / 1000).toFixed(2)} km`}
+              subtitle={`${crater.modifiedDiameter.toFixed(0)}m`}
               color="text-orange-400"
             />
             <StatCard
               label="Depth"
-              value={`${(crater.depth / 1000).toFixed(2)} km`}
-              subtitle={`${crater.depth.toFixed(0)}m`}
+              value={`${(crater.modifiedDepth / 1000).toFixed(2)} km`}
+              subtitle={`${crater.modifiedDepth.toFixed(0)}m`}
               color="text-orange-400"
             />
             <StatCard
