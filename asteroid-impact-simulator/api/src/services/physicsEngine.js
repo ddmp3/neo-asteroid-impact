@@ -131,21 +131,40 @@ class PhysicsEngine {
     calculateCraterSize(energy, angle = 45, targetDensity = 2500) {
         const angleRad = angle * Math.PI / 180;
 
-        // Simplified crater scaling law
-        // D ∝ E^0.25 (approximate)
-        const baseDiameter = 1.8 * Math.pow(energy / 1e15, 0.25);
+        // STEP 1: Calculate TRANSIENT crater (initial before collapse)
+        // Based on Collins et al. (2005) simplified pi-scaling
+        // D_transient ∝ E^0.25 (calibrated on Barringer: 10 MT → 1.2 km)
+        const K_transient = 472; // Empirical coefficient
+        const D_transient_meters = K_transient * Math.pow(energy / 1e15, 0.25);
 
-        // Adjust for angle (vertical impacts create larger craters)
+        // Adjust for impact angle
         const angleFactor = Math.pow(Math.sin(angleRad), 1/3);
-        const diameter = baseDiameter * angleFactor;
+        const D_transient = D_transient_meters * angleFactor;
 
-        // Depth is typically 1/5 to 1/3 of diameter
-        const depth = diameter / 5;
+        // STEP 2: SIMPLE vs COMPLEX crater (Collins et al. 2005, Eq. 22 & 27)
+        // Transition at D_transient = 3.2 km on Earth
+        let diameter, depth, craterType;
+
+        if (D_transient < 3200) {
+            // SIMPLE crater (< 3.2 km): bowl-shaped
+            diameter = 1.25 * D_transient;
+            depth = diameter / 5;
+            craterType = 'simple';
+        } else {
+            // COMPLEX crater (≥ 3.2 km): central peak, collapse
+            const D_tc_km = D_transient / 1000;
+            const D_final_km = 1.17 * Math.pow(D_tc_km, 1.13);
+            diameter = D_final_km * 1000;
+            depth = 0.1 * diameter; // Shallower
+            craterType = 'complex';
+        }
 
         return {
+            transientDiameter: D_transient,
             diameter: diameter,
             depth: depth,
-            volume: Math.PI * Math.pow(diameter/2, 2) * depth / 3 // Approximate cone volume
+            volume: Math.PI * Math.pow(diameter/2, 2) * depth / 3,
+            craterType: craterType
         };
     }
 
