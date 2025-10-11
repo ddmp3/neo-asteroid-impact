@@ -3,9 +3,9 @@
  * Implements Keplerian orbital mechanics and impact physics calculations
  */
 
-// Using advanced population grid service for better global coverage
-// Upgrade from 45 hardcoded cities to grid-based density model
-const populationService = require('./populationGridService');
+// Using optimized city-based service with GeoNames database (32,686 cities >15k pop)
+// Fast, accurate casualty calculations without grid sampling (<5 seconds)
+const populationService = require('./populationCityService');
 const casualtyModel = require('./casualtyModel');
 const TerrainAnalysis = require('./terrainAnalysis');
 const USGSService = require('./usgsService');
