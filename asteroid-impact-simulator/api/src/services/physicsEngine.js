@@ -286,26 +286,95 @@ class PhysicsEngine {
     }
 
     /**
-     * Estimate tsunami potential for ocean impacts
+     * Calculate tsunami effects for ocean impacts (Ward & Asphaug 2000)
+     * Based on: Ward, S. N., & Asphaug, E. (2000). Asteroid Impact Tsunami:
+     * A Probabilistic Hazard Assessment. Icarus, 145(1), 64-78.
+     *
      * @param {number} energy - Impact energy in Joules
-     * @param {number} waterDepth - Ocean depth at impact point in meters
-     * @returns {Object} Tsunami characteristics
+     * @param {number} waterDepth - Ocean depth at impact point in meters (default 4000m)
+     * @param {number} diameter - Impactor diameter in meters (optional, for cavity calc)
+     * @param {number} velocity - Impact velocity in m/s (optional)
+     * @param {number} angle - Impact angle in degrees (default 45)
+     * @returns {Object} Tsunami characteristics with Ward & Asphaug formulas
      */
-    calculateTsunamiEffects(energy, waterDepth = 4000) {
-        const megatons = energy / (4.184e15);
+    calculateTsunamiEffects(energy, waterDepth = 4000, diameter = null, velocity = null, angle = 45) {
+        // Convert angle to radians
+        const angleRad = angle * Math.PI / 180;
 
-        // Simplified tsunami wave height estimation
-        const waveHeight = Math.sqrt(megatons) * 10; // meters
-        const wavelength = waterDepth * 50; // meters
+        // 1. Calculate transient water cavity (same scaling as land craters)
+        // Using Collins et al. (2005) + Ward & Asphaug (2000)
+        const K_transient = 472; // Calibrated coefficient from crater scaling
+        const D_transient_meters = K_transient * Math.pow(energy / 1e15, 0.25);
+        const angleFactor = Math.pow(Math.sin(angleRad), 1/3);
+        const D_transient = D_transient_meters * angleFactor; // meters
+
+        // 2. Water cavity radius
+        const R_cavity = D_transient / 2; // meters
+
+        // 3. Initial wave height at cavity rim (Ward & Asphaug 2000, empirical)
+        // H_max ≈ 0.28 × R_cavity
+        const H_initial = 0.28 * R_cavity; // meters
+
+        // 4. Maximum wave height cannot exceed water depth
+        const H_max = Math.min(H_initial, waterDepth);
+
+        // 5. Wavelength ≈ transient cavity diameter (Ward & Asphaug 2000)
+        const wavelength = D_transient; // meters
+
+        // 6. Propagation speed (shallow water wave equation)
+        // v = √(g × h) - valid for long waves where wavelength >> depth
         const speed = Math.sqrt(this.EARTH_SURFACE_GRAVITY * waterDepth); // m/s
 
+        // 7. Wave amplitude attenuation with distance (Ward & Asphaug empirical formula)
+        // A(r) = 45 × (h / r) × Y^0.25
+        // where Y = energy in kilotons TNT, r = distance in meters
+        const Y_kilotons = energy / 4.184e12; // Convert Joules to kilotons TNT
+
+        // 8. Estimate affected radius (where amplitude drops to ~1 meter)
+        // Solving: 1 = 45 × (h / r) × Y^0.25 for r
+        // r = 45 × h × Y^0.25
+        const affectedRadiusMeters = 45 * waterDepth * Math.pow(Y_kilotons, 0.25);
+        const affectedRadiusKm = affectedRadiusMeters / 1000;
+
+        // 9. Calculate amplitude at several key distances for visualization
+        const amplitudeAtDistances = [
+            { distanceKm: 100, amplitude: this.getTsunamiAmplitudeAt(100, waterDepth, Y_kilotons) },
+            { distanceKm: 500, amplitude: this.getTsunamiAmplitudeAt(500, waterDepth, Y_kilotons) },
+            { distanceKm: 1000, amplitude: this.getTsunamiAmplitudeAt(1000, waterDepth, Y_kilotons) },
+            { distanceKm: 2000, amplitude: this.getTsunamiAmplitudeAt(2000, waterDepth, Y_kilotons) }
+        ].filter(item => item.amplitude >= 0.5); // Filter out negligible waves
+
         return {
-            initialWaveHeight: waveHeight,
+            cavityDiameter: D_transient,
+            cavityRadius: R_cavity,
+            initialWaveHeight: H_max,
             wavelength: wavelength,
             propagationSpeed: speed,
             speedKmh: speed * 3.6,
-            affectedRadiusKm: megatons * 100 // Rough estimate
+            affectedRadiusKm: Math.round(affectedRadiusKm),
+            amplitudeAtDistances: amplitudeAtDistances,
+            attenuationRate: 'r^-1 (dispersion + geometric spreading)',
+            method: 'Ward & Asphaug (2000)',
+            limitations: 'Deep water approximation; coastal run-up not modeled',
+            note: waterDepth < 1000 ?
+                'Shallow water - wave shoaling effects important near coast' :
+                'Deep ocean impact - tsunami propagates globally'
         };
+    }
+
+    /**
+     * Calculate tsunami amplitude at a specific distance (Ward & Asphaug 2000)
+     * A(r) = 45 × (h / r) × Y^0.25
+     *
+     * @param {number} distanceKm - Distance from impact in kilometers
+     * @param {number} waterDepth - Water depth in meters
+     * @param {number} Y_kilotons - Impact energy in kilotons TNT
+     * @returns {number} Wave amplitude in meters
+     */
+    getTsunamiAmplitudeAt(distanceKm, waterDepth, Y_kilotons) {
+        const r = distanceKm * 1000; // convert to meters
+        const amplitude = 45 * (waterDepth / r) * Math.pow(Y_kilotons, 0.25);
+        return Math.max(0, Math.round(amplitude * 10) / 10); // Round to 1 decimal, min 0
     }
 
     /**
