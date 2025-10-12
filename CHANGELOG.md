@@ -16,7 +16,92 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - Development Branch
 
-### Current Development Version: v1.6.12 - Phase 1 Part 3 (Frontend Integration)
+### Current Development Version: v1.6.13 - Phase 1 Bugfix Release
+
+---
+
+## [1.6.13] - 2025-10-11 (**PHASE 1 BUGFIX RELEASE - END-TO-END TEST FIXES**)
+
+### Fixed
+- **Bug #1: Energy Field Access** (Test 3 - Chelyabinsk)
+  - Fixed incorrect energy field reference in end-to-end test
+  - Changed `sim.energy.megatonsTNT` → `sim.energy.megatons`
+  - API response structure uses `energy.megatons`, not `energy.megatonsTNT`
+  - File: `api/src/tests/endToEndTest.js` line 117
+
+- **Bug #2: Composition Parameter Extraction** (Test 4 - Barringer)
+  - Fixed missing `composition` parameter in impact simulation endpoint
+  - Added extraction from request body: `composition = 'rocky'` (default)
+  - Now correctly passes composition to physics engine
+  - Enables material-specific fragmentation: rocky (2 MPa), iron (100 MPa), icy (0.1 MPa), weak (0.5 MPa)
+  - File: `api/src/index.js` lines 281, 305
+
+- **Bug #3: Crater Field Access** (Test 4 - Barringer)
+  - Fixed crater field references in end-to-end test
+  - Changed `sim.crater.diameter` → `sim.crater.modifiedDiameter`
+  - Changed `sim.crater.depth` → `sim.crater.modifiedDepth`
+  - Matches actual API response structure (terrain-modified crater dimensions)
+  - File: `api/src/tests/endToEndTest.js` lines 188, 189, 194, 202
+
+### Validation
+- **End-to-End Tests:** 6/6 PASSING ✅
+  - Test 1: API Health Check ✅
+  - Test 2: Real-Time NEO Data Loading (JPL SBDB) ✅
+  - Test 3: Atmospheric Fragmentation - Chelyabinsk Airburst ✅ (0.5% error)
+  - Test 4: Ground Impact - Barringer Crater ✅ (15.5% error)
+  - Test 5: NEO Statistics (Real-Time) ✅
+  - Test 6: Potentially Hazardous Asteroids (Real-Time) ✅
+
+### Technical Details
+**Bug #1 - API Response Structure:**
+```json
+{
+  "energy": {
+    "joules": 3359862415507225.5,
+    "tntTons": 803026.3899395855,
+    "megatons": 0.8030263899395854  // ← Correct field
+  }
+}
+```
+
+**Bug #2 - Composition Parameter Flow:**
+```javascript
+// POST /api/simulate/impact request body
+{
+  "diameter": 50,
+  "velocity": 12.8,
+  "composition": "iron",  // ← Now extracted and used
+  // ...
+}
+
+// Passed to physics engine
+const simulation = await physicsEngine.simulateImpact({
+  composition,  // ← Now included (v1.6.10+)
+  // ...
+});
+```
+
+**Bug #3 - Crater Response Structure:**
+```json
+{
+  "crater": {
+    "originalDiameter": 1540.4,
+    "originalDepth": 308.1,
+    "modifiedDiameter": 1386.4,  // ← Correct field (terrain-adjusted)
+    "modifiedDepth": 369.7,      // ← Correct field (terrain-adjusted)
+    "craterType": "simple",
+    "transientDiameter": 1232.3
+  }
+}
+```
+
+### Impact
+- **Phase 1 Complete:** All 3 parts (v1.6.10, v1.6.11, v1.6.12) now fully validated
+- **Production-Ready:** 6/6 end-to-end tests passing
+- **Accuracy Verified:**
+  - Chelyabinsk airburst: 23.4 km vs 23.5 km observed = **0.5% error** ✅
+  - Barringer crater: 1386 m vs 1200 m observed = **15.5% error** ✅
+- **Material Fragmentation:** Iron asteroids now correctly use 100 MPa strength
 
 ---
 

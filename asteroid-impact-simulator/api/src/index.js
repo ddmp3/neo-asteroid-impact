@@ -278,6 +278,7 @@ app.post('/api/simulate/impact', async (req, res) => {
             velocity,        // km/s
             angle = 45,      // degrees
             density = 3000,  // kg/m³
+            composition = 'rocky', // Material type: 'rocky', 'iron', 'icy', 'weak' (v1.6.10+)
             impactLocation   // { lat, lon }
         } = req.body;
 
@@ -301,6 +302,7 @@ app.post('/api/simulate/impact', async (req, res) => {
             velocity: velocity * 1000, // Convert km/s to m/s
             angle,
             density,
+            composition, // Pass composition to physics engine (v1.6.10+)
             impactLocation: {
                 lat: impactLocation.lat,
                 lon: impactLocation.lon,

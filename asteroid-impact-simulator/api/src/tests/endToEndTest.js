@@ -6,7 +6,7 @@
 
 const axios = require('axios');
 
-const API_URL = process.env.API_URL || 'https://ca-api-lgfjbo72.ambitiousflower-98a4df12.canadacentral.azurecontainerapps.io';
+const API_URL = process.env.API_URL || 'http://localhost:7071';
 
 console.log('🧪 END-TO-END INTEGRATION TEST');
 console.log('='.repeat(80));
@@ -114,7 +114,7 @@ async function runTests() {
         console.log(`   - Model: ${frag.model}`);
 
         console.log(`\n   Impact Energy:`);
-        console.log(`   - ${sim.energy.megatonsTNT.toFixed(2)} megatons TNT`);
+        console.log(`   - ${sim.energy.megatons.toFixed(2)} megatons TNT`);
         console.log(`   - ${(sim.energy.joules / 1e15).toFixed(2)} PJ`);
 
         console.log(`\n   Crater:`);
@@ -185,13 +185,13 @@ async function runTests() {
         console.log(`   - Material Strength: ${(frag.strength / 1e6).toFixed(0)} MPa (iron)`);
 
         console.log(`\n   Crater:`);
-        console.log(`   - Diameter: ${sim.crater.diameter.toFixed(0)} m`);
-        console.log(`   - Depth: ${sim.crater.depth.toFixed(0)} m`);
+        console.log(`   - Diameter: ${sim.crater.modifiedDiameter.toFixed(0)} m`);
+        console.log(`   - Depth: ${sim.crater.modifiedDepth.toFixed(0)} m`);
         console.log(`   - Type: ${sim.crater.craterType}`);
 
         // Validation
         const expectedDiameter = 1200; // meters (observed)
-        const calculatedDiameter = sim.crater.diameter;
+        const calculatedDiameter = sim.crater.modifiedDiameter;
         const error = Math.abs(calculatedDiameter - expectedDiameter) / expectedDiameter * 100;
 
         console.log(`\n   Validation vs Observed Barringer:`);
@@ -199,7 +199,7 @@ async function runTests() {
         console.log(`   - Calculated Diameter: ${calculatedDiameter.toFixed(0)} m`);
         console.log(`   - Error: ${error.toFixed(1)}%`);
 
-        if (frag.craterFormed && sim.crater.diameter > 0 && error < 50) {
+        if (frag.craterFormed && sim.crater.modifiedDiameter > 0 && error < 50) {
             console.log(`   ✅ PASS: Barringer correctly simulated with crater`);
             testsPassed++;
         } else {

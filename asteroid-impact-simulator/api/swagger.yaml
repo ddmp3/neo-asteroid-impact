@@ -29,7 +29,7 @@ info:
 
     **⚠️ DISCLAIMER**: Simplified models for educational use. Not for actual planetary defense planning.
 
-  version: 1.1-dev
+  version: 1.6.13
   contact:
     name: Meteor Madness Team (Dev)
     url: https://github.com/ddmp3/meteormadness
@@ -141,6 +141,25 @@ paths:
                   default: 3000
                   minimum: 1000
                   maximum: 8000
+                composition:
+                  type: string
+                  description: |
+                    Asteroid material composition type (affects atmospheric fragmentation).
+
+                    **Material Strengths (Hills-Goda 1993)**:
+                    - `rocky`: 2 MPa (chondrite, stony meteorites)
+                    - `iron`: 100 MPa (iron-nickel meteorites)
+                    - `icy`: 0.1 MPa (cometary material)
+                    - `weak`: 0.5 MPa (fragile carbonaceous chondrites)
+
+                    Higher strength = deeper penetration before airburst.
+                  enum:
+                    - rocky
+                    - iron
+                    - icy
+                    - weak
+                  default: rocky
+                  example: rocky
                 impactLocation:
                   type: object
                   required:
