@@ -41,7 +41,8 @@ const allowedOrigins = [
     'http://localhost:5173',
     'https://lively-water-02a3d060f.1.azurestaticapps.net',
     'https://lively-water-02a3d060f-preview.eastus2.1.azurestaticapps.net',
-    'https://jolly-tree-0b50d3d0f.1.azurestaticapps.net'
+    'https://jolly-tree-0b50d3d0f.1.azurestaticapps.net',
+    'https://jolly-tree-0b50d3d0f-preview.eastus2.1.azurestaticapps.net'
 ];
 
 if (process.env.FRONTEND_URL) {
