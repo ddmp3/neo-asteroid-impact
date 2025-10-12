@@ -231,7 +231,7 @@ export async function loadAsteroidData(): Promise<ProcessedAsteroid[]> {
       const asteroids = response.data.map(processRealTimeNEO);
 
       // Sort by closest distance
-      asteroids.sort((a, b) => a.closestDistance - b.closestDistance);
+      asteroids.sort((a: ProcessedAsteroid, b: ProcessedAsteroid) => a.closestDistance - b.closestDistance);
 
       console.log(`✅ Loaded ${asteroids.length} asteroids from JPL SBDB API (real-time)`);
       console.log(`   Source: ${response.source}`);
@@ -261,7 +261,7 @@ async function loadStaticAsteroidData(): Promise<ProcessedAsteroid[]> {
     const asteroids = data.asteroids.map(processNASAAsteroid);
 
     // Sort by closest distance
-    asteroids.sort((a, b) => a.closestDistance - b.closestDistance);
+    asteroids.sort((a: ProcessedAsteroid, b: ProcessedAsteroid) => a.closestDistance - b.closestDistance);
 
     console.log(`✅ Loaded ${asteroids.length} asteroids from static JSON (fallback)`);
     return asteroids;

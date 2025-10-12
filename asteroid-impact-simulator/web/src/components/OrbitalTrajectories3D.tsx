@@ -119,7 +119,7 @@ function OrbitLine({
   isSelected: boolean;
 }) {
   const points = useMemo(
-    () => generateOrbitPoints(asteroid.elements, isSelected ? 200 : 100),
+    () => asteroid.elements ? generateOrbitPoints(asteroid.elements, isSelected ? 200 : 100) : [],
     [asteroid.elements, isSelected]
   );
 
@@ -156,6 +156,7 @@ function AsteroidMarker({
   isSelected: boolean;
 }) {
   const position = useMemo(() => {
+    if (!asteroid.elements) return new THREE.Vector3(0, 0, 0);
     const julianDate = dateToJulian(currentDate);
     const pos = calculateOrbitalPosition(asteroid.elements, julianDate);
     return new THREE.Vector3(pos.x * SCALE, pos.z * SCALE, -pos.y * SCALE);

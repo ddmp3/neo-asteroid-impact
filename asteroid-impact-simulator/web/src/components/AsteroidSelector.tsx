@@ -249,18 +249,18 @@ export default function AsteroidSelector({
             </div>
             <div>
               <span className="text-gray-400">Eccentricity:</span>
-              <div className="text-white font-semibold">{selectedAsteroid.elements.e.toFixed(4)}</div>
+              <div className="text-white font-semibold">{selectedAsteroid.elements?.e.toFixed(4) ?? 'N/A'}</div>
             </div>
             <div>
               <span className="text-gray-400">Semi-major axis:</span>
               <div className="text-white font-semibold">
-                {(selectedAsteroid.elements.a / 149597870.7).toFixed(3)} AU
+                {selectedAsteroid.elements?.a ? (selectedAsteroid.elements.a / 149597870.7).toFixed(3) + ' AU' : 'N/A'}
               </div>
             </div>
             <div>
               <span className="text-gray-400">Inclination:</span>
               <div className="text-white font-semibold">
-                {((selectedAsteroid.elements.i * 180) / Math.PI).toFixed(2)}°
+                {selectedAsteroid.elements?.i ? ((selectedAsteroid.elements.i * 180) / Math.PI).toFixed(2) + '°' : 'N/A'}
               </div>
             </div>
             <div>

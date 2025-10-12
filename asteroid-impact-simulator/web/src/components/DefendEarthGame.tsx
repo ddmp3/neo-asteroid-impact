@@ -168,13 +168,13 @@ export default function DefendEarthGame() {
     setIsCalculating(true);
 
     try {
-      const result = await simulationAPI.simulateDeflection({
-        asteroidDiameter: gameState.currentThreat.diameter,
-        asteroidDensity: 3000,
-        warningTime: warningYears * 365,
-        missDistance: 100000,
-        method: selectedMethod
-      });
+      const result = await simulationAPI.simulateDeflection(
+        gameState.currentThreat.diameter,
+        3000,
+        warningYears * 365,
+        100000,
+        selectedMethod
+      );
 
       setDeflectionResult(result);
 

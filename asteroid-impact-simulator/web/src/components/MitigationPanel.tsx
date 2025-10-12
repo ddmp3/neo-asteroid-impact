@@ -44,13 +44,13 @@ export default function MitigationPanel() {
   const handleSimulate = async () => {
     setIsSimulating(true);
     try {
-      const result = await simulationAPI.simulateDeflection({
-        asteroidDiameter: asteroidParams.diameter,
-        asteroidDensity: asteroidParams.density,
-        warningTime: warningYears * 365, // Convert years to days
-        missDistance: 100000, // Default 100,000 km miss distance
-        method: selectedMethod,
-      });
+      const result = await simulationAPI.simulateDeflection(
+        asteroidParams.diameter,
+        asteroidParams.density,
+        warningYears * 365, // Convert years to days
+        100000, // Default 100,000 km miss distance
+        selectedMethod
+      );
       setDeflectionResult(result);
     } catch (error) {
       console.error('Deflection simulation failed:', error);
