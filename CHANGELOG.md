@@ -16,7 +16,70 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - Development Branch
 
-### Current Development Version: v1.6.11 - Phase 1 Part 2 (Real-Time NEO Data)
+### Current Development Version: v1.6.12 - Phase 1 Part 3 (Frontend Integration)
+
+---
+
+## [1.6.12] - 2025-10-11 (**PHASE 1 PART 3 - FRONTEND REAL-TIME NEO INTEGRATION**)
+
+### Changed
+- **Frontend Data Source:** Static JSON → Real-time JPL SBDB API
+  - `nasaDataLoader.ts` now calls `/api/neo/realtime/upcoming` endpoint
+  - Automatic fallback to static JSON if API fails
+  - Graceful error handling with console warnings
+
+- **New API Client Methods** (`api.ts`):
+  - `neoAPI.getRealTimeUpcoming()` - Get upcoming close approaches
+  - `neoAPI.getRealTimeDetails()` - Get detailed asteroid data
+  - `neoAPI.getRealTimePHAs()` - Get Potentially Hazardous Asteroids
+  - `neoAPI.getRealTimeBySize()` - Filter by size category
+  - `neoAPI.getRealTimeStatistics()` - Get real-time statistics
+
+- **Data Processing:**
+  - New `processRealTimeNEO()` function for API response format
+  - Legacy `processNASAAsteroid()` kept for fallback compatibility
+  - Added `source` and `lastUpdated` metadata to ProcessedAsteroid interface
+
+### Added
+- **Real-Time Data Loading:**
+  - Primary: JPL SBDB API (200 NEOs, 2024-2026)
+  - Fallback: Static JSON (/data/asteroids.json)
+  - Console logs show data source and timestamp
+
+- **Enhanced Statistics:**
+  - `getAsteroidStats()` now includes `dataSource` and `lastUpdated`
+  - Helps users see if data is real-time or fallback
+
+### Technical Details
+**Data Flow:**
+1. User loads orbital view/scenarios
+2. `loadAsteroidData()` called
+3. Try: `neoAPI.getRealTimeUpcoming()` → JPL SBDB
+4. Success: Process and display real-time data
+5. Fail: Fallback to static JSON with warning
+
+**API Call:**
+```typescript
+const response = await neoAPI.getRealTimeUpcoming({
+  dateMin: '2024-01-01',
+  dateMax: '2026-12-31',
+  limit: 200,
+});
+```
+
+**Console Output:**
+```
+🌍 Loading asteroid data from JPL SBDB API (real-time)...
+✅ Loaded 200 asteroids from JPL SBDB API (real-time)
+   Source: JPL SBDB CAD API
+   Last Updated: 2025-10-11T...
+```
+
+### Impact
+- **User Experience:** Transparent data loading with fallback
+- **Data Freshness:** Now shows real-time NASA data (when API available)
+- **Reliability:** Fallback ensures app always works
+- **Performance:** No change (caching handled by backend)
 
 ---
 

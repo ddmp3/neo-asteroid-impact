@@ -1,9 +1,11 @@
 /**
  * NASA Asteroid Data Loader
- * Loads and processes the 200 closest asteroids from Luis's dataset
+ * Loads and processes asteroid data from real-time JPL SBDB API (v1.6.11+)
+ * Replaces static JSON with live NASA data
  */
 
 import { dateToJulian } from '../utils/orbitalMechanics';
+import { neoAPI } from './api';
 
 const AU = 149597870.7; // Astronomical Unit in km
 
@@ -49,6 +51,42 @@ export interface NASAAsteroidRaw {
   }>;
 }
 
+// Real-Time NEO API Response (JPL SBDB)
+export interface RealTimeNEO {
+  id: string;
+  name: string;
+  fullName: string;
+  designation: string;
+  closeApproachDate: string;
+  absoluteMagnitude: number;
+  estimatedDiameter: {
+    meters: {
+      min: number;
+      max: number;
+      estimated: number;
+    };
+    kilometers: {
+      min: number;
+      max: number;
+      estimated: number;
+    };
+  };
+  relativeVelocity: {
+    kilometersPerSecond: number;
+    kilometersPerHour: number;
+    metersPerSecond: number;
+  };
+  missDistance: {
+    astronomical: number;
+    lunar: number;
+    kilometers: number;
+    miles: number;
+  };
+  isPotentiallyHazardous: boolean;
+  source: string;
+  lastUpdated: string;
+}
+
 export interface OrbitalElements {
   a: number; // Semi-major axis (km)
   e: number; // Eccentricity
@@ -67,12 +105,12 @@ export interface ProcessedAsteroid {
   isHazardous: boolean;
   magnitude: number;
   diameter: {
-    min: number;
-    max: number;
-    avg: number;
+    min: number; // km
+    max: number; // km
+    avg: number; // km
   };
-  elements: OrbitalElements;
-  orbitClass: string;
+  elements?: OrbitalElements; // Optional, for orbital view
+  orbitClass?: string;
   closeApproaches: Array<{
     date: Date;
     julianDate: number;
@@ -83,10 +121,44 @@ export interface ProcessedAsteroid {
   // For sorting/filtering
   closestDistance: number; // km
   closestDistanceAU: number;
+  // Real-time metadata
+  source?: string;
+  lastUpdated?: string;
 }
 
 /**
- * Process raw NASA asteroid data into usable format
+ * Process real-time NEO data from JPL SBDB API
+ */
+export function processRealTimeNEO(raw: RealTimeNEO): ProcessedAsteroid {
+  const closeApproach = {
+    date: new Date(raw.closeApproachDate),
+    julianDate: dateToJulian(new Date(raw.closeApproachDate)),
+    velocity: raw.relativeVelocity.kilometersPerSecond,
+    distance: raw.missDistance.kilometers,
+    distanceAU: raw.missDistance.astronomical,
+  };
+
+  return {
+    id: raw.id,
+    name: raw.name,
+    fullName: raw.fullName || raw.name,
+    isHazardous: raw.isPotentiallyHazardous,
+    magnitude: raw.absoluteMagnitude,
+    diameter: {
+      min: raw.estimatedDiameter.kilometers.min,
+      max: raw.estimatedDiameter.kilometers.max,
+      avg: raw.estimatedDiameter.kilometers.estimated,
+    },
+    closeApproaches: [closeApproach],
+    closestDistance: closeApproach.distance,
+    closestDistanceAU: closeApproach.distanceAU,
+    source: raw.source,
+    lastUpdated: raw.lastUpdated,
+  };
+}
+
+/**
+ * Process raw NASA asteroid data (legacy format from static JSON)
  */
 export function processNASAAsteroid(raw: NASAAsteroidRaw): ProcessedAsteroid {
   const orbital = raw.orbital_data;
@@ -141,9 +213,47 @@ export function processNASAAsteroid(raw: NASAAsteroidRaw): ProcessedAsteroid {
 }
 
 /**
- * Load all asteroid data from JSON file
+ * Load asteroid data from real-time JPL SBDB API (v1.6.11+)
+ * Falls back to static JSON if API fails
  */
 export async function loadAsteroidData(): Promise<ProcessedAsteroid[]> {
+  try {
+    console.log('🌍 Loading asteroid data from JPL SBDB API (real-time)...');
+
+    // Try real-time API first
+    const response = await neoAPI.getRealTimeUpcoming({
+      dateMin: '2024-01-01',
+      dateMax: '2026-12-31',
+      limit: 200,
+    });
+
+    if (response && response.data && response.data.length > 0) {
+      const asteroids = response.data.map(processRealTimeNEO);
+
+      // Sort by closest distance
+      asteroids.sort((a, b) => a.closestDistance - b.closestDistance);
+
+      console.log(`✅ Loaded ${asteroids.length} asteroids from JPL SBDB API (real-time)`);
+      console.log(`   Source: ${response.source}`);
+      console.log(`   Last Updated: ${response.timestamp}`);
+      return asteroids;
+    }
+
+    // If API returns no data, fall back to static JSON
+    console.warn('⚠️  API returned no data, falling back to static JSON...');
+    return await loadStaticAsteroidData();
+
+  } catch (error) {
+    console.error('❌ Failed to load from JPL SBDB API:', error);
+    console.log('   Falling back to static JSON data...');
+    return await loadStaticAsteroidData();
+  }
+}
+
+/**
+ * Load asteroid data from static JSON file (fallback)
+ */
+async function loadStaticAsteroidData(): Promise<ProcessedAsteroid[]> {
   try {
     const response = await fetch('/data/asteroids.json');
     const data = await response.json();
@@ -153,10 +263,10 @@ export async function loadAsteroidData(): Promise<ProcessedAsteroid[]> {
     // Sort by closest distance
     asteroids.sort((a, b) => a.closestDistance - b.closestDistance);
 
-    console.log(`✅ Loaded ${asteroids.length} asteroids from NASA data`);
+    console.log(`✅ Loaded ${asteroids.length} asteroids from static JSON (fallback)`);
     return asteroids;
   } catch (error) {
-    console.error('❌ Failed to load asteroid data:', error);
+    console.error('❌ Failed to load static asteroid data:', error);
     return [];
   }
 }
@@ -219,6 +329,11 @@ export function getAsteroidStats(asteroids: ProcessedAsteroid[]) {
     farthestDistance: Math.max(...asteroids.map((a) => a.closestDistance)),
     averageDistance:
       asteroids.reduce((sum, a) => sum + a.closestDistance, 0) / asteroids.length,
-    orbitClasses: [...new Set(asteroids.map((a) => a.orbitClass))],
+    orbitClasses: asteroids
+      .map((a) => a.orbitClass)
+      .filter((c): c is string => c !== undefined)
+      .filter((c, i, arr) => arr.indexOf(c) === i),
+    dataSource: asteroids[0]?.source || 'static',
+    lastUpdated: asteroids[0]?.lastUpdated,
   };
 }

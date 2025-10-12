@@ -123,6 +123,85 @@ export const neoAPI = {
     const response = await api.get('/api/neo/samples');
     return response.data.data;
   },
+
+  // ===== REAL-TIME NEO DATA (JPL SBDB) =====
+
+  /**
+   * Get upcoming close approaches from JPL SBDB (real-time)
+   */
+  async getRealTimeUpcoming(options?: {
+    dateMin?: string;
+    dateMax?: string;
+    distMax?: string;
+    hMax?: number;
+    limit?: number;
+  }): Promise<any> {
+    const response = await api.get('/api/neo/realtime/upcoming', {
+      params: {
+        date_min: options?.dateMin,
+        date_max: options?.dateMax,
+        dist_max: options?.distMax,
+        h_max: options?.hMax,
+        limit: options?.limit,
+      },
+    });
+    return response.data;
+  },
+
+  /**
+   * Get detailed asteroid data from JPL SBDB
+   */
+  async getRealTimeDetails(designation: string): Promise<any> {
+    const response = await api.get(`/api/neo/realtime/details/${encodeURIComponent(designation)}`);
+    return response.data;
+  },
+
+  /**
+   * Get Potentially Hazardous Asteroids from JPL SBDB (real-time)
+   */
+  async getRealTimePHAs(options?: {
+    dateMin?: string;
+    dateMax?: string;
+    limit?: number;
+  }): Promise<any> {
+    const response = await api.get('/api/neo/realtime/phas', {
+      params: {
+        date_min: options?.dateMin,
+        date_max: options?.dateMax,
+        limit: options?.limit,
+      },
+    });
+    return response.data;
+  },
+
+  /**
+   * Get NEOs by size category (small/medium/large)
+   */
+  async getRealTimeBySize(
+    category: 'small' | 'medium' | 'large' | 'all',
+    options?: {
+      dateMin?: string;
+      dateMax?: string;
+      limit?: number;
+    }
+  ): Promise<any> {
+    const response = await api.get(`/api/neo/realtime/by-size/${category}`, {
+      params: {
+        date_min: options?.dateMin,
+        date_max: options?.dateMax,
+        limit: options?.limit,
+      },
+    });
+    return response.data;
+  },
+
+  /**
+   * Get real-time NEO statistics
+   */
+  async getRealTimeStatistics(): Promise<any> {
+    const response = await api.get('/api/neo/realtime/statistics');
+    return response.data;
+  },
 };
 
 export const usgsAPI = {
