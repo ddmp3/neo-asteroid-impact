@@ -112,12 +112,14 @@ export default function ResultsDashboard() {
                 color="text-cyan-400"
               />
             )}
-            <StatCard
-              label="Material Strength"
-              value={`${fragmentation.details.strengthMPa.toFixed(1)} MPa`}
-              subtitle={`Ram pressure: ${fragmentation.details.ramPressureMPa.toFixed(1)} MPa`}
-              color="text-purple-400"
-            />
+            {fragmentation.details && (
+              <StatCard
+                label="Material Strength"
+                value={`${fragmentation.details.strengthMPa.toFixed(1)} MPa`}
+                subtitle={`Ram pressure: ${fragmentation.details.ramPressureMPa.toFixed(1)} MPa`}
+                color="text-purple-400"
+              />
+            )}
             <StatCard
               label="Crater Formation"
               value={fragmentation.craterFormed ? 'YES' : 'NO'}
