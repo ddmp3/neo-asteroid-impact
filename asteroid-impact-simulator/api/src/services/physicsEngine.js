@@ -9,6 +9,7 @@ const populationService = require('./populationCityService');
 const casualtyModel = require('./casualtyModel');
 const TerrainAnalysis = require('./terrainAnalysis');
 const USGSService = require('./usgsService');
+const AtmosphericFragmentation = require('./atmosphericFragmentation');
 
 class PhysicsEngine {
     constructor() {
@@ -23,6 +24,9 @@ class PhysicsEngine {
         // Initialize terrain analysis
         this.usgsService = new USGSService();
         this.terrainAnalysis = new TerrainAnalysis(this.usgsService);
+
+        // Initialize atmospheric fragmentation (Hills-Goda 1993)
+        this.atmosphericFragmentation = new AtmosphericFragmentation();
     }
 
     /**
@@ -470,6 +474,7 @@ class PhysicsEngine {
             velocity, // m/s
             angle = 45, // degrees
             density = this.DEFAULT_ASTEROID_DENSITY,
+            composition = 'rocky', // NEW: Material composition
             impactLocation = { lat: 0, lon: 0, isOcean: false, depth: 0 }
         } = params;
 
@@ -488,23 +493,71 @@ class PhysicsEngine {
         // Calculate impact energy
         const energy = this.calculateImpactEnergy(mass, finalVelocity);
 
-        // Calculate terrain-modified crater
-        const baseCrater = this.calculateCraterSize(energy.joules, angle);
-        const crater = await this.terrainAnalysis.calculateTerrainModifiedCrater(
-            { lat: impactLocation.lat, lon: impactLocation.lon },
-            baseCrater.diameter,
-            baseCrater.depth
+        // NEW: Analyze atmospheric fragmentation (Hills-Goda 1993)
+        // Critical for asteroids <100m - determines airburst vs ground impact
+        const fragmentation = this.atmosphericFragmentation.analyzeFragmentation(
+            diameter,
+            finalVelocity,
+            composition,
+            density
         );
 
-        // Add craterType and transientDiameter to modified crater
-        crater.craterType = baseCrater.craterType;
-        crater.transientDiameter = baseCrater.transientDiameter;
+        // Calculate blast zone adjustments for airbursts
+        let blastAdjustment = null;
+        if (!fragmentation.craterFormed) {
+            blastAdjustment = this.atmosphericFragmentation.calculateAirburstBlastAdjustment(
+                fragmentation.altitude,
+                energy.joules
+            );
+        }
+
+        // Calculate crater ONLY if object reaches ground
+        let baseCrater, crater;
+        if (fragmentation.craterFormed) {
+            baseCrater = this.calculateCraterSize(energy.joules, angle);
+            crater = await this.terrainAnalysis.calculateTerrainModifiedCrater(
+                { lat: impactLocation.lat, lon: impactLocation.lon },
+                baseCrater.diameter,
+                baseCrater.depth
+            );
+
+            // Add craterType and transientDiameter to modified crater
+            crater.craterType = baseCrater.craterType;
+            crater.transientDiameter = baseCrater.transientDiameter;
+        } else {
+            // Airburst - no crater formed
+            crater = {
+                diameter: 0,
+                depth: 0,
+                volume: 0,
+                craterType: 'none',
+                transientDiameter: 0,
+                note: `Airburst at ${Math.round(fragmentation.altitude/1000)} km - no crater formed`
+            };
+        }
 
         // Calculate seismic effects
         const seismic = this.calculateSeismicEffects(energy.joules);
 
-        // Calculate blast effects
-        const blast = this.calculateBlastRadius(energy.joules);
+        // Calculate blast effects with airburst adjustments
+        let blast = this.calculateBlastRadius(energy.joules);
+
+        // Apply airburst altitude adjustments to blast zones
+        if (blastAdjustment) {
+            const factor = blastAdjustment.adjustmentFactor;
+            blast = {
+                fireball: blast.fireball * factor,
+                radiationRadius: blast.radiationRadius * factor,
+                airblastRadius: blast.airblastRadius * factor,
+                thermalRadius: blast.thermalRadius * factor,
+                altitudeAdjustment: {
+                    altitudeKm: blastAdjustment.altitudeKm,
+                    factor: factor,
+                    damageType: blastAdjustment.damageType,
+                    note: blastAdjustment.note
+                }
+            };
+        }
 
         // Detect ocean using hybrid approach (USGS + geographic heuristics)
         const oceanData = this.detectOcean(
@@ -563,9 +616,23 @@ class PhysicsEngine {
                 mass,
                 velocity: finalVelocity,
                 density,
+                composition,
                 angle
             },
             energy,
+            fragmentation: {
+                willFragment: fragmentation.willFragment,
+                impactType: fragmentation.impactType,
+                altitude: fragmentation.altitude,
+                energyDepositionAltitude: fragmentation.energyDepositionAltitude,
+                craterFormed: fragmentation.craterFormed,
+                reachesGround: fragmentation.reachesGround,
+                note: fragmentation.note,
+                strength: fragmentation.strength,
+                ramPressure: fragmentation.ramPressure,
+                details: fragmentation.details,
+                model: 'Hills-Goda (1993)'
+            },
             crater,
             seismic,
             blast,
