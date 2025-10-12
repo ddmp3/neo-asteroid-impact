@@ -9,6 +9,7 @@ const path = require('path');
 
 const PhysicsEngine = require('./services/physicsEngine');
 const NASANeoService = require('./services/nasaNeoService');
+const RealTimeNeoService = require('./services/realTimeNeoService');
 const USGSService = require('./services/usgsService');
 
 // Initialize Application Insights (Azure monitoring)
@@ -27,6 +28,7 @@ const port = process.env.PORT || 7071;
 // Initialize services
 const physicsEngine = new PhysicsEngine();
 const nasaNeoService = new NASANeoService();
+const realTimeNeoService = new RealTimeNeoService();
 const usgsService = new USGSService();
 
 // Middleware
@@ -466,6 +468,143 @@ app.get('/api/neo/impactor-2025', (req, res) => {
 app.get('/api/neo/samples', (req, res) => {
     const samples = nasaNeoService.getSampleAsteroids();
     res.json({ count: samples.length, data: samples });
+});
+
+// ===== REAL-TIME NEO DATA ENDPOINTS (JPL SBDB) =====
+
+/**
+ * GET /api/neo/realtime/upcoming
+ * Get upcoming close approaches from JPL SBDB (real-time)
+ */
+app.get('/api/neo/realtime/upcoming', async (req, res) => {
+    try {
+        const options = {
+            dateMin: req.query.date_min,
+            dateMax: req.query.date_max,
+            distMax: req.query.dist_max,
+            hMax: req.query.h_max ? parseInt(req.query.h_max) : undefined,
+            limit: req.query.limit ? parseInt(req.query.limit) : 200
+        };
+
+        const neos = await realTimeNeoService.getUpcomingCloseApproaches(options);
+
+        res.json({
+            count: neos.length,
+            data: neos,
+            source: 'JPL SBDB CAD API',
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Real-time NEO fetch error:', error);
+        res.status(500).json({
+            error: 'Failed to fetch real-time NEO data',
+            message: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/neo/realtime/details/:designation
+ * Get detailed asteroid data from JPL SBDB
+ */
+app.get('/api/neo/realtime/details/:designation', async (req, res) => {
+    try {
+        const details = await realTimeNeoService.getAsteroidDetails(req.params.designation);
+
+        res.json({
+            data: details,
+            source: 'JPL SBDB',
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Asteroid details fetch error:', error);
+        res.status(404).json({
+            error: 'Asteroid not found',
+            message: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/neo/realtime/phas
+ * Get Potentially Hazardous Asteroids from JPL SBDB (real-time)
+ */
+app.get('/api/neo/realtime/phas', async (req, res) => {
+    try {
+        const options = {
+            dateMin: req.query.date_min,
+            dateMax: req.query.date_max,
+            limit: req.query.limit ? parseInt(req.query.limit) : 100
+        };
+
+        const phas = await realTimeNeoService.getPotentiallyHazardousAsteroids(options);
+
+        res.json({
+            count: phas.length,
+            data: phas,
+            source: 'JPL SBDB CAD API',
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('PHA fetch error:', error);
+        res.status(500).json({
+            error: 'Failed to fetch PHAs',
+            message: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/neo/realtime/by-size/:category
+ * Get NEOs filtered by size category (small/medium/large)
+ */
+app.get('/api/neo/realtime/by-size/:category', async (req, res) => {
+    try {
+        const category = req.params.category;
+        const options = {
+            dateMin: req.query.date_min,
+            dateMax: req.query.date_max,
+            limit: req.query.limit ? parseInt(req.query.limit) : 200
+        };
+
+        const neos = await realTimeNeoService.getNEOsBySize(category, options);
+
+        res.json({
+            category,
+            count: neos.length,
+            data: neos,
+            source: 'JPL SBDB CAD API',
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('NEO by size fetch error:', error);
+        res.status(500).json({
+            error: 'Failed to fetch NEOs by size',
+            message: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/neo/realtime/statistics
+ * Get statistics about upcoming NEOs
+ */
+app.get('/api/neo/realtime/statistics', async (req, res) => {
+    try {
+        const stats = await realTimeNeoService.getStatistics();
+
+        res.json({
+            statistics: stats,
+            source: 'JPL SBDB CAD API',
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Statistics fetch error:', error);
+        res.status(500).json({
+            error: 'Failed to fetch statistics',
+            message: error.message
+        });
+    }
 });
 
 // ===== USGS DATA ENDPOINTS =====
