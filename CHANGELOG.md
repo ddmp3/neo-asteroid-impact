@@ -16,7 +16,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - Development Branch
 
-### Current Development Version: v1.6.14 - UI Enhancements & CORS Fix
+### Current Development Version: v1.6.15 - TypeScript Critical Fixes
+
+---
+
+## [1.6.15] - 2025-10-12 (**CRITICAL TYPESCRIPT FIXES - BLANK SCREEN RESOLVED**)
+
+### Fixed
+- **AsteroidSelector.tsx** - Optional chaining for undefined orbital elements
+  - Fixed `elements.e`, `elements.a`, `elements.i` possibly undefined errors
+  - Added `?.` operator and `??` nullish coalescing
+  - Display 'N/A' when orbital data unavailable
+
+- **api.ts** - Vite environment types
+  - Created `vite-env.d.ts` with `ImportMeta` interface
+  - Declared `VITE_API_URL` type for `import.meta.env`
+  - Added to `tsconfig.json` include array
+
+- **nasaDataLoader.ts** - Explicit typing in sort functions
+  - Fixed implicit 'any' type errors
+  - Added `ProcessedAsteroid` types to lambda parameters
+
+- **OrbitalTrajectories3D.tsx** - Null safety for orbital elements
+  - Added null checks before accessing `asteroid.elements`
+  - Return empty array/default position when undefined
+
+- **MitigationPanel.tsx** - Function signature mismatch
+  - Fixed `simulateDeflection` call from object to positional parameters
+  - Changed from `{...}` to `(diameter, density, warningTime, missDistance, method)`
+
+- **DefendEarthGame.tsx** - Function signature mismatch
+  - Same fix as MitigationPanel for consistency
+
+### Impact
+These TypeScript errors were causing:
+- ❌ **Blank/white screens** when launching scenarios (CRITICAL)
+- ❌ Runtime crashes when accessing undefined properties
+- ❌ Type mismatches preventing proper API calls
+
+✅ All scenarios now work correctly without blank screens
 
 ---
 
