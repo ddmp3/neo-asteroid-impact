@@ -62,20 +62,62 @@ export default function AsteroidSelector({
     });
   };
 
+  // Format timestamp for Last Updated display
+  const formatTimestamp = (timestamp?: string) => {
+    if (!timestamp) return null;
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const dataSource = asteroids.length > 0 ? asteroids[0]?.source : null;
+  const lastUpdated = asteroids.length > 0 ? asteroids[0]?.lastUpdated : null;
+
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold text-cyan-300">
-          🌌 200 Closest Asteroids (NASA Data)
-        </h3>
-        {selectedAsteroid && (
-          <button
-            onClick={() => onSelectAsteroid(null)}
-            className="text-xs px-3 py-1 bg-red-500/20 border border-red-500/40 rounded text-red-300 hover:bg-red-500/30"
-          >
-            ✕ Clear
-          </button>
+      {/* Header with Last Updated */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-bold text-cyan-300">
+            🌌 200 Closest Asteroids (NASA Data)
+          </h3>
+          {selectedAsteroid && (
+            <button
+              onClick={() => onSelectAsteroid(null)}
+              className="text-xs px-3 py-1 bg-red-500/20 border border-red-500/40 rounded text-red-300 hover:bg-red-500/30"
+            >
+              ✕ Clear
+            </button>
+          )}
+        </div>
+
+        {/* Data Source & Last Updated Badge */}
+        {(dataSource || lastUpdated) && (
+          <div className="flex items-center gap-2 text-xs">
+            {dataSource && (
+              <span className={`px-2 py-1 rounded ${
+                dataSource === 'JPL SBDB CAD API'
+                  ? 'bg-green-500/20 border border-green-500/40 text-green-300'
+                  : 'bg-gray-500/20 border border-gray-500/40 text-gray-300'
+              }`}>
+                {dataSource === 'JPL SBDB CAD API' ? '🌐 Real-time' : '📁 Static'}: {dataSource}
+              </span>
+            )}
+            {lastUpdated && (
+              <span className="px-2 py-1 rounded bg-blue-500/20 border border-blue-500/40 text-blue-300">
+                🕒 Updated {formatTimestamp(lastUpdated)}
+              </span>
+            )}
+          </div>
         )}
       </div>
 

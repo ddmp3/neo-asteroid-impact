@@ -28,6 +28,25 @@ export interface SimulationResult {
     tntTons: number;
     megatons: number;
   };
+  fragmentation?: {
+    willFragment: boolean;
+    impactType: 'ground' | 'low_airburst_with_impact' | 'airburst' | 'high_altitude_airburst';
+    altitude: number;
+    energyDepositionAltitude: number;
+    craterFormed: boolean;
+    reachesGround: boolean;
+    note: string;
+    strength: number;
+    ramPressure: number;
+    details: {
+      fragmentationCriterion: string;
+      strengthMPa: number;
+      ramPressureMPa: number;
+      fragmentationRatio: number;
+      model: string;
+    };
+    model: string;
+  };
   crater: {
     diameter: number;
     depth: number;

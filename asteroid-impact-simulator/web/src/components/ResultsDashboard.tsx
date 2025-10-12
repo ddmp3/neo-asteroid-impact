@@ -5,7 +5,48 @@ export default function ResultsDashboard() {
 
   if (!simulationResult || !zoneAnalysis) return null;
 
-  const { asteroidProperties, energy, crater, seismic, blast, tsunami, casualties } = simulationResult;
+  const { asteroidProperties, energy, crater, seismic, blast, tsunami, casualties, fragmentation } = simulationResult;
+
+  // Helper function to get impact type badge info
+  const getImpactTypeBadge = (impactType: string) => {
+    switch (impactType) {
+      case 'ground':
+        return {
+          icon: '🎯',
+          label: 'Ground Impact',
+          color: 'bg-red-500/20 border-red-500/50 text-red-300',
+          description: 'Direct surface impact with full crater formation'
+        };
+      case 'low_airburst_with_impact':
+        return {
+          icon: '💥',
+          label: 'Low Airburst + Impact',
+          color: 'bg-orange-500/20 border-orange-500/50 text-orange-300',
+          description: 'Partial fragmentation with ground impact and crater'
+        };
+      case 'airburst':
+        return {
+          icon: '☄️',
+          label: 'Airburst',
+          color: 'bg-yellow-500/20 border-yellow-500/50 text-yellow-300',
+          description: 'Mid-altitude explosion without ground impact'
+        };
+      case 'high_altitude_airburst':
+        return {
+          icon: '✨',
+          label: 'High-Altitude Airburst',
+          color: 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300',
+          description: 'Complete atmospheric breakup at high altitude'
+        };
+      default:
+        return {
+          icon: '❓',
+          label: 'Unknown',
+          color: 'bg-gray-500/20 border-gray-500/50 text-gray-300',
+          description: 'Impact type not determined'
+        };
+    }
+  };
 
   return (
     <div className="space-y-6" role="region" aria-label="Simulation results dashboard">
@@ -36,6 +77,66 @@ export default function ResultsDashboard() {
           />
         </div>
       </div>
+
+      {/* Fragmentation Analysis (v1.6.10+) */}
+      {fragmentation && (
+        <div className="card" role="region" aria-labelledby="fragmentation-heading">
+          <h2 id="fragmentation-heading" className="text-2xl font-bold mb-6 flex items-center gap-2">
+            <span aria-hidden="true">🌠</span> Atmospheric Fragmentation Analysis
+            <span className="text-xs font-normal text-white/50 ml-2">(Hills-Goda 1993)</span>
+          </h2>
+
+          {/* Impact Type Badge */}
+          <div className="mb-6">
+            {(() => {
+              const badge = getImpactTypeBadge(fragmentation.impactType);
+              return (
+                <div className={`inline-flex items-center gap-3 px-5 py-3 rounded-lg border-2 ${badge.color}`}>
+                  <span className="text-3xl" aria-hidden="true">{badge.icon}</span>
+                  <div>
+                    <div className="font-bold text-lg">{badge.label}</div>
+                    <div className="text-sm opacity-80">{badge.description}</div>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Fragmentation Details */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            {fragmentation.willFragment && (
+              <StatCard
+                label="Fragmentation Altitude"
+                value={`${(fragmentation.altitude / 1000).toFixed(1)} km`}
+                subtitle={`${fragmentation.altitude.toFixed(0)}m above ground`}
+                color="text-cyan-400"
+              />
+            )}
+            <StatCard
+              label="Material Strength"
+              value={`${fragmentation.details.strengthMPa.toFixed(1)} MPa`}
+              subtitle={`Ram pressure: ${fragmentation.details.ramPressureMPa.toFixed(1)} MPa`}
+              color="text-purple-400"
+            />
+            <StatCard
+              label="Crater Formation"
+              value={fragmentation.craterFormed ? 'YES' : 'NO'}
+              subtitle={fragmentation.reachesGround ? 'Reaches ground' : 'Airburst only'}
+              color={fragmentation.craterFormed ? 'text-red-400' : 'text-green-400'}
+            />
+          </div>
+
+          {/* Scientific Note */}
+          <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+            <div className="text-sm text-blue-200">
+              <span className="font-semibold">📖 Scientific Note:</span> {fragmentation.note}
+            </div>
+            <div className="text-xs text-white/50 mt-2">
+              Model: {fragmentation.model} | Criterion: {fragmentation.details.fragmentationCriterion}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Human Casualties */}
       <div className={`card ${casualties.severity === 'Extinction-Level Event' || casualties.severity === 'Mass Casualty Event' || casualties.severity === 'Catastrophic' ? 'glow-red border-2 border-red-500/50' : ''}`} role="region" aria-labelledby="casualties-heading" aria-live="polite">

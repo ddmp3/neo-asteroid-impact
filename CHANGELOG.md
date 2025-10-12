@@ -16,7 +16,79 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - Development Branch
 
-### Current Development Version: v1.6.13 - Phase 1 Bugfix Release
+### Current Development Version: v1.6.14 - UI Enhancements for Impact Analysis
+
+---
+
+## [1.6.14] - 2025-10-12 (**UI ENHANCEMENTS - IMPACT TYPE & NEO DATA INDICATORS**)
+
+### Added
+- **Impact Type Badges** (Results Dashboard)
+  - Visual badges for 4 impact types with color coding:
+    - 🎯 Ground Impact (red) - Direct surface impact with full crater formation
+    - 💥 Low Airburst + Impact (orange) - Partial fragmentation with ground impact
+    - ☄️ Airburst (yellow) - Mid-altitude explosion without ground impact
+    - ✨ High-Altitude Airburst (cyan) - Complete atmospheric breakup
+  - Each badge shows icon, label, and scientific description
+  - File: web/src/components/ResultsDashboard.tsx lines 10-49
+
+- **Fragmentation Analysis Section** (Results Dashboard)
+  - New dedicated section showing Hills-Goda (1993) fragmentation analysis
+  - Displays fragmentation altitude in km and meters
+  - Shows material strength (MPa) vs ram pressure (MPa)
+  - Crater formation indicator (YES/NO with ground reach status)
+  - Scientific note with model details and criterion
+  - File: web/src/components/ResultsDashboard.tsx lines 81-139
+
+- **Real-Time NEO Data Indicators** (Asteroid Selector)
+  - "Last Updated" timestamp badge with relative time formatting:
+    - Just now / Xm ago / Xh ago / Xd ago / Full date
+  - Data source badge showing:
+    - 🌐 Real-time: JPL SBDB CAD API (green)
+    - 📁 Static: asteroids.json (gray)
+  - File: web/src/components/AsteroidSelector.tsx lines 65-122
+
+### Changed
+- **SimulationResult Type Extended** (TypeScript)
+  - Added `fragmentation` field to `SimulationResult` interface
+  - Includes all Hills-Goda model data: altitude, strength, ram pressure, impact type
+  - File: web/src/types/index.ts lines 31-49
+
+### UI/UX Improvements
+- **Color-Coded Impact Types**: Visual hierarchy helps users quickly understand impact severity
+- **Relative Timestamps**: "5h ago" is more intuitive than "2025-10-12T02:51:51.396Z"
+- **Scientific Transparency**: Users see the model (Hills-Goda 1993) and criterion used
+- **Data Source Visibility**: Clear indication whether data is real-time or static
+
+### Technical Details
+**Impact Type Badge Logic:**
+```typescript
+const getImpactTypeBadge = (impactType: string) => {
+  switch (impactType) {
+    case 'ground': return { icon: '🎯', color: 'red', ... };
+    case 'low_airburst_with_impact': return { icon: '💥', color: 'orange', ... };
+    case 'airburst': return { icon: '☄️', color: 'yellow', ... };
+    case 'high_altitude_airburst': return { icon: '✨', color: 'cyan', ... };
+  }
+};
+```
+
+**Timestamp Formatting:**
+```typescript
+const formatTimestamp = (timestamp?: string) => {
+  const diffMins = Math.floor((now - date) / 60000);
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  // ...
+};
+```
+
+### Impact
+- **User Experience**: More informative and visually appealing results dashboard
+- **Scientific Accuracy**: Clear display of fragmentation physics (Hills-Goda 1993)
+- **Data Transparency**: Users know when NEO data was last refreshed
+- **Educational Value**: Impact type badges help users understand different outcomes
 
 ---
 

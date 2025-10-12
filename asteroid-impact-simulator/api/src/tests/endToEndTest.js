@@ -6,7 +6,7 @@
 
 const axios = require('axios');
 
-const API_URL = process.env.API_URL || 'http://localhost:7071';
+const API_URL = process.env.API_URL || 'https://ca-api-ckq6mn38.victoriousglacier-63962c13.canadacentral.azurecontainerapps.io';
 
 console.log('🧪 END-TO-END INTEGRATION TEST');
 console.log('='.repeat(80));
