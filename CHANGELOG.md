@@ -16,11 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - Development Branch
 
-### Current Development Version: v1.6.14 - UI Enhancements for Impact Analysis
+### Current Development Version: v1.6.14 - UI Enhancements & CORS Fix
 
 ---
 
-## [1.6.14] - 2025-10-12 (**UI ENHANCEMENTS - IMPACT TYPE & NEO DATA INDICATORS**)
+## [1.6.14] - 2025-10-12 (**UI ENHANCEMENTS & CORS FIX**)
 
 ### Added
 - **Impact Type Badges** (Results Dashboard)
@@ -84,11 +84,20 @@ const formatTimestamp = (timestamp?: string) => {
 };
 ```
 
+### Fixed
+- **CORS Network Error** (Critical Bug)
+  - Added missing frontend origin to CORS allowlist: `https://jolly-tree-0b50d3d0f-preview.eastus2.1.azurestaticapps.net`
+  - Azure logs showed: `blocked origin: https://jolly-tree-0b50d3d0f-preview.eastus2.1.azurestaticapps.net`
+  - Frontend was unable to communicate with API due to CORS policy
+  - File: `api/src/index.js` line 45
+  - Deployed: Azure Container Apps revision `ca-api-ckq6mn38--0000017`
+
 ### Impact
 - **User Experience**: More informative and visually appealing results dashboard
 - **Scientific Accuracy**: Clear display of fragmentation physics (Hills-Goda 1993)
 - **Data Transparency**: Users know when NEO data was last refreshed
 - **Educational Value**: Impact type badges help users understand different outcomes
+- **Critical Fix**: Frontend on Azure can now successfully communicate with API
 
 ---
 
