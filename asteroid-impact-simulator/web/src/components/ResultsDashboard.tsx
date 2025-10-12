@@ -131,10 +131,11 @@ export default function ResultsDashboard() {
           {/* Scientific Note */}
           <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
             <div className="text-sm text-blue-200">
-              <span className="font-semibold">📖 Scientific Note:</span> {fragmentation.note}
+              <span className="font-semibold">📖 Scientific Note:</span> {fragmentation.note || 'N/A'}
             </div>
             <div className="text-xs text-white/50 mt-2">
-              Model: {fragmentation.model} | Criterion: {fragmentation.details.fragmentationCriterion}
+              Model: {fragmentation.model || 'N/A'}
+              {fragmentation.details?.fragmentationCriterion && ` | Criterion: ${fragmentation.details.fragmentationCriterion}`}
             </div>
           </div>
         </div>
