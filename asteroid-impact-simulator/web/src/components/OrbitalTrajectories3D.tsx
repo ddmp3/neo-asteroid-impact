@@ -24,6 +24,12 @@ function calculateOrbitalPosition(
   elements: OrbitalElements,
   julianDate: number
 ): { x: number; y: number; z: number } {
+  // Validate elements first (v1.6.18)
+  if (!isValidOrbitalElements(elements)) {
+    console.warn('Invalid orbital elements in calculateOrbitalPosition', elements);
+    return { x: 0, y: 0, z: 0 };
+  }
+
   const { a, e, i, Omega, omega, M0, n, epoch } = elements;
 
   // Time since epoch (seconds)
@@ -64,13 +70,44 @@ function calculateOrbitalPosition(
 
   const z = sinomega * sini * x_orb + cosomega * sini * y_orb;
 
+  // Validate result (v1.6.18)
+  if (!isFinite(x) || !isFinite(y) || !isFinite(z)) {
+    console.warn('Invalid position calculated:', { x, y, z });
+    return { x: 0, y: 0, z: 0 };
+  }
+
   return { x, y, z };
+}
+
+/**
+ * Validate orbital elements have valid numeric values
+ */
+function isValidOrbitalElements(elements: OrbitalElements): boolean {
+  const { a, e, i, Omega, omega, M0, n, epoch } = elements;
+
+  // Check all required fields exist and are finite numbers
+  return (
+    typeof a === 'number' && isFinite(a) && a > 0 &&
+    typeof e === 'number' && isFinite(e) && e >= 0 && e < 1 &&
+    typeof i === 'number' && isFinite(i) &&
+    typeof Omega === 'number' && isFinite(Omega) &&
+    typeof omega === 'number' && isFinite(omega) &&
+    typeof M0 === 'number' && isFinite(M0) &&
+    typeof n === 'number' && isFinite(n) &&
+    typeof epoch === 'number' && isFinite(epoch)
+  );
 }
 
 /**
  * Generate orbit line points
  */
 function generateOrbitPoints(elements: OrbitalElements, segments: number = 100): THREE.Vector3[] {
+  // Validate elements before generating points (v1.6.18)
+  if (!isValidOrbitalElements(elements)) {
+    console.warn('Invalid orbital elements detected, skipping orbit generation', elements);
+    return [];
+  }
+
   const points: THREE.Vector3[] = [];
   const { a, e, i, Omega, omega, M0 } = elements;
 
@@ -100,6 +137,12 @@ function generateOrbitPoints(elements: OrbitalElements, segments: number = 100):
       (-sinOmega * sinomega + cosOmega * cosomega * cosi) * y_orb;
 
     const z = sinomega * sini * x_orb + cosomega * sini * y_orb;
+
+    // Validate calculated position (v1.6.18)
+    if (!isFinite(x) || !isFinite(y) || !isFinite(z)) {
+      console.warn(`Invalid orbit point at segment ${i_seg}:`, { x, y, z });
+      continue; // Skip this point
+    }
 
     // Convert to Three.js coordinates (Y-up, scaled)
     points.push(new THREE.Vector3(x * SCALE, z * SCALE, -y * SCALE));
@@ -131,6 +174,11 @@ function OrbitLine({
 
   const opacity = isSelected ? 0.9 : 0.3;
   const lineWidth = isSelected ? 3 : 1;
+
+  // Don't render if points array is empty or too small (v1.6.18 - fix RangeError)
+  if (!points || points.length < 2) {
+    return null;
+  }
 
   return (
     <DreiLine

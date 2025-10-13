@@ -393,7 +393,7 @@ export default function Simulation3D() {
         <p className="text-xs text-purple-200">
           ✨ Enhanced with high-precision orbital mechanics and professional time controls from{' '}
           <a
-            href="https://github.com/TawbeBaker/Cyber-and-Space/tree/main/Hackathon"
+            href="https://github.com/TawbeBaker/Cyber-and-Space/tree/main/luis_code_reference"
             target="_blank"
             rel="noopener noreferrer"
             className="underline hover:text-purple-100"

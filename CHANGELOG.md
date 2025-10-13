@@ -16,7 +16,99 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - Development Branch
 
-### Current Development Version: v1.6.15 - TypeScript Critical Fixes
+### Current Development Version: v1.6.20 - Fix Luis Repo Link
+
+---
+
+## [1.6.20] - 2025-10-12 (**FIX: Corrected Luis's repository link in Simulation 3D**)
+
+### Fixed
+- **Simulation3D.tsx** - Updated GitHub repository link for Luis's Asteroid Visualizer
+  - Changed from: `https://github.com/TawbeBaker/Cyber-and-Space/tree/main/Hackathon`
+  - Changed to: `https://github.com/TawbeBaker/Cyber-and-Space/tree/main/luis_code_reference`
+  - File: web/src/components/Simulation3D.tsx line 396
+
+### Impact
+✅ **Correct attribution** - Link now points to the correct luis_code_reference folder
+
+---
+
+## [1.6.19] - 2025-10-12 (**FIX: modifiedDiameter/modifiedDepth undefined in scenarios**)
+
+### Fixed
+- **ResultsDashboard.tsx** - TypeError: can't access property "toFixed", modifiedDiameter is undefined
+  - Added nullish coalescing for `crater.modifiedDiameter ?? crater.diameter`
+  - Added nullish coalescing for `crater.modifiedDepth ?? crater.depth`
+  - Fallback to original crater dimensions when modified values unavailable
+  - File: web/src/components/ResultsDashboard.tsx lines 229-236
+
+### Root Cause
+- Scenarios (Chelyabinsk, Tunguska, etc.) crashed when displaying crater data
+- API returns `crater.diameter` and `crater.depth` but not always `modifiedDiameter`/`modifiedDepth`
+- Code assumed modified values always exist, causing undefined access
+
+### Impact
+✅ **All scenarios now display crater data correctly**
+✅ **Graceful fallback** to original crater dimensions when modifications unavailable
+
+---
+
+## [1.6.18] - 2025-10-12 (**FIX: RangeError in Orbital View 3D**)
+
+### Fixed
+- **OrbitalTrajectories3D.tsx** - RangeError: invalid array length in LineGeometry
+  - Added `isValidOrbitalElements()` validation function
+  - Validates all orbital element fields are finite numbers (a > 0, 0 ≤ e < 1)
+  - `generateOrbitPoints()` now validates elements before generating orbit paths
+  - Skip invalid orbit points with NaN/Infinity coordinates
+  - `OrbitLine` component now checks points array length before rendering
+  - Return null when points array has < 2 points (prevents Line component crash)
+  - `calculateOrbitalPosition()` validates elements and returns (0,0,0) if invalid
+  - File: web/src/components/OrbitalTrajectories3D.tsx
+
+### Root Cause
+- Firefox threw `RangeError: invalid array length` at LineGeometry.js:10
+- Some asteroids had malformed orbital elements (NaN, undefined, or e ≥ 1)
+- Line component from @react-three/drei cannot render with empty or invalid arrays
+- Error occurred in "Simulateur 3D" tab when selecting "Orbital View"
+
+### Impact
+✅ **Orbital View now stable** - no more crashes when viewing 3D asteroid orbits
+✅ **Console warnings** for invalid orbital data help identify problematic asteroids
+✅ **Graceful degradation** - invalid asteroids simply don't show orbit lines
+
+---
+
+## [1.6.17] - 2025-10-12 (**FIX: Complete Null Safety for Fragmentation**)
+
+### Fixed
+- **ResultsDashboard.tsx** - Nested property access without null checks
+  - Added optional chaining for `fragmentation.details?.fragmentationCriterion`
+  - Added nullish coalescing for `fragmentation.note || 'N/A'`
+  - Added nullish coalescing for `fragmentation.model || 'N/A'`
+  - Fixed line 137-138 crashes when fragmentation data incomplete
+
+### Root Cause
+- Scenarios with location (Chelyabinsk, Tunguska, Apophis, Bennu, City Killer) crashed
+- Backend returned fragmentation object but `details`, `note`, or `model` could be undefined
+- Accessing nested properties without checks caused "Cannot read property of undefined"
+
+### Impact
+✅ **All scenarios now work** including Chelyabinsk, Tunguska, Apophis, Bennu, Chicxulub, City Killer
+
+---
+
+## [1.6.16] - 2025-10-12 (**FIX: Fragmentation Details Null Check**)
+
+### Fixed
+- **ResultsDashboard.tsx** - Cannot read property 'details' of undefined
+  - Added conditional rendering `{fragmentation.details && (...)}`
+  - Line 115 now checks if fragmentation.details exists before accessing
+
+### Root Cause
+- Chelyabinsk scenario crashed with blank screen
+- Backend sometimes returns fragmentation without details object
+- Accessing `fragmentation.details.strengthMPa` without check caused runtime error
 
 ---
 
