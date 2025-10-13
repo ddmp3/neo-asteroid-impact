@@ -39,9 +39,8 @@ const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:3001',
     'http://localhost:5173',
-    'https://lively-water-02a3d060f.1.azurestaticapps.net',
-    'https://lively-water-02a3d060f-preview.eastus2.1.azurestaticapps.net',
-    'https://jolly-tree-0b50d3d0f.1.azurestaticapps.net',
+    'https://neo.lueger.fr',  // ✅ Custom domain (production)
+    'https://jolly-tree-0b50d3d0f.1.azurestaticapps.net',  // ✅ Azure fallback
     'https://jolly-tree-0b50d3d0f-preview.eastus2.1.azurestaticapps.net'
 ];
 
