@@ -1,6 +1,6 @@
 # 🚀 Asteroid Impact Simulator - DEVELOPMENT
 
-⚠️ **This is the DEVELOPMENT environment** - Production is at [meteormadness.earth](https://meteormadness.earth)
+⚠️ **This is the DEVELOPMENT environment** - Production is at [neo.lueger.fr](https://neo.lueger.fr)
 
 ## 🌐 Development URLs
 
@@ -40,14 +40,14 @@ npx @azure/static-web-apps-cli deploy --deployment-token $(cd ../../terraform &&
 ```bash
 cd asteroid-impact-simulator/api
 npm install
-npm run dev  # Runs on http://localhost:7071
+npm run dev  # Runs on https://api.neo.lueger.fr
 ```
 
 ### Frontend
 ```bash
 cd asteroid-impact-simulator/web
 npm install
-npm run dev  # Runs on http://localhost:5173
+npm run dev  # Runs on https://neo.lueger.fr
 ```
 
 ## 🔐 Environment Variables
@@ -70,13 +70,13 @@ See [DEV_URLS.md](DEV_URLS.md) for complete URL reference.
 
 ## ⚠️ Important Notes
 
-- **DO NOT** use production URLs (meteormadness.earth) in dev code
+- **DO NOT** use production URLs (neo.lueger.fr) in dev code
 - **DO NOT** push to production Azure subscription
 - All changes go to GitHub branch `dev` on `ddmp3/meteormadness`
 
 ## 🔗 Related
 
-- **Production**: https://meteormadness.earth
+- **Production**: https://neo.lueger.fr
 - **Prod GitHub**: https://github.com/TawbeBaker/Cyber-and-Space
 - **Dev GitHub**: https://github.com/ddmp3/meteormadness
 

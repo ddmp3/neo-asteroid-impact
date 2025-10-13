@@ -207,8 +207,8 @@ done
 ## 7. CORS Validation ✅
 
 **Allowed Origins**:
-- `http://localhost:3000`
-- `http://localhost:5173`
+- `https://neo.lueger.fr`
+- `https://neo.lueger.fr`
 - `https://meteormadness.earth`
 - `https://www.meteormadness.earth`
 - `https://kind-plant-00c23d60f.1.azurestaticapps.net`

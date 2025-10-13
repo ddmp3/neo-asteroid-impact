@@ -7,8 +7,8 @@
 ![License](https://img.shields.io/badge/license-MIT%20Educational-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/status-Live-success?style=for-the-badge)
 
-**🌍 Live Demo**: [meteormadness.earth](https://meteormadness.earth)
-**🚀 Interactive API**: [Swagger UI](https://ca-api-92nppgw4.kinddesert-44c62b55.canadacentral.azurecontainerapps.io/api-docs) ⭐ **NEW!**
+**🌍 Live Demo**: [neo.lueger.fr](https://neo.lueger.fr)
+**🚀 Interactive API**: [Swagger UI](https://api.neo.lueger.fr/api-docs) ⭐ **NEW!**
 **📚 API Guide**: [Usage Documentation](./docs/API_USAGE.md)
 **🔬 Scientific Docs**: [Physics & Formulas](./docs/SCIENTIFIC_DOCUMENTATION.md)
 
@@ -143,7 +143,7 @@ GET /api/neo/potentially-hazardous
 GET /api/neo/close-approaches?dist_max=0.05
 ```
 
-**Live API Base URL**: `https://ca-api-92nppgw4.kinddesert-44c62b55.canadacentral.azurecontainerapps.io`
+**Live API Base URL**: `https://api.neo.lueger.fr`
 
 See [API Usage Guide](./docs/API_USAGE.md) for full documentation.
 
@@ -219,7 +219,7 @@ Compared against:
 
 ### Production (Live)
 
-Visit: **[https://meteormadness.earth](https://meteormadness.earth)**
+Visit: **[https://neo.lueger.fr](https://neo.lueger.fr)**
 
 ### Local Development
 
@@ -232,7 +232,7 @@ Visit: **[https://meteormadness.earth](https://meteormadness.earth)**
 cd asteroid-impact-simulator/api
 npm install
 npm start
-# → http://localhost:7071
+# → https://api.neo.lueger.fr
 ```
 
 **Frontend**:
@@ -240,7 +240,7 @@ npm start
 cd asteroid-impact-simulator/web
 npm install
 npm run dev
-# → http://localhost:5173
+# → https://neo.lueger.fr
 ```
 
 **Environment Variables** (optional):
@@ -253,7 +253,7 @@ NASA_API_KEY=your_key_here  # Optional (uses DEMO_KEY by default)
 
 **Frontend** (`web/.env`):
 ```bash
-VITE_API_URL=http://localhost:7071
+VITE_API_URL=https://api.neo.lueger.fr
 ```
 
 ---
@@ -262,24 +262,24 @@ VITE_API_URL=http://localhost:7071
 
 ### Public Educational API
 
-**🌐 Interactive Documentation**: [**Open Swagger UI**](https://ca-api-92nppgw4.kinddesert-44c62b55.canadacentral.azurecontainerapps.io/api-docs) ⭐
+**🌐 Interactive Documentation**: [**Open Swagger UI**](https://api.neo.lueger.fr/api-docs) ⭐
 
-**Base URL**: `https://ca-api-92nppgw4.kinddesert-44c62b55.canadacentral.azurecontainerapps.io`
+**Base URL**: `https://api.neo.lueger.fr`
 
 **Rate Limit**: 100 requests / 15 minutes (per IP)
 
 **No Authentication Required** (educational use)
 
 **Quick Access**:
-- 🏠 [API Landing Page](https://ca-api-92nppgw4.kinddesert-44c62b55.canadacentral.azurecontainerapps.io/) - Beautiful NASA-branded welcome page
-- 📖 [Interactive Swagger UI](https://ca-api-92nppgw4.kinddesert-44c62b55.canadacentral.azurecontainerapps.io/api-docs) - Try all endpoints live
-- 💚 [Health Check](https://ca-api-92nppgw4.kinddesert-44c62b55.canadacentral.azurecontainerapps.io/api/health) - API status
+- 🏠 [API Landing Page](https://api.neo.lueger.fr/) - Beautiful NASA-branded welcome page
+- 📖 [Interactive Swagger UI](https://api.neo.lueger.fr/api-docs) - Try all endpoints live
+- 💚 [Health Check](https://api.neo.lueger.fr/api/health) - API status
 
 ### Quick Example
 
 ```bash
 # Simulate 100m asteroid hitting Paris at 20 km/s
-curl -X POST https://ca-api-92nppgw4.kinddesert-44c62b55.canadacentral.azurecontainerapps.io/api/simulate/impact \
+curl -X POST https://api.neo.lueger.fr/api/simulate/impact \
   -H "Content-Type: application/json" \
   -d '{
     "diameter": 100,
@@ -302,7 +302,7 @@ curl -X POST https://ca-api-92nppgw4.kinddesert-44c62b55.canadacentral.azurecont
 
 ### Documentation
 
-- **🚀 Interactive Swagger UI**: [Live API Docs](https://ca-api-92nppgw4.kinddesert-44c62b55.canadacentral.azurecontainerapps.io/api-docs) - **Try it now!**
+- **🚀 Interactive Swagger UI**: [Live API Docs](https://api.neo.lueger.fr/api-docs) - **Try it now!**
 - **📚 Full API Guide**: [docs/API_USAGE.md](./docs/API_USAGE.md) - Complete usage examples
 - **📄 OpenAPI Spec**: [swagger.yaml](./asteroid-impact-simulator/api/swagger.yaml) - OpenAPI 3.0.3 specification
 - **🔬 Scientific Details**: [docs/SCIENTIFIC_DOCUMENTATION.md](./docs/SCIENTIFIC_DOCUMENTATION.md) - Physics & formulas
@@ -313,7 +313,7 @@ curl -X POST https://ca-api-92nppgw4.kinddesert-44c62b55.canadacentral.azurecont
 ```javascript
 const axios = require('axios');
 
-const result = await axios.post('https://ca-api-92nppgw4.kinddesert-44c62b55.canadacentral.azurecontainerapps.io/api/simulate/impact', {
+const result = await axios.post('https://api.neo.lueger.fr/api/simulate/impact', {
   diameter: 140,
   velocity: 20,
   impactLocation: { lat: 40.7128, lon: -74.0060 } // NYC
@@ -326,7 +326,7 @@ console.log(`Energy: ${result.data.simulation.impactEnergy.megatonsTNT} MT`);
 ```python
 import requests
 
-response = requests.post('https://ca-api-92nppgw4.kinddesert-44c62b55.canadacentral.azurecontainerapps.io/api/simulate/impact', json={
+response = requests.post('https://api.neo.lueger.fr/api/simulate/impact', json={
     'diameter': 140,
     'velocity': 20,
     'impactLocation': {'lat': 35.6762, 'lon': 139.6503}  # Tokyo
@@ -381,7 +381,7 @@ asteroid-impact-simulator/
 ├── docs/                         # Documentation
 │   ├── API_USAGE.md             # Public API guide
 │   ├── SCIENTIFIC_DOCUMENTATION.md  # Physics & formulas
-│   └── DNS_CONFIGURATION_meteormadness.earth.md
+│   └── DNS_CONFIGURATION_neo.lueger.fr.md
 │
 └── LICENSE                       # MIT (Educational Use)
 ```
@@ -404,7 +404,7 @@ asteroid-impact-simulator/
 - **Frontend**: Azure Static Web Apps
 - **Backend API**: Azure Container Apps
 - **Infrastructure**: Terraform
-- **Custom Domain**: meteormadness.earth
+- **Custom Domain**: neo.lueger.fr
 
 ---
 
@@ -412,9 +412,9 @@ asteroid-impact-simulator/
 
 ### Production URLs
 
-- **Frontend**: https://meteormadness.earth
-- **Frontend (www)**: https://www.meteormadness.earth
-- **API**: https://ca-api-92nppgw4.kinddesert-44c62b55.canadacentral.azurecontainerapps.io
+- **Frontend**: https://neo.lueger.fr
+- **Frontend (www)**: https://www.neo.lueger.fr
+- **API**: https://api.neo.lueger.fr
 
 ### Azure Resources
 
@@ -556,7 +556,7 @@ See [LICENSE](./LICENSE) for full terms.
 Asteroid Impact Simulator - Meteor Madness
 NASA Space Apps Challenge 2025
 Data sources: NASA/JPL-Caltech, USGS
-https://meteormadness.earth
+https://neo.lueger.fr
 ```
 
 ### Educational Disclaimer
@@ -600,7 +600,7 @@ For real planetary defense:
 
 ## 📞 Contact & Support
 
-- **Live Demo**: https://meteormadness.earth
+- **Live Demo**: https://neo.lueger.fr
 - **GitHub**: https://github.com/TawbeBaker/Cyber-and-Space
 - **Issues**: https://github.com/TawbeBaker/Cyber-and-Space/issues
 - **API Docs**: [docs/API_USAGE.md](./docs/API_USAGE.md)
@@ -628,7 +628,7 @@ If you find this project useful for education, please ⭐ star the repo!
 
 [![NASA](https://img.shields.io/badge/Data-NASA%2FJPL-0B3D91?style=flat-square&logo=nasa)](https://api.nasa.gov/)
 [![USGS](https://img.shields.io/badge/Data-USGS-006634?style=flat-square)](https://www.usgs.gov/)
-[![Live](https://img.shields.io/badge/Demo-Live-success?style=flat-square)](https://meteormadness.earth)
+[![Live](https://img.shields.io/badge/Demo-Live-success?style=flat-square)](https://neo.lueger.fr)
 [![License](https://img.shields.io/badge/License-MIT%20Educational-green?style=flat-square)](./LICENSE)
 
 **Version 1.5.0** | October 2025

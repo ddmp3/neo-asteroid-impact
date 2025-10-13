@@ -6,5 +6,5 @@
 
 ## 🔧 Configuration Spécifique
 
-- **[DNS Configuration](DNS_CONFIGURATION_meteormadness.earth.md)** - Setup meteormadness.earth
+- **[DNS Configuration](DNS_CONFIGURATION_neo.lueger.fr.md)** - Setup neo.lueger.fr
 - **[Terraform](../terraform/README.md)** - Infrastructure Azure
