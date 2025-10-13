@@ -1,0 +1,128 @@
+📊 OUR SIMULATOR RESULTS (v1.6.29)
+
+========================================================================================================================
+
+[1] Small Iron Airburst (Chelyabinsk-class)
+    Location: Chelyabinsk, Russia
+    Input: D=20m, V=19km/s, θ=18°, ρ=3300kg/m³, rocky
+    Energy: 0.80 MT
+    Type: high_altitude_airburst
+    Crater: D=0.00km, depth=0.00km
+    Blast Zones: Fireball 0.1km, Thermal 3.4km, Airblast 7.8km
+    Seismic: M4.5
+    Casualties: 2,308,553 (1 cities affected)
+
+ERREUR: Item invalide
+
+[2] Medium Rocky Airburst (Tunguska-class)
+    Location: Tunguska, Russia
+    Input: D=65m, V=17km/s, θ=45°, ρ=3000kg/m³, rocky
+    Energy: 21.35 MT
+    Type: airburst
+    Crater: D=0.00km, depth=0.00km
+    Blast Zones: Fireball 0.2km, Thermal 14.9km, Airblast 26.4km
+    Seismic: M5.4
+    Casualties: 0 (0 cities affected)
+
+ERREUR: Item invalide
+
+[3] Small Iron Ground Impact (Barringer-class)
+    Location: Barringer Crater, Arizona
+    Input: D=50m, V=12.8km/s, θ=80°, ρ=7800kg/m³, iron
+    Energy: 17.63 MT
+    Type: low_airburst_with_impact
+    Crater: D=NaNkm, depth=NaNkm
+    Blast Zones: Fireball 0.2km, Thermal 17.2km, Airblast 30.9km
+    Seismic: M5.4
+    Casualties: 0 (0 cities affected)
+
+ERREUR: Item invalide
+
+[4] Medium Rocky Ground Impact (City Threat)
+    Location: New York City, USA
+    Input: D=100m, V=20km/s, θ=45°, ρ=3000kg/m³, rocky
+    Energy: 98.57 MT
+    Type: low_airburst_with_impact
+    Crater: D=NaNkm, depth=NaNkm
+    Blast Zones: Fireball 0.4km, Thermal 34.8km, Airblast 54.6km
+    Seismic: M5.9
+    Casualties: 68,928,542 (50 cities affected)
+
+ERREUR: Item invalide
+
+[5] Large Rocky Ground Impact (Regional Devastation)
+    Location: London, UK
+    Input: D=300m, V=20km/s, θ=45°, ρ=3000kg/m³, rocky
+    Energy: 2661.49 MT
+    Type: low_airburst_with_impact
+    Crater: D=NaNkm, depth=NaNkm
+    Blast Zones: Fireball 1.1km, Thermal 134.5km, Airblast 162.0km
+    Seismic: M6.8
+    Casualties: 72,450,275 (50 cities affected)
+
+ERREUR: Item invalide
+
+[6] Very Oblique Rocky Airburst
+    Location: Tokyo, Japan
+    Input: D=50m, V=18km/s, θ=15°, ρ=3000kg/m³, rocky
+    Energy: 10.54 MT
+    Type: airburst
+    Crater: D=0.00km, depth=0.00km
+    Blast Zones: Fireball 0.2km, Thermal 16.7km, Airblast 31.3km
+    Seismic: M5.2
+    Casualties: 53,449,625 (50 cities affected)
+
+ERREUR: Item invalide
+
+[7] Fast Comet/Icy Impact
+    Location: Sydney, Australia
+    Input: D=200m, V=51km/s, θ=45°, ρ=1000kg/m³, icy
+    Energy: 1364.62 MT
+    Type: low_airburst_with_impact
+    Crater: D=NaNkm, depth=NaNkm
+    Blast Zones: Fireball 0.9km, Thermal 102.2km, Airblast 129.9km
+    Seismic: M6.6
+    Casualties: 24,808,642 (50 cities affected)
+
+ERREUR: Item invalide
+
+[8] Slow Iron Ground Impact
+    Location: Paris, France
+    Input: D=80m, V=11km/s, θ=75°, ρ=7800kg/m³, iron
+    Energy: 61.50 MT
+    Type: low_airburst_with_impact
+    Crater: D=NaNkm, depth=NaNkm
+    Blast Zones: Fireball 0.3km, Thermal 28.7km, Airblast 46.7km
+    Seismic: M5.7
+    Casualties: 22,161,138 (50 cities affected)
+
+ERREUR: Item invalide
+
+[9] Apophis-class Flyby (2029 scenario)
+    Location: Delhi, India
+    Input: D=370m, V=7.42km/s, θ=45°, ρ=3200kg/m³, rocky
+    Energy: 1827.45 MT
+    Type: low_airburst_with_impact
+    Crater: D=NaNkm, depth=NaNkm
+    Blast Zones: Fireball 1.0km, Thermal 115.2km, Airblast 143.1km
+    Seismic: M6.7
+    Casualties: 62,752,360 (50 cities affected)
+
+ERREUR: Item invalide
+
+[10] Dinosaur Killer (Chicxulub-class)
+    Location: Chicxulub, Mexico
+    Input: D=10000m, V=20km/s, θ=60°, ρ=3000kg/m³, rocky
+    Energy: 98573870.84 MT
+    Type: low_airburst_with_impact
+    Crater: D=NaNkm, depth=NaNkm
+    Blast Zones: Fireball 34.8km, Thermal 10039.6km, Airblast 5213.4km
+    Seismic: M9.9
+    Casualties: 1,684,527,380 (50 cities affected)
+
+ERREUR: Item invalide
+
+========================================================================================================================
+
+✅ Summary saved to OUR_RESULTS_SUMMARY.json
+

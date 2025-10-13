@@ -278,12 +278,82 @@ app.post('/api/simulate/impact', async (req, res) => {
             impactLocation   // { lat, lon }
         } = req.body;
 
-        // Validation
-        if (!diameter || !velocity || !impactLocation) {
+        // VALIDATION EXPLICITE avec messages clairs
+        // v1.6.30: Validation rigoureuse pour éviter HTTP 400 sur cas valides
+
+        if (!diameter || typeof diameter !== 'number') {
             return res.status(400).json({
-                error: 'Missing required parameters: diameter, velocity, impactLocation'
+                error: 'Invalid parameter: diameter',
+                received: { diameter, type: typeof diameter },
+                expected: 'number (meters, 1-100000)'
             });
         }
+
+        if (diameter <= 0 || diameter > 100000) {
+            return res.status(400).json({
+                error: 'Diameter out of range',
+                received: diameter,
+                expected: '0 < diameter ≤ 100,000 meters',
+                note: 'Diameter must be positive and realistic'
+            });
+        }
+
+        if (!velocity || typeof velocity !== 'number') {
+            return res.status(400).json({
+                error: 'Invalid parameter: velocity',
+                received: { velocity, type: typeof velocity },
+                expected: 'number (km/s, 5-75)'
+            });
+        }
+
+        if (velocity < 5 || velocity > 75) {
+            return res.status(400).json({
+                error: 'Velocity out of range',
+                received: velocity,
+                expected: '5 ≤ velocity ≤ 75 km/s',
+                note: 'Min: Earth escape velocity (~11 km/s), Max: Solar system max (~72 km/s)'
+            });
+        }
+
+        if (angle !== undefined && angle !== null) {
+            if (typeof angle !== 'number' || angle < 0 || angle > 90) {
+                return res.status(400).json({
+                    error: 'Invalid parameter: angle',
+                    received: angle,
+                    expected: '0 ≤ angle ≤ 90 degrees (0=horizontal, 90=vertical)'
+                });
+            }
+        }
+
+        if (!impactLocation || typeof impactLocation !== 'object') {
+            return res.status(400).json({
+                error: 'Invalid parameter: impactLocation',
+                received: impactLocation,
+                expected: '{ lat: number, lon: number }'
+            });
+        }
+
+        const { lat, lon } = impactLocation;
+        if (typeof lat !== 'number' || lat < -90 || lat > 90) {
+            return res.status(400).json({
+                error: 'Invalid latitude',
+                received: lat,
+                expected: '-90 ≤ lat ≤ 90'
+            });
+        }
+
+        if (typeof lon !== 'number' || lon < -180 || lon > 180) {
+            return res.status(400).json({
+                error: 'Invalid longitude',
+                received: lon,
+                expected: '-180 ≤ lon ≤ 180'
+            });
+        }
+
+        console.log('✅ Validation passed for impact simulation:', {
+            diameter, velocity, angle, density, composition,
+            location: { lat, lon }
+        });
 
         // Get impact zone data from USGS
         const zoneAnalysis = await usgsService.analyzeImpactZone(
