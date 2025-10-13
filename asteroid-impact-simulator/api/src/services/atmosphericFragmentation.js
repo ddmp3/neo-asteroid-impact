@@ -317,10 +317,28 @@ class AtmosphericFragmentation {
         let impactType, reachesGround, craterFormed, note;
 
         // Size threshold for complete airburst (Wheeler et al. 2017)
-        // Small objects (<50m) fragment completely at high altitude
-        // Large objects (>100m) can still reach ground even if fragmented
-        const SIZE_THRESHOLD_COMPLETE_AIRBURST = 50; // meters
-        const SIZE_THRESHOLD_PARTIAL = 100; // meters
+        // FIX v1.6.30: Make thresholds COMPOSITION-DEPENDENT
+        // Iron meteorites are 50× stronger than rocky ones and reach ground more often!
+        //
+        // COMPOSITION-DEPENDENT SIZE THRESHOLDS:
+        // - Rocky: <30m complete airburst, <70m partial
+        // - Iron: <10m complete airburst, <20m partial (MUCH stronger, survives better)
+        // - Icy: <80m complete airburst, <150m partial (MUCH weaker, fragments easily)
+        const comp_lower = composition.toLowerCase();
+        let SIZE_THRESHOLD_COMPLETE_AIRBURST, SIZE_THRESHOLD_PARTIAL;
+
+        if (comp_lower === 'iron' || comp_lower === 'metal') {
+            SIZE_THRESHOLD_COMPLETE_AIRBURST = 10; // meters - iron is VERY strong
+            SIZE_THRESHOLD_PARTIAL = 20;
+        } else if (comp_lower === 'icy' || comp_lower === 'ice' || comp_lower === 'comet') {
+            SIZE_THRESHOLD_COMPLETE_AIRBURST = 80; // meters - ice is VERY weak
+            SIZE_THRESHOLD_PARTIAL = 150;
+        } else {
+            // Rocky (default)
+            SIZE_THRESHOLD_COMPLETE_AIRBURST = 30; // meters
+            SIZE_THRESHOLD_PARTIAL = 70;
+        }
+
         const ALTITUDE_THRESHOLD_HIGH = 20000; // 20 km
         const ALTITUDE_THRESHOLD_LOW = 5000; // 5 km
 

@@ -743,11 +743,33 @@ class PhysicsEngine {
         }
 
         // Pacific Ocean (largest ocean)
-        if ((lon < -100 && lon > -180) || (lon > 120 && lon < 180)) {
+        // Eastern Pacific: -180 to -100 (excluding western North America coast)
+        if (lon < -100 && lon > -180) {
             // Exclude western North America coast
             if (!(lat > 30 && lat < 60 && lon > -130 && lon < -100)) {
                 return { isOcean: true, waterDepth: 4000, source: 'Pacific Ocean (heuristic)' };
             }
+        }
+
+        // Western Pacific: 120 to 180 (excluding Japan, Philippines, Australia, New Zealand)
+        if (lon > 120 && lon < 180) {
+            // Exclude Japan (lat 30-46, lon 128-146)
+            if (lat >= 30 && lat <= 46 && lon >= 128 && lon <= 146) {
+                return { isOcean: false, waterDepth: 0, source: 'land' };
+            }
+            // Exclude Philippines (lat 5-20, lon 118-127)
+            if (lat >= 5 && lat <= 20 && lon >= 118 && lon <= 127) {
+                return { isOcean: false, waterDepth: 0, source: 'land' };
+            }
+            // Exclude eastern Australia (lat -44 to -10, lon 142-154)
+            if (lat >= -44 && lat <= -10 && lon >= 142 && lon <= 154) {
+                return { isOcean: false, waterDepth: 0, source: 'land' };
+            }
+            // Exclude New Zealand (lat -47 to -34, lon 166-179)
+            if (lat >= -47 && lat <= -34 && lon >= 166 && lon <= 179) {
+                return { isOcean: false, waterDepth: 0, source: 'land' };
+            }
+            return { isOcean: true, waterDepth: 4000, source: 'Pacific Ocean (heuristic)' };
         }
 
         // Indian Ocean
@@ -830,7 +852,15 @@ class PhysicsEngine {
         // Calculate crater ONLY if object reaches ground
         let baseCrater, crater;
         if (fragmentation.craterFormed) {
-            baseCrater = this.calculateCraterSize(energy.joules, angle);
+            // FIX v1.6.30: Pass composition and density for accurate crater calculations
+            // This is critical for iron meteorites which form different craters than rocky ones
+            baseCrater = this.calculateCraterSize(
+                energy.joules,
+                angle,
+                composition,
+                density,
+                2500 // targetDensity: Earth's average crustal rock density
+            );
             crater = await this.terrainAnalysis.calculateTerrainModifiedCrater(
                 { lat: impactLocation.lat, lon: impactLocation.lon },
                 baseCrater.diameter,
