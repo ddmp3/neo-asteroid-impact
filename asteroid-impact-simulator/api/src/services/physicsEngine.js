@@ -190,7 +190,13 @@ class PhysicsEngine {
 
         if (comp === 'iron' || comp === 'metal') {
             // Iron meteorites: dense (7800 kg/m³), strong, deep craters
-            K_base = 380;
+            // v1.6.33: Reduced K for small energies (fixes overestimation)
+            const E_MT = energy / 4.184e15;
+            if (E_MT < 0.1) {
+                K_base = 220; // Small iron craters (<0.1 MT)
+            } else {
+                K_base = 380; // Large iron craters (≥0.1 MT, Barringer-calibrated)
+            }
         } else if (comp === 'rocky' || comp === 'stony' || comp === 'rock') {
             // Rocky asteroids: moderate density (3000 kg/m³), most common
             K_base = 520;

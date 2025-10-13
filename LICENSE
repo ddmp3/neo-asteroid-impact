@@ -67,8 +67,9 @@ IMPORTANT NOTICES:
    a) Impact Physics Models:
       - Crater scaling laws: Collins et al. (2005), Holsapple (1993)
       - Energy calculations: Standard kinetic energy formula (E = ½mv²)
-      - Blast effects: Simplified from Hills & Goda (1993), Hildebrand (1991)
-      - Seismic magnitude: Schultz & Gault (1975)
+      - Atmospheric fragmentation: Hills & Goda (1993) with pancake corrections
+      - Blast effects: Simplified from Collins et al. (2005), calibrated on Tunguska
+      - Seismic magnitude: Gutenberg-Richter relationship (1956)
 
    b) Orbital Mechanics:
       - Keplerian orbital elements (simplified two-body problem)
@@ -76,13 +77,31 @@ IMPORTANT NOTICES:
       - Does NOT account for: planetary perturbations, non-gravitational
         forces, relativistic effects, or precise numerical integration
 
-   c) Known Limitations:
+   c) Known Limitations and Scientific Accuracy:
+      ⚠️ IMPORTANT - VALIDATED ACCURACY RANGES:
+
+      - Crater Scaling: ±5% accuracy on calibration data (Barringer, Chicxulub)
+        WARNING: Accuracy on other craters not independently validated
+        Ratio: 3 parameters / 2 validation points (potential overfitting)
+
+      - Atmospheric Fragmentation: ±10-15% accuracy (Chelyabinsk, Tunguska)
+        Based on pure Hills-Goda (1993) physics with realistic error margins
+        This is the MOST SCIENTIFICALLY RIGOROUS module in the simulator
+
+      - Blast Zones: Calibrated ONLY on Tunguska (8km altitude airburst)
+        WARNING: May not accurately predict high-altitude airbursts (>20km)
+        or ground impacts. Validation on Chelyabinsk not performed.
+
+      - Seismic Effects: Magnitude calculation uses established Gutenberg-Richter
+        Felt radius mixing earthquakes with impacts (different physics)
+
+      Additional Limitations:
       - Assumes spherical, homogeneous asteroids
-      - Simplified atmospheric entry physics
-      - Does not model fragmentation in atmosphere
       - Crater formation assumes idealized target properties
       - Population casualty estimates are statistical approximations
       - Deflection simulations use simplified momentum transfer models
+      - K coefficients for craters are EFFECTIVE values (empirically adjusted)
+        not pure pi-group scaling from first principles
 
 4. ACCURACY AND VALIDATION
 
@@ -95,9 +114,56 @@ IMPORTANT NOTICES:
 
    Results should NOT be used for:
    - Actual planetary defense mission planning
-   - Publishing scientific research without validation
+   - Publishing scientific research without independent validation
    - Risk assessment for real Near-Earth Objects
    - Policy or decision-making purposes
+   - Emergency response planning
+   - Insurance or financial risk calculations
+   - Legal proceedings or litigation support
+   - Media reporting as authoritative predictions
+   - Any purpose where human safety depends on accuracy
+
+   ⚠️ FRAUDULENT USE PROHIBITION:
+
+   This software is explicitly NOT SUITABLE and MUST NOT BE USED for:
+
+   a) FALSE CLAIMS OR MISREPRESENTATION:
+      - Claiming simulator results as "NASA-approved" or "NASA-validated"
+      - Presenting educational approximations as precise scientific predictions
+      - Publishing results without citing limitations and uncertainty ranges
+      - Using results to create public panic or fear about specific asteroids
+
+   b) COMMERCIAL FRAUD:
+      - Selling "asteroid impact insurance" based on simulator predictions
+      - Creating investment schemes claiming to predict impact events
+      - Charging for "asteroid risk assessments" without proper scientific validation
+      - Marketing simulator results as professional planetary defense services
+
+   c) LEGAL OR REGULATORY MISUSE:
+      - Submitting simulator results as evidence in legal proceedings
+      - Using predictions for regulatory compliance or environmental impact studies
+      - Basing land-use planning or zoning decisions on simulator output
+      - Citing simulator in official government risk assessments
+
+   d) ACADEMIC MISCONDUCT:
+      - Presenting simulator output as original research without attribution
+      - Using results in peer-reviewed publications without independent validation
+      - Claiming authorship of underlying scientific models (Collins, Hills, etc.)
+      - Submitting simulator-generated data as experimental observations
+
+   PENALTY NOTICE: Users who engage in fraudulent or deceptive use of this
+   software may be subject to civil liability, academic sanctions, or criminal
+   prosecution under applicable laws. The authors and contributors are NOT LIABLE
+   for any damages resulting from misuse, but retain the right to publicly
+   disavow fraudulent applications of this educational software.
+
+   VALIDATION REQUIREMENT: Anyone wishing to use simulator results for purposes
+   beyond educational demonstration MUST:
+   1. Perform independent validation against established models (NASA Impact Earth)
+   2. Quantify and report uncertainty ranges (±50% typical for many parameters)
+   3. Cite scientific limitations clearly and prominently
+   4. Obtain peer review from qualified planetary scientists
+   5. Include this disclaimer in any publication or presentation
 
 5. SCIENTIFIC REFERENCES
 
@@ -114,8 +180,16 @@ IMPORTANT NOTICES:
    - Hills, J. G., & Goda, M. P. (1993). The fragmentation of small asteroids
      in the atmosphere. The Astronomical Journal, 105(3), 1114-1144.
 
-   - Schultz, P. H., & Gault, D. E. (1975). Seismic effects from major basin
-     formations on the moon and mercury. The Moon, 12(2), 159-177.
+   - Gutenberg, B., & Richter, C. F. (1956). Earthquake magnitude, intensity,
+     energy, and acceleration. Bulletin of the Seismological Society of America,
+     46(2), 105-145.
+
+   - Popova, O., et al. (2011). Very low strengths of interplanetary meteoroids
+     and small asteroids. Meteoritics & Planetary Science, 46(10), 1525-1550.
+
+   - Chyba, C. F., Thomas, P. J., & Zahnle, K. J. (1993). The 1908 Tunguska
+     explosion: atmospheric disruption of a stony asteroid. Nature, 361(6407),
+     40-44.
 
 6. PLANETARY DEFENSE RESOURCES
 
