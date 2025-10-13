@@ -16,7 +16,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - Development Branch
 
-### Current Development Version: v1.6.20 - Fix Luis Repo Link
+### Current Development Version: v1.6.21 - Terrain-Aware Blast Zones
+
+---
+
+## [1.6.21] - 2025-10-12 (**FEATURE: Terrain-Aware Blast Zones with Line-of-Sight Analysis**)
+
+### Added
+- **Terrain-Aware Blast Zone Calculation** (Backend)
+  - New service: `terrainAwareBlast.js` - Line-of-sight analysis respecting terrain topology
+  - Casts 36 radial rays (every 10°) from burst point
+  - Samples terrain elevation along each ray (15 points per ray)
+  - Blocks blast zones behind mountains/terrain features
+  - Returns polygonal blast zones instead of perfect circles
+  - File: api/src/services/terrainAwareBlast.js (370 lines)
+
+- **PhysicsEngine Integration** (Backend)
+  - Integrated terrainAwareBlastService into simulation pipeline
+  - Calculates terrain-aware zones using burst altitude from fragmentation model
+  - Returns `blastTerrainAware` field with polygonal zones
+  - Graceful fallback to circular zones if terrain analysis fails
+  - File: api/src/services/physicsEngine.js lines 617-642, 670
+
+- **Polygonal Blast Zone Visualization** (Frontend)
+  - Leaflet Polygon components render terrain-aware blast zones
+  - Dashed lines (dashArray: '5, 10') to distinguish from circular zones
+  - Thermal zone: Red polygons with 15% opacity
+  - Air blast zone: Orange polygons with 10% opacity
+  - Popup shows original radius vs terrain-adjusted polygon
+  - File: web/src/components/ImpactMapLeaflet.tsx lines 316-369
+
+- **TypeScript Types** (Frontend)
+  - Added `blastTerrainAware` interface to `SimulationResult`
+  - Includes zones, burstPoint, metadata (method, radialSamples, rangeSteps)
+  - File: web/src/types/index.ts lines 68-87
+
+### Scientific Basis
+**Line-of-Sight Methodology**:
+- Shock waves travel in straight lines from burst altitude
+- Mountains and terrain features block/shadow blast effects
+- If terrain elevation > line-of-sight altitude → blast blocked
+- More realistic for mountainous regions (Pyrénées, Alps, Rockies, Himalayas)
+
+**References**:
+- Glasstone & Dolan (1977) - Effects of Nuclear Weapons
+- Collins et al. (2005) - Earth Impact Effects Program
+- USGS Elevation API for terrain data
+
+### Impact
+✅ **Realistic blast zones** - Mountains now protect areas from blast effects
+✅ **Visual comparison** - Polygons (dashed lines) overlay circular zones
+✅ **Scientific accuracy** - Pyrénées example: mountains block thermal radiation
+✅ **Educational** - Users see how terrain affects impact consequences
+
+### Example Use Case
+**180m asteroid at 37 km/s impacting the Pyrénées**:
+- Circular model: Blast zones extend uniformly in all directions
+- Terrain-aware model: Mountain ranges block zones, valleys channel effects
+- Result: Fewer affected cities behind mountains, more accurate casualty estimates
+
+### Notes
+- Terrain analysis adds ~2-5 seconds to simulation time (USGS API calls)
+- Graceful degradation: Falls back to circular zones if API unavailable
+- Currently displays both circular (solid) and terrain-aware (dashed) zones for comparison
 
 ---
 

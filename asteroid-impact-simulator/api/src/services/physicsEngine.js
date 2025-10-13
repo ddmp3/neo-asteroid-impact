@@ -10,6 +10,7 @@ const casualtyModel = require('./casualtyModel');
 const TerrainAnalysis = require('./terrainAnalysis');
 const USGSService = require('./usgsService');
 const AtmosphericFragmentation = require('./atmosphericFragmentation');
+const TerrainAwareBlastService = require('./terrainAwareBlast');
 
 class PhysicsEngine {
     constructor() {
@@ -27,6 +28,9 @@ class PhysicsEngine {
 
         // Initialize atmospheric fragmentation (Hills-Goda 1993)
         this.atmosphericFragmentation = new AtmosphericFragmentation();
+
+        // Initialize terrain-aware blast service (v1.6.21)
+        this.terrainAwareBlastService = new TerrainAwareBlastService();
     }
 
     /**
@@ -610,6 +614,33 @@ class PhysicsEngine {
             );
         }
 
+        // Calculate terrain-aware blast zones (v1.6.21)
+        // Uses line-of-sight analysis to respect terrain topology
+        let terrainAwareBlast = null;
+        try {
+            if (impactLocation && impactLocation.latitude && impactLocation.longitude) {
+                console.log('Calculating terrain-aware blast zones...');
+                terrainAwareBlast = await this.terrainAwareBlastService.calculateTerrainAwareBlastZones(
+                    blast,
+                    {
+                        latitude: impactLocation.latitude,
+                        longitude: impactLocation.longitude,
+                        elevation: terrainData.elevation || 0
+                    },
+                    fragmentation.energyDepositionAltitude || 1000, // Burst altitude in meters
+                    {
+                        radialSamples: 36, // Every 10 degrees
+                        rangeSteps: 15     // 15 elevation checks per ray
+                    }
+                );
+                console.log('Terrain-aware blast zones calculated successfully');
+            }
+        } catch (error) {
+            console.error('Terrain-aware blast calculation failed (using circular fallback):', error.message);
+            // Fallback to circular zones if terrain analysis fails
+            terrainAwareBlast = null;
+        }
+
         return {
             asteroidProperties: {
                 diameter,
@@ -636,6 +667,7 @@ class PhysicsEngine {
             crater,
             seismic,
             blast,
+            blastTerrainAware: terrainAwareBlast, // v1.6.21 - Polygonal blast zones respecting terrain
             tsunami,
             casualties: casualties,
             impactLocation: {

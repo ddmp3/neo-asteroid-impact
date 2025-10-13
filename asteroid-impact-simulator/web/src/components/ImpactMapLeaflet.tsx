@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Circle, useMap, useMapEvents, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Circle, Polygon, useMap, useMapEvents, Popup } from 'react-leaflet';
 import { useSimulationStore } from '../store/useSimulationStore';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -312,6 +312,61 @@ export default function ImpactMapLeaflet() {
                     </div>
                   </Popup>
                 </Circle>
+
+                {/* Terrain-Aware Blast Zones (v1.6.21) - Polygons respecting terrain */}
+                {simulationResult.blastTerrainAware && simulationResult.blastTerrainAware.zones && (
+                  <>
+                    {/* Thermal radiation - terrain aware */}
+                    {simulationResult.blastTerrainAware.zones.thermalRadius && (
+                      <Polygon
+                        positions={simulationResult.blastTerrainAware.zones.thermalRadius.polygon.map(p => [p.lat, p.lon])}
+                        pathOptions={{
+                          color: '#ff3300',
+                          fillColor: '#ff3300',
+                          fillOpacity: 0.15,
+                          weight: 3,
+                          dashArray: '5, 10'
+                        }}
+                      >
+                        <Popup>
+                          <div role="region" aria-label="Terrain-aware thermal zone details">
+                            <strong>🔥 Terrain-Aware Thermal Zone</strong>
+                            <br />
+                            Original radius: {(simulationResult.blastTerrainAware.zones.thermalRadius.originalRadius / 1000).toFixed(1)} km
+                            <br />
+                            <em>Adjusted for terrain blocking (mountains, valleys)</em>
+                            <br />
+                            Method: {simulationResult.blastTerrainAware.metadata.method}
+                          </div>
+                        </Popup>
+                      </Polygon>
+                    )}
+
+                    {/* Air blast - terrain aware */}
+                    {simulationResult.blastTerrainAware.zones.airblastRadius && (
+                      <Polygon
+                        positions={simulationResult.blastTerrainAware.zones.airblastRadius.polygon.map(p => [p.lat, p.lon])}
+                        pathOptions={{
+                          color: '#ffaa00',
+                          fillColor: '#ffaa00',
+                          fillOpacity: 0.1,
+                          weight: 3,
+                          dashArray: '5, 10'
+                        }}
+                      >
+                        <Popup>
+                          <div role="region" aria-label="Terrain-aware air blast zone details">
+                            <strong>💨 Terrain-Aware Air Blast Zone</strong>
+                            <br />
+                            Original radius: {(simulationResult.blastTerrainAware.zones.airblastRadius.originalRadius / 1000).toFixed(1)} km
+                            <br />
+                            <em>Adjusted for terrain blocking</em>
+                          </div>
+                        </Popup>
+                      </Polygon>
+                    )}
+                  </>
+                )}
               </>
             )}
           </>

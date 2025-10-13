@@ -65,6 +65,26 @@ export interface SimulationResult {
     airblastRadius: number;
     thermalRadius: number;
   };
+  blastTerrainAware?: {
+    zones: {
+      [key: string]: {
+        originalRadius: number;
+        polygon: Array<{ lat: number; lon: number }>;
+        terrainAdjusted: boolean;
+      };
+    };
+    burstPoint: {
+      latitude: number;
+      longitude: number;
+      altitudeASL: number;
+      burstHeight: number;
+    };
+    metadata: {
+      radialSamples: number;
+      rangeSteps: number;
+      method: string;
+    };
+  } | null;
   tsunami: {
     initialWaveHeight: number;
     wavelength: number;
