@@ -24,17 +24,23 @@ class AtmosphericFragmentation {
         this.GRAVITY = 9.81; // m/s²
 
         // Material strength values (Pa)
-        // Based on Wheeler et al. (2017), Brown et al. (2013), and laboratory measurements
+        // v1.6.31: Updated values based on Popova et al. (2011) "Very low strengths of interplanetary meteoroids"
+        // Reference: Popova, O., et al. (2011). "Very low strengths of interplanetary meteoroids and small asteroids"
+        //            Meteoritics & Planetary Science 46(10), 1525-1550. DOI: 10.1111/j.1945-5100.2011.01247.x
         this.STRENGTH_VALUES = {
-            // Composition-based strengths
-            rocky: 2e6,      // 2 MPa - typical stony asteroid (S-type, consolidated)
-            iron: 1e8,       // 100 MPa - iron meteorite (M-type)
-            icy: 1e5,        // 0.1 MPa - cometary material (C-type)
+            // Composition-based strengths (v1.6.31: adjusted for scientific accuracy)
+            rocky: 10e6,     // 10 MPa - LL/H chondrites (Popova et al. 2011)
+            stony: 10e6,     // synonym for rocky
+            iron: 150e6,     // 150 MPa - iron meteorite (M-type, very resistant)
+            metal: 150e6,    // synonym for iron
+            icy: 1e6,        // 1 MPa - cometary material (C-type)
+            comet: 1e6,      // synonym for icy
 
-            // Quality-based modifiers (for weak/porous objects like Tunguska)
+            // Quality-based modifiers (for rubble piles like Tunguska)
             weak: 5e5,       // 0.5 MPa - rubble pile, fractured (Tunguska-like)
-            medium: 2e6,     // 2 MPa - typical consolidated
-            strong: 1e7      // 10 MPa - monolithic rock
+            medium: 10e6,    // 10 MPa - typical consolidated
+            strong: 50e6,    // 50 MPa - monolithic rock
+            carbonaceous: 5e6 // 5 MPa - CI/CM chondrites (weaker than rocky)
         };
 
         // HIGH-PRECISION INTERPOLATION ANCHORS (v1.7.0)
@@ -302,16 +308,33 @@ class AtmosphericFragmentation {
         // ρ_air(h) = ρ₀ × exp(-h/H)
         // → h = H × ln(0.5 × ρ₀ × v² / σ)
         //
-        // CORRECTION: The observed burst altitude is typically LOWER than
-        // theoretical fragmentation height due to:
-        // 1. Progressive breakup (not instantaneous)
-        // 2. Fragment cloud deceleration
-        // 3. Peak energy deposition occurs below initial breakup
-        //
-        // Empirical correction factor ~0.55 based on Chelyabinsk & Tunguska data
+        // v1.6.31: PURE Hills-Goda formula without excessive empirical corrections
+        // Accept ~13% error on Chelyabinsk as scientifically reasonable
         const theoretical_altitude = this.SCALE_HEIGHT *
             Math.log(P_ram_surface / strength);
-        const altitude_fragmentation = theoretical_altitude * 0.55;
+
+        // Use theoretical altitude directly for small objects (<20m)
+        // Chelyabinsk (20m): H = 26,317m (observed: 23,300m, error: +13% ✓)
+        let altitude_fragmentation = theoretical_altitude;
+
+        // v1.6.31: PANCAKE MODEL CORRECTIONS for large objects (>20m)
+        // Reference: Chyba et al. (1993), Wheeler et al. (2017)
+        //
+        // Large objects (>20m) undergo "pancaking" - lateral spreading that increases
+        // drag and causes fragmentation at LOWER altitudes than Hills-Goda predicts.
+        //
+        // Correction factors (calibrated on Tunguska 60m):
+        if (diameter > 20) {
+            // Pancake flattening effect: inversely proportional to sqrt(diameter)
+            const pancake_factor = Math.pow(20 / diameter, 0.5);
+            altitude_fragmentation = altitude_fragmentation * pancake_factor;
+
+            // Additional correction for very large objects (>40m)
+            // Large objects experience stronger aerodynamic forces
+            if (diameter > 40) {
+                altitude_fragmentation = altitude_fragmentation * 0.5;
+            }
+        }
 
         // 5. Determine impact type based on fragmentation altitude and size
         let impactType, reachesGround, craterFormed, note;
@@ -398,23 +421,24 @@ class AtmosphericFragmentation {
 
     /**
      * PUBLIC API: Determine if asteroid will fragment in atmosphere
-     * Uses high-precision interpolation (v1.7.0) with fallback to Hills-Goda
+     * v1.6.31: PURE Hills-Goda (1993) formula WITHOUT interpolation
+     *
+     * Scientific approach: Accept realistic 5-15% error margins instead of
+     * artificial 0.00% from IDW interpolation (which copies anchor points).
      *
      * @param {number} diameter - Asteroid diameter in meters
      * @param {number} velocity - Entry velocity in m/s
      * @param {string} composition - Material type ('rocky', 'iron', 'icy')
      * @param {number} density - Asteroid density in kg/m³ (optional)
      * @param {number} angle - Entry angle in degrees (optional, default 45)
-     * @returns {Object} Fragmentation analysis result with <1% precision
+     * @returns {Object} Fragmentation analysis result with realistic error margins (5-15%)
      */
     analyzeFragmentation(diameter, velocity, composition = 'rocky', density = 3000, angle = 45) {
-        // Use new high-precision interpolation method
-        return this.analyzeFragmentationInterpolated({
-            D: diameter,
-            V: velocity,
-            θ: angle,
-            comp: composition,
-            ρ: density
+        // v1.6.31: Use PURE Hills-Goda formula (no interpolation)
+        // This gives realistic 5-15% error instead of artificial 0.00%
+        return this.analyzeFragmentationHillsGoda(diameter, velocity, composition, density, {
+            note: 'Pure Hills-Goda (1993) formula - v1.6.31',
+            pureFormula: true
         });
     }
 
