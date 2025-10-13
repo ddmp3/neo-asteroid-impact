@@ -325,81 +325,143 @@ class PhysicsEngine {
      * @returns {Object} Tsunami characteristics with Ward & Asphaug formulas
      */
     calculateTsunamiEffects(energy, waterDepth = 4000, diameter = null, velocity = null, angle = 45) {
-        // Convert angle to radians
+        // AUTO-SELECT appropriate dedicated function based on water depth (v1.6.23)
+        // This ensures different physics for deep ocean vs coastal impacts
+        if (waterDepth >= 1000) {
+            // Deep ocean impact: global propagation, minimal shoaling
+            return this.calculateOceanImpactTsunami(energy, waterDepth, angle);
+        } else {
+            // Coastal/shallow water impact: localized effects, strong shoaling
+            return this.calculateCoastalTsunami(energy, waterDepth, angle);
+        }
+    }
+
+    /**
+     * DEDICATED: Calculate tsunami for DEEP OCEAN impacts (water depth > 1000m)
+     * Uses Ward & Asphaug (2000) with deep water approximations
+     *
+     * @param {number} energy - Impact energy in Joules
+     * @param {number} waterDepth - Ocean depth in meters (should be > 1000m)
+     * @param {number} angle - Impact angle in degrees
+     * @returns {Object} Deep ocean tsunami characteristics
+     */
+    calculateOceanImpactTsunami(energy, waterDepth, angle = 45) {
         const angleRad = angle * Math.PI / 180;
 
-        // Ward & Asphaug (2000) - Asteroid Impact Tsunami
-        // Uses Schmidt-Holsapple crater scaling for water cavities
-        // Corrected for realistic tsunami heights (v1.6.23)
+        // Schmidt-Holsapple scaling for water
+        const rho_water = 1000;
+        const beta = 0.22;
+        const CT = 1.88;
 
-        // 1. Calculate transient water cavity using Schmidt-Holsapple scaling
-        // For water: β = 0.22, CT = 1.88 (Ward & Asphaug 2000)
-        // Diameter scaling: dc = CT * (E / ρ_water)^β
-        // where E is kinetic energy, ρ_water = 1000 kg/m³
-        const rho_water = 1000; // kg/m³
-        const beta = 0.22; // Scaling exponent for water
-        const CT = 1.88; // Scaling coefficient for water
-
-        // Cavity diameter (meters)
         const D_cavity = CT * Math.pow(energy / rho_water, beta);
-
-        // Apply angle correction (oblique impacts)
         const angleFactor = Math.pow(Math.sin(angleRad), 1/3);
-        const D_transient = D_cavity * angleFactor; // meters
-        const R_cavity = D_transient / 2; // cavity radius
+        const D_transient = D_cavity * angleFactor;
+        const R_cavity = D_transient / 2;
 
-        // 2. Initial wave height at cavity rim (Ward & Asphaug 2000)
-        // H_0 ≈ 0.1 × R_cavity (NOT 0.28 - that was too high!)
-        // Empirical from their simulations
-        const H_initial = 0.1 * R_cavity; // meters
-
-        // 3. Maximum wave height cannot exceed water depth
-        // Also cap at 500m for physical realism (even Chicxulub was ~300m)
+        // Deep ocean: initial wave height ≈ 0.1 × R_cavity
+        const H_initial = 0.1 * R_cavity;
         const H_max = Math.min(H_initial, waterDepth, 500);
 
-        // 5. Wavelength ≈ transient cavity diameter (Ward & Asphaug 2000)
-        const wavelength = D_transient; // meters
+        // Deep water propagation speed: v = √(g × h)
+        const speed = Math.sqrt(this.EARTH_SURFACE_GRAVITY * waterDepth);
 
-        // 6. Propagation speed (shallow water wave equation)
-        // v = √(g × h) - valid for long waves where wavelength >> depth
-        const speed = Math.sqrt(this.EARTH_SURFACE_GRAVITY * waterDepth); // m/s
-
-        // 7. Wave amplitude attenuation with distance (Ward & Asphaug 2000)
-        // CORRECTED FORMULA (v1.6.23):
-        // A(r) = H_0 × (R_cavity / r)  [geometric spreading + dispersion]
-        // More realistic: waves decay as 1/r, not as slowly as before
-        const Y_kilotons = energy / 4.184e12; // Convert Joules to kilotons TNT
-
-        // 8. Estimate affected radius (where amplitude drops to ~1 meter)
-        // Solving: 1 = H_max × (R_cavity / r) for r
-        // r = H_max × R_cavity
-        // This gives MUCH more realistic distances
-        const affectedRadiusMeters = Math.min(H_max * R_cavity, 3000000); // Cap at 3000 km (Chicxulub was global but let's be reasonable)
+        // Deep ocean attenuation: geometric spreading 1/r
+        // Waves can travel globally
+        const Y_kilotons = energy / 4.184e12;
+        const affectedRadiusMeters = Math.min(H_max * R_cavity, 10000000); // Can propagate up to 10,000 km
         const affectedRadiusKm = affectedRadiusMeters / 1000;
 
-        // 9. Calculate amplitude at several key distances for visualization
         const amplitudeAtDistances = [
             { distanceKm: 100, amplitude: this.getTsunamiAmplitudeAt(100, waterDepth, Y_kilotons, H_max, R_cavity) },
             { distanceKm: 500, amplitude: this.getTsunamiAmplitudeAt(500, waterDepth, Y_kilotons, H_max, R_cavity) },
             { distanceKm: 1000, amplitude: this.getTsunamiAmplitudeAt(1000, waterDepth, Y_kilotons, H_max, R_cavity) },
-            { distanceKm: 2000, amplitude: this.getTsunamiAmplitudeAt(2000, waterDepth, Y_kilotons, H_max, R_cavity) }
-        ].filter(item => item.amplitude >= 0.5); // Filter out negligible waves
+            { distanceKm: 2000, amplitude: this.getTsunamiAmplitudeAt(2000, waterDepth, Y_kilotons, H_max, R_cavity) },
+            { distanceKm: 5000, amplitude: this.getTsunamiAmplitudeAt(5000, waterDepth, Y_kilotons, H_max, R_cavity) }
+        ].filter(item => item.amplitude >= 0.5);
 
         return {
+            impactType: 'Deep Ocean',
             cavityDiameter: D_transient,
             cavityRadius: R_cavity,
             initialWaveHeight: H_max,
-            wavelength: wavelength,
+            wavelength: D_transient,
             propagationSpeed: speed,
             speedKmh: speed * 3.6,
             affectedRadiusKm: Math.round(affectedRadiusKm),
             amplitudeAtDistances: amplitudeAtDistances,
-            attenuationRate: 'r^-1 (dispersion + geometric spreading)',
-            method: 'Ward & Asphaug (2000)',
+            attenuationRate: 'r^-1 (geometric spreading)',
+            method: 'Ward & Asphaug (2000) - Deep Ocean',
             limitations: 'Deep water approximation; coastal run-up not modeled',
-            note: waterDepth < 1000 ?
-                'Shallow water - wave shoaling effects important near coast' :
-                'Deep ocean impact - tsunami propagates globally'
+            note: 'Deep ocean impact - tsunami propagates globally with minimal attenuation'
+        };
+    }
+
+    /**
+     * DEDICATED: Calculate tsunami for COASTAL/SHALLOW impacts (water depth < 1000m)
+     * Includes shoaling effects as waves approach coast
+     *
+     * @param {number} energy - Impact energy in Joules
+     * @param {number} waterDepth - Shallow water depth in meters (< 1000m)
+     * @param {number} angle - Impact angle in degrees
+     * @returns {Object} Coastal tsunami characteristics with shoaling
+     */
+    calculateCoastalTsunami(energy, waterDepth, angle = 45) {
+        const angleRad = angle * Math.PI / 180;
+
+        // Schmidt-Holsapple scaling for water
+        const rho_water = 1000;
+        const beta = 0.22;
+        const CT = 1.88;
+
+        const D_cavity = CT * Math.pow(energy / rho_water, beta);
+        const angleFactor = Math.pow(Math.sin(angleRad), 1/3);
+        const D_transient = D_cavity * angleFactor;
+        const R_cavity = D_transient / 2;
+
+        // Shallow water: initial wave height slightly lower
+        // Wave energy is more focused in shallower water
+        const H_initial = 0.08 * R_cavity; // Slightly lower coefficient for shallow water
+        const H_max = Math.min(H_initial, waterDepth * 1.5, 300); // Can exceed depth due to shoaling
+
+        // Shallow water propagation speed: v = √(g × h)
+        // Speed is lower in shallow water
+        const speed = Math.sqrt(this.EARTH_SURFACE_GRAVITY * waterDepth);
+
+        // Shoaling factor: waves amplify as they approach shore
+        // Green's Law: A ∝ h^(-1/4) where h is water depth
+        // Run-up can be 2-5x wave height
+        const shoalingFactor = Math.pow(4000 / waterDepth, 0.25); // Relative to deep ocean
+        const runupMultiplier = 3.5; // Typical run-up is 3-4x wave height
+        const estimatedRunup = H_max * runupMultiplier * shoalingFactor;
+
+        // Coastal impacts have more localized effects
+        const Y_kilotons = energy / 4.184e12;
+        const affectedRadiusMeters = Math.min(H_max * R_cavity * 0.5, 1000000); // More localized, cap at 1000 km
+        const affectedRadiusKm = affectedRadiusMeters / 1000;
+
+        const amplitudeAtDistances = [
+            { distanceKm: 10, amplitude: this.getTsunamiAmplitudeAt(10, waterDepth, Y_kilotons, H_max, R_cavity) },
+            { distanceKm: 50, amplitude: this.getTsunamiAmplitudeAt(50, waterDepth, Y_kilotons, H_max, R_cavity) },
+            { distanceKm: 100, amplitude: this.getTsunamiAmplitudeAt(100, waterDepth, Y_kilotons, H_max, R_cavity) },
+            { distanceKm: 500, amplitude: this.getTsunamiAmplitudeAt(500, waterDepth, Y_kilotons, H_max, R_cavity) }
+        ].filter(item => item.amplitude >= 0.5);
+
+        return {
+            impactType: 'Coastal/Shallow Ocean',
+            cavityDiameter: D_transient,
+            cavityRadius: R_cavity,
+            initialWaveHeight: H_max,
+            estimatedRunup: Math.round(estimatedRunup * 10) / 10,
+            shoalingFactor: Math.round(shoalingFactor * 100) / 100,
+            wavelength: D_transient,
+            propagationSpeed: speed,
+            speedKmh: speed * 3.6,
+            affectedRadiusKm: Math.round(affectedRadiusKm),
+            amplitudeAtDistances: amplitudeAtDistances,
+            attenuationRate: 'r^-1 with shoaling amplification near coast',
+            method: 'Ward & Asphaug (2000) + Green\'s Law (shoaling)',
+            limitations: 'Simplified shoaling model; actual run-up depends on coastal geometry',
+            note: `Shallow water impact - wave amplifies near coast. Estimated coastal run-up: ${Math.round(estimatedRunup)}m`
         };
     }
 
@@ -424,6 +486,118 @@ class PhysicsEngine {
 
         // Physical minimum: waves below 0.1m are negligible
         return amplitude >= 0.1 ? Math.round(amplitude * 10) / 10 : 0;
+    }
+
+    /**
+     * DEDICATED: Calculate land impact crater and effects
+     * For TERRESTRIAL impacts that reach the ground (not airbursts)
+     *
+     * @param {number} energy - Impact energy in Joules
+     * @param {number} angle - Impact angle in degrees
+     * @param {number} targetDensity - Target rock density in kg/m³ (default: 2500)
+     * @returns {Object} Land impact characteristics with crater formation
+     */
+    calculateLandImpact(energy, angle = 45, targetDensity = 2500) {
+        const angleRad = angle * Math.PI / 180;
+
+        // Collins et al. (2005) crater scaling for land impacts
+        const K_transient = 472; // Empirical coefficient for rock targets
+        const D_transient_meters = K_transient * Math.pow(energy / 1e15, 0.25);
+
+        // Angle correction
+        const angleFactor = Math.pow(Math.sin(angleRad), 1/3);
+        const D_transient = D_transient_meters * angleFactor;
+
+        // Simple vs complex crater transition (3.2 km on Earth)
+        let diameter, depth, craterType;
+
+        if (D_transient < 3200) {
+            // Simple crater: bowl-shaped
+            diameter = 1.25 * D_transient;
+            depth = diameter / 5;
+            craterType = 'simple';
+        } else {
+            // Complex crater: central peak, terraced walls
+            const D_tc_km = D_transient / 1000;
+            const D_final_km = 1.17 * Math.pow(D_tc_km, 1.13);
+            diameter = D_final_km * 1000;
+            depth = 0.1 * diameter;
+            craterType = 'complex';
+        }
+
+        // Ejecta blanket (extends to ~2-3 crater diameters)
+        const ejectaRange = diameter * 2.5;
+
+        return {
+            impactType: 'Land Impact',
+            transientDiameter: D_transient,
+            finalDiameter: diameter,
+            craterDepth: depth,
+            craterVolume: Math.PI * Math.pow(diameter/2, 2) * depth / 3,
+            craterType: craterType,
+            ejectaRange: ejectaRange,
+            targetDensity: targetDensity,
+            method: 'Collins et al. (2005) - Pi-group scaling',
+            note: craterType === 'simple' ?
+                'Simple bowl-shaped crater with raised rim' :
+                'Complex crater with central peak and terraced walls'
+        };
+    }
+
+    /**
+     * DEDICATED: Calculate airburst impact and atmospheric explosion effects
+     * For objects that DISINTEGRATE in atmosphere (do NOT reach ground)
+     *
+     * @param {number} energy - Impact energy in Joules
+     * @param {number} burstAltitude - Altitude of fragmentation/explosion in meters
+     * @param {number} blastAdjustmentFactor - Factor based on altitude (default: 1.0)
+     * @returns {Object} Airburst characteristics with NO crater
+     */
+    calculateAirburstImpact(energy, burstAltitude, blastAdjustmentFactor = 1.0) {
+        const megatons = energy / 4.184e15;
+        const altitudeKm = burstAltitude / 1000;
+
+        // Base blast zones (Tunguska-calibrated formulas)
+        const baseBlast = this.calculateBlastRadius(energy);
+
+        // Altitude adjustments for airbursts
+        // High-altitude airbursts have LARGER blast zones due to atmospheric coupling
+        // Tunguska (8km): factor ≈ 1.0
+        // Chelyabinsk (23km): factor ≈ 1.3-1.5
+        const airblastRadius = baseBlast.airblastRadius * blastAdjustmentFactor;
+        const thermalRadius = baseBlast.thermalRadius * blastAdjustmentFactor;
+        const radiationRadius = baseBlast.radiationRadius * blastAdjustmentFactor;
+        const fireball = baseBlast.fireball;
+
+        // Estimate ground overpressure (reduced by altitude)
+        // At burst altitude h: P ∝ 1 / (h + slant_range)
+        // For h > 5km, blast is primarily atmospheric, less ground damage
+        const groundOverpressureFactor = altitudeKm < 5 ? 1.0 : Math.max(0.3, 5 / altitudeKm);
+
+        return {
+            impactType: 'Airburst',
+            burstAltitudeKm: altitudeKm,
+            energyMegatons: megatons,
+            noCrater: true,
+            craterDiameter: 0,
+            craterDepth: 0,
+            fireball: fireball,
+            thermalRadius: thermalRadius,
+            airblastRadius: airblastRadius,
+            radiationRadius: radiationRadius,
+            blastAdjustmentFactor: blastAdjustmentFactor,
+            groundOverpressureFactor: groundOverpressureFactor,
+            method: 'Tunguska-calibrated airburst model',
+            limitations: 'Does not model shock wave focusing or bow shock effects',
+            note: altitudeKm < 5 ?
+                `Low-altitude airburst at ${altitudeKm.toFixed(1)} km - significant ground damage` :
+                altitudeKm < 20 ?
+                `Mid-altitude airburst at ${altitudeKm.toFixed(1)} km - primarily atmospheric effects` :
+                `High-altitude airburst at ${altitudeKm.toFixed(1)} km - dispersed energy, reduced ground effects`,
+            damageType: altitudeKm < 5 ? 'Ground + atmospheric blast' :
+                       altitudeKm < 20 ? 'Primarily atmospheric blast' :
+                       'Dispersed atmospheric shockwave'
+        };
     }
 
     /**
@@ -1030,10 +1204,10 @@ class PhysicsEngine {
 
             // 7. TSUNAMI LETHALITY (if ocean impact)
             let tsunamiLethality = 0;
-            if (tsunami && tsunami.waveHeight > 0) {
+            if (tsunami && tsunami.initialWaveHeight > 0) {
                 // Estimate distance from coast (simplified)
                 const distanceFromCoast = 0; // Would need coastline data
-                tsunamiLethality = casualtyModel.calculateTsunamiLethality(tsunami.waveHeight, distanceFromCoast);
+                tsunamiLethality = casualtyModel.calculateTsunamiLethality(tsunami.initialWaveHeight, distanceFromCoast);
             }
 
             // Combine all lethalities using competitive risk model

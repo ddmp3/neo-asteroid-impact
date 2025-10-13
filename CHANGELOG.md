@@ -20,9 +20,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.6.23] - 2025-10-13 (**CRITICAL FIX: Corrected Tsunami Wave Heights & Scaling Laws**)
+## [1.6.23] - 2025-10-13 (**CRITICAL FIX: Verified & Corrected Tsunami Physics + Dedicated Impact Functions**)
 
-### Fixed
+### Fixed - CRITICAL
+- **Tsunami Field Naming Mismatch** (Backend - physicsEngine.js)
+  - Fixed `tsunami.waveHeight` → `tsunami.initialWaveHeight` in casualty calculations
+  - Bug: casualtyModel.calculateTsunamiLethality expected `waveHeight` field
+  - But calculateTsunamiEffects returned `initialWaveHeight` field
+  - Result: Tsunami casualties were always ZERO (field was undefined!)
+  - File: api/src/services/physicsEngine.js line 1033, 1036
+
 - **Tsunami Calculation Physics** (Backend - physicsEngine.js)
   - Fixed Schmidt-Holsapple cavity scaling: β=0.22, CT=1.88 (water-specific)
   - Corrected initial wave height: H_0 = 0.1 × R_cavity (was 0.28, too high!)
@@ -30,7 +37,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Corrected attenuation: A(r) = H_0 × (R_cavity / r) [geometric spreading]
   - Added physical caps: max 500m wave height (Chicxulub was ~300m)
   - Affected radius now realistic: r = H_max × R_cavity (not 45 × h × Y^0.25)
-  - File: api/src/services/physicsEngine.js lines 327-427
+  - File: api/src/services/physicsEngine.js lines 327-466
+
+### Added - NEW DEDICATED FUNCTIONS
+- **Dedicated Tsunami Functions** (Backend - physicsEngine.js)
+  - `calculateOceanImpactTsunami()` - Deep ocean impacts (depth > 1000m)
+    - Global propagation with minimal shoaling
+    - Can travel up to 10,000 km
+    - Amplitude rings at 100, 500, 1000, 2000, 5000 km
+    - Lines 339-397
+
+  - `calculateCoastalTsunami()` - Coastal/shallow impacts (depth < 1000m)
+    - Includes shoaling effects (Green's Law: A ∝ h^(-1/4))
+    - Estimated run-up: 3.5× wave height × shoaling factor
+    - More localized effects (max 1000 km)
+    - Amplitude rings at 10, 50, 100, 500 km
+    - Lines 399-466
+
+  - `calculateTsunamiEffects()` - Auto-router (main function)
+    - Automatically selects appropriate function based on water depth
+    - depth ≥ 1000m → calculateOceanImpactTsunami()
+    - depth < 1000m → calculateCoastalTsunami()
+    - Lines 327-337
+
+- **Dedicated Land Impact Functions** (Backend - physicsEngine.js)
+  - `calculateLandImpact()` - Terrestrial crater formation
+    - Collins et al. (2005) pi-group scaling for rock targets
+    - Simple vs complex crater transition at 3.2 km
+    - Ejecta blanket extends to 2.5× crater diameter
+    - Returns: crater type, dimensions, volume, ejecta range
+    - Lines 491-545
+
+- **Dedicated Airburst Functions** (Backend - physicsEngine.js)
+  - `calculateAirburstImpact()` - Atmospheric explosions (no crater)
+    - For objects that disintegrate in atmosphere
+    - Altitude-dependent blast adjustments
+    - Ground overpressure factor: 1.0 (low alt) to 0.3 (high alt)
+    - Returns: burst altitude, blast zones, damage type classification
+    - Lines 547-601
 
 ### Problem Identified
 **Before v1.6.23**: 100m asteroid at 20 km/s in Mediterranean gave:
