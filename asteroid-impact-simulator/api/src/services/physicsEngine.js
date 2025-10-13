@@ -424,22 +424,46 @@ class PhysicsEngine {
             };
         }
 
-        // Geographic heuristics for major oceans
+        // Geographic heuristics for major oceans and seas
+        // Improved for better coverage (v1.6.22)
         // Useful when USGS times out or doesn't detect ocean
+
+        // Mediterranean Sea (IMPROVED - full coverage)
+        // From Gibraltar (-5.3°) to Levantine Basin (36°E)
+        if (lon >= -6 && lon <= 37 && lat >= 30 && lat <= 46) {
+            return { isOcean: true, waterDepth: 1500, source: 'Mediterranean Sea (heuristic)' };
+        }
+
+        // Black Sea
+        if (lon >= 27 && lon <= 42 && lat >= 41 && lat <= 47) {
+            return { isOcean: true, waterDepth: 1200, source: 'Black Sea (heuristic)' };
+        }
+
+        // Gulf of Mexico (NEW - important for Chicxulub testing)
+        // Critical for asteroid impact tsunami modeling
+        if (lon >= -98 && lon <= -80 && lat >= 18 && lat <= 31) {
+            return { isOcean: true, waterDepth: 1600, source: 'Gulf of Mexico (heuristic)' };
+        }
+
+        // Caribbean Sea
+        if (lon >= -85 && lon <= -60 && lat >= 10 && lat <= 23) {
+            return { isOcean: true, waterDepth: 2500, source: 'Caribbean Sea (heuristic)' };
+        }
+
+        // North Atlantic (IMPROVED - includes Bretagne/UK/Ireland coasts)
+        // From US East Coast to European West Coast
+        if (lon >= -75 && lon <= -6 && lat >= 25 && lat <= 65) {
+            // Exclude eastern US mainland (rough approximation)
+            if (!(lon >= -80 && lon <= -70 && lat >= 30 && lat <= 45)) {
+                return { isOcean: true, waterDepth: 4000, source: 'North Atlantic Ocean (heuristic)' };
+            }
+        }
 
         // Pacific Ocean (largest ocean)
         if ((lon < -100 && lon > -180) || (lon > 120 && lon < 180)) {
             // Exclude western North America coast
             if (!(lat > 30 && lat < 60 && lon > -130 && lon < -100)) {
                 return { isOcean: true, waterDepth: 4000, source: 'Pacific Ocean (heuristic)' };
-            }
-        }
-
-        // Atlantic Ocean
-        if (lon > -80 && lon < -10) {
-            // Exclude Caribbean islands (narrow band)
-            if (!(lat > 10 && lat < 27 && lon > -85 && lon < -60)) {
-                return { isOcean: true, waterDepth: 4000, source: 'Atlantic Ocean (heuristic)' };
             }
         }
 
@@ -458,9 +482,14 @@ class PhysicsEngine {
             return { isOcean: true, waterDepth: 4000, source: 'Southern Ocean (heuristic)' };
         }
 
-        // Mediterranean Sea
-        if (lon > 0 && lon < 40 && lat > 30 && lat < 45) {
-            return { isOcean: true, waterDepth: 1500, source: 'Mediterranean Sea (heuristic)' };
+        // Bay of Bengal
+        if (lon >= 80 && lon <= 95 && lat >= 5 && lat <= 22) {
+            return { isOcean: true, waterDepth: 2600, source: 'Bay of Bengal (heuristic)' };
+        }
+
+        // South China Sea
+        if (lon >= 105 && lon <= 120 && lat >= 0 && lat <= 23) {
+            return { isOcean: true, waterDepth: 1200, source: 'South China Sea (heuristic)' };
         }
 
         // Not an ocean

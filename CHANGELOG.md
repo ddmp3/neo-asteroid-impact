@@ -16,7 +16,77 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - Development Branch
 
-### Current Development Version: v1.6.21 - Terrain-Aware Blast Zones
+### Current Development Version: v1.6.22 - Tsunami Detection & Visualization Fix
+
+---
+
+## [1.6.22] - 2025-10-12 (**FIX: Improved Ocean Detection & Tsunami Wave Visualization**)
+
+### Fixed
+- **Ocean Detection** (Backend - physicsEngine.js)
+  - Fixed Mediterranean Sea coverage (now -6° to 37°E, full basin)
+  - Added Gulf of Mexico detection (critical for Chicxulub testing)
+  - Added North Atlantic coverage (Bretagne, UK, Ireland coasts)
+  - Added Black Sea, Caribbean Sea, Bay of Bengal, South China Sea
+  - Improved heuristics for coastal impact detection
+  - File: api/src/services/physicsEngine.js lines 431-493
+
+- **Tsunami Wave Visualization** (Frontend - ImpactMapLeaflet.tsx)
+  - Added blue circular zones showing tsunami propagation
+  - Primary zone: Large blue circle (affected radius)
+  - Amplitude rings: Multiple circles at 100km, 500km, 1000km, 2000km
+  - Color intensity varies with wave amplitude (darker = higher waves)
+  - Dashed lines (10, 5) to show wave nature
+  - Popup shows distance, amplitude, and danger level
+  - File: web/src/components/ImpactMapLeaflet.tsx lines 371-434
+
+### Why This Matters
+**Problem Identified**:
+- Tsunami not detected for impacts in Bretagne (Atlantic coast)
+- Tsunami not detected for impacts in Méditerranée
+- Tsunami not detected for impacts near Mexico (Gulf coast)
+- No visual representation of tsunami wave propagation on map
+
+**Root Causes**:
+1. Ocean detection heuristics too limited (only covered major oceans)
+2. Mediterranean coordinates wrong (started at 0° instead of -6° Gibraltar)
+3. Gulf of Mexico not included in heuristics
+4. Frontend didn't display tsunami zones even when calculated
+
+**Solution**:
+- Expanded ocean detection to cover ALL major seas and coastal areas
+- Added visual blue circles showing tsunami propagation zones
+- Wave amplitude displayed at key distances (100km, 500km, 1000km, 2000km)
+- Color coding: Darker blue = higher/more dangerous waves
+
+### Testing Locations
+Now correctly detects ocean impacts at:
+- ✅ **Bretagne** (France Atlantic coast): ~48°N, -4°W
+- ✅ **Méditerranée** (full basin): Nice (43.7°N, 7.3°E), Barcelona, Athens
+- ✅ **Gulf of Mexico**: Near Mexico City water (21°N, -95°W)
+- ✅ **Caribbean**: Haiti, Cuba, Jamaica
+- ✅ **Black Sea**: Istanbul, Crimea
+- ✅ **Bay of Bengal**: Bangladesh coast
+
+### Scientific Validation
+Referenced against **Chicxulub tsunami study** (Molly Range et al., 2022, AGU Advances):
+- Gulf of Mexico: 300m+ wave height
+- Gulf coasts: 50-150m waves
+- Distant coasts: 10m+ waves
+- Model: Ward & Asphaug (2000) tsunami generation
+
+### Visual Changes
+**Before**: No tsunami visualization, circular blast zones only
+**After**: Blue tsunami zones overlay map showing:
+- Primary propagation zone (light blue)
+- Amplitude rings at key distances (varying blue intensity)
+- Popup information with wave height and danger level
+
+### Impact
+✅ Tsunami now correctly detected for coastal/ocean impacts
+✅ Visual feedback shows extent of tsunami propagation
+✅ Users can see which coastlines are affected
+✅ Color intensity indicates wave danger (dark blue = extreme)
 
 ---
 

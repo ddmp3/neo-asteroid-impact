@@ -367,6 +367,71 @@ export default function ImpactMapLeaflet() {
                     )}
                   </>
                 )}
+
+                {/* Tsunami Wave Propagation Zones (v1.6.22) - Blue circles for ocean impacts */}
+                {simulationResult.tsunami && simulationResult.tsunami.affectedRadiusKm > 0 && (
+                  <>
+                    {/* Primary tsunami zone - Initial wave */}
+                    <Circle
+                      center={[impactLocation.lat, impactLocation.lon]}
+                      radius={simulationResult.tsunami.affectedRadiusKm * 1000}
+                      pathOptions={{
+                        color: '#0066ff',
+                        fillColor: '#0099ff',
+                        fillOpacity: 0.25,
+                        weight: 3,
+                        dashArray: '10, 5'
+                      }}
+                    >
+                      <Popup>
+                        <div role="region" aria-label="Tsunami propagation zone">
+                          <strong>🌊 Tsunami Propagation Zone</strong>
+                          <br />
+                          Affected radius: {simulationResult.tsunami.affectedRadiusKm.toFixed(0)} km
+                          <br />
+                          Initial wave height: {simulationResult.tsunami.initialWaveHeight.toFixed(1)} m
+                          <br />
+                          Speed: {simulationResult.tsunami.speedKmh.toFixed(0)} km/h
+                        </div>
+                      </Popup>
+                    </Circle>
+
+                    {/* Amplitude rings at specific distances */}
+                    {simulationResult.tsunami.amplitudeAtDistances && simulationResult.tsunami.amplitudeAtDistances.map((ring, index) => {
+                      // Color intensity based on amplitude (darker blue = higher waves)
+                      const opacity = Math.min(0.4, Math.max(0.1, ring.amplitude / 10));
+                      const colorIntensity = Math.floor(Math.min(255, Math.max(100, 255 - ring.amplitude * 10)));
+                      const ringColor = `rgb(0, ${colorIntensity}, 255)`;
+
+                      return (
+                        <Circle
+                          key={`tsunami-ring-${index}`}
+                          center={[impactLocation.lat, impactLocation.lon]}
+                          radius={ring.distanceKm * 1000}
+                          pathOptions={{
+                            color: ringColor,
+                            fillColor: ringColor,
+                            fillOpacity: opacity,
+                            weight: 2,
+                            dashArray: '15, 10'
+                          }}
+                        >
+                          <Popup>
+                            <div role="region" aria-label={`Tsunami wave at ${ring.distanceKm} km`}>
+                              <strong>🌊 Tsunami Wave</strong>
+                              <br />
+                              Distance: {ring.distanceKm} km
+                              <br />
+                              Wave amplitude: {ring.amplitude.toFixed(1)} m
+                              <br />
+                              <em>{ring.amplitude > 5 ? 'Extremely dangerous' : ring.amplitude > 2 ? 'Dangerous' : 'Moderate'}</em>
+                            </div>
+                          </Popup>
+                        </Circle>
+                      );
+                    })}
+                  </>
+                )}
               </>
             )}
           </>
