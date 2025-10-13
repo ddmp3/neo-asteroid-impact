@@ -1,6 +1,6 @@
 {
   "name": "asteroid-impact-simulator-api",
-  "version": "1.6.28",
+  "version": "1.6.29",
   "description": "Backend API for Asteroid Impact Simulator - NASA Space Apps Challenge 2025",
   "main": "src/index.js",
   "scripts": {
