@@ -109,7 +109,7 @@ function generateOrbitPoints(elements: OrbitalElements, segments: number = 100):
   }
 
   const points: THREE.Vector3[] = [];
-  const { a, e, i, Omega, omega, M0 } = elements;
+  const { a, e, i, Omega, omega, M0: _M0 } = elements;
 
   for (let i_seg = 0; i_seg <= segments; i_seg++) {
     const M = (i_seg / segments) * 2 * Math.PI;

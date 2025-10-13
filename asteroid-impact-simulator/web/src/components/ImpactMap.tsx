@@ -4,11 +4,11 @@ import { useSimulationStore } from '../store/useSimulationStore';
 export default function ImpactMap() {
   const mapRef = useRef<HTMLDivElement>(null);
   const { impactLocation, setImpactLocation } = useSimulationStore();
-  const [mapReady, setMapReady] = useState(false);
+  const [_mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
     // This is a placeholder - actual Leaflet implementation would go here
-    setMapReady(true);
+    setMapReady(true); // Will be used when map is fully implemented
   }, []);
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {

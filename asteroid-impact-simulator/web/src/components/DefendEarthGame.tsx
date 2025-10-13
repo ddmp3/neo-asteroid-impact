@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useSimulationStore } from '../store/useSimulationStore';
+import { useState, useEffect } from 'react';
+// useSimulationStore imported but prepared for future feature
 import { simulationAPI } from '../services/api';
 
 interface GameState {

@@ -1,4 +1,4 @@
-import React, { useRef, useMemo, useState } from 'react';
+import { useRef, useMemo, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Text } from '@react-three/drei';
 import * as THREE from 'three';
@@ -133,7 +133,7 @@ function ImpactEffect({ show }: { show: boolean }) {
   const [scale, setScale] = useState(0);
   const effectRef = useRef<THREE.Group>(null);
 
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
     if (show && scale < 1) {
       setScale((prev) => Math.min(prev + delta * 0.5, 1));
     }

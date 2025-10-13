@@ -1,4 +1,4 @@
-import React, { useRef, useMemo, useEffect, useState } from 'react';
+import { useRef, useMemo, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stars, Text } from '@react-three/drei';
 import * as THREE from 'three';
@@ -57,7 +57,7 @@ function Asteroid({
   isAnimating: boolean
 }) {
   const asteroidRef = useRef<THREE.Mesh>(null);
-  const [progress, setProgress] = useState(0);
+  const [_progress, setProgress] = useState(0);
 
   // Calculate asteroid size (scaled down for visualization)
   const asteroidSize = Math.max(0.05, Math.min(0.3, params.diameter / 1000));

@@ -134,7 +134,7 @@ export default function ScenarioSelector() {
   const {
     asteroidParams,
     setAsteroidParams,
-    impactLocation,
+    _impactLocation,
     setImpactLocation,
     setSimulationStep,
     simulationStep,
@@ -187,35 +187,6 @@ export default function ScenarioSelector() {
     }
   };
 
-  const handleSimulate = async () => {
-    if (!impactLocation) {
-      setError('Please select an impact location on the map');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const { simulation, zoneAnalysis } = await simulationAPI.simulateImpact(
-        asteroidParams,
-        impactLocation
-      );
-
-      if (!simulation || !zoneAnalysis) {
-        throw new Error('Invalid simulation response');
-      }
-
-      setSimulationResult(simulation, zoneAnalysis);
-      setSimulationStep('results');
-    } catch (error: any) {
-      console.error('Simulation error:', error);
-      const errorMessage = error.response?.data?.message || error.message || 'Simulation failed. Please check API connection.';
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="space-y-6">

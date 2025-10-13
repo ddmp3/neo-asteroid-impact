@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 interface TooltipData {
   id: string;
@@ -111,7 +111,7 @@ interface EducationalTooltipsProps {
   className?: string;
 }
 
-export default function EducationalTooltips({ topic, className = '' }: EducationalTooltipsProps) {
+export default function EducationalTooltips({ topic: _topic, className = '' }: EducationalTooltipsProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 

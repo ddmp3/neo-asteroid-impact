@@ -189,7 +189,7 @@ export default function ParameterPanel() {
               { value: 'rocky', label: 'Rocky', emoji: '🪨', density: 3000 },
               { value: 'iron', label: 'Iron', emoji: '⚙️', density: 7800 },
               { value: 'icy', label: 'Icy', emoji: '❄️', density: 1000 },
-            ].map((comp, index) => (
+            ].map((comp) => (
               <button
                 key={comp.value}
                 onClick={() => setAsteroidParams({ composition: comp.value as any, density: comp.density })}

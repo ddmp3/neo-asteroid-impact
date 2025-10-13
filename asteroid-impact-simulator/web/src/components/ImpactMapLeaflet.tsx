@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Circle, Polygon, useMap, useMapEvents, Popup } from 'react-leaflet';
 import { useSimulationStore } from '../store/useSimulationStore';
 import L from 'leaflet';
