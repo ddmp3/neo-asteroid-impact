@@ -218,5 +218,5 @@ export interface SampleAsteroid {
 }
 
 // UI State types
-export type ViewMode = 'simulation' | 'scenario' | 'education' | 'mitigation' | 'game' | '3d';
+export type ViewMode = 'simulation' | 'scenario' | 'education' | 'mitigation' | 'game' | '3d' | 'info';
 export type SimulationStep = 'parameters' | 'location' | 'results' | 'mitigation';

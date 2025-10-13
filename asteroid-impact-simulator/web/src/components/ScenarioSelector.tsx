@@ -134,7 +134,7 @@ export default function ScenarioSelector() {
   const {
     asteroidParams,
     setAsteroidParams,
-    _impactLocation,
+    impactLocation: _impactLocation,
     setImpactLocation,
     setSimulationStep,
     simulationStep,

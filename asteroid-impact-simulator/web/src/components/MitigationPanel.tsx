@@ -4,12 +4,6 @@ import { simulationAPI } from '../services/api';
 
 type MitigationMethod = 'kinetic' | 'gravity' | 'nuclear';
 
-interface MitigationParams {
-  method: MitigationMethod;
-  warningYears: number;
-  impactorMass: number;
-}
-
 export default function MitigationPanel() {
   const { asteroidParams, deflectionResult, setDeflectionResult } = useSimulationStore();
   const [isSimulating, setIsSimulating] = useState(false);

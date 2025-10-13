@@ -12,6 +12,7 @@ import EducationalTooltips from './components/EducationalTooltips';
 import DefendEarthGame from './components/DefendEarthGame';
 import ScenarioSelector from './components/ScenarioSelector';
 import Simulation3D from './components/Simulation3D';
+import InfoPanel from './components/InfoPanel';
 
 function App() {
   const [apiHealth, setApiHealth] = useState<'checking' | 'healthy' | 'error'>('checking');
@@ -79,6 +80,10 @@ function App() {
         ) : viewMode === '3d' ? (
           <div className="container mx-auto px-4 py-6">
             <Simulation3D />
+          </div>
+        ) : viewMode === 'info' ? (
+          <div className="container mx-auto px-4 py-6">
+            <InfoPanel />
           </div>
         ) : viewMode === 'simulation' ? (
           <div className="container mx-auto px-4 py-6">

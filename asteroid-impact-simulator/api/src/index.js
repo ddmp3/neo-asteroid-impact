@@ -341,9 +341,25 @@ app.post('/api/simulate/deflection', async (req, res) => {
             method = 'kinetic' // 'kinetic', 'gravity', 'nuclear'
         } = req.body;
 
+        // Detailed logging for debugging
+        console.log('🎯 Deflection request received:', {
+            asteroidDiameter,
+            asteroidDensity,
+            warningTime,
+            missDistance,
+            method,
+            body: JSON.stringify(req.body)
+        });
+
         if (!asteroidDiameter || !warningTime || !missDistance) {
+            console.error('❌ Missing required parameters:', {
+                asteroidDiameter,
+                warningTime,
+                missDistance
+            });
             return res.status(400).json({
-                error: 'Missing required parameters: asteroidDiameter, warningTime, missDistance'
+                error: 'Missing required parameters: asteroidDiameter, warningTime, missDistance',
+                received: { asteroidDiameter, warningTime, missDistance }
             });
         }
 

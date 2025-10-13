@@ -79,6 +79,13 @@ export default function Header({ apiHealth }: HeaderProps) {
             >
               Game
             </NavButton>
+            <NavButton
+              active={viewMode === 'info'}
+              onClick={() => setViewMode('info')}
+              ariaLabel="Navigate to version info and changelog"
+            >
+              Info
+            </NavButton>
           </nav>
 
           {/* Status & Actions */}
@@ -153,6 +160,12 @@ export default function Header({ apiHealth }: HeaderProps) {
                 onClick={() => handleNavClick('game')}
               >
                 🎮 Game
+              </MobileNavButton>
+              <MobileNavButton
+                active={viewMode === 'info'}
+                onClick={() => handleNavClick('info')}
+              >
+                ℹ️ Info
               </MobileNavButton>
               <button
                 onClick={() => {

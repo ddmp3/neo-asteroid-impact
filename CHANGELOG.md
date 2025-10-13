@@ -16,7 +16,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - Development Branch
 
-### Current Development Version: v1.6.23 - Tsunami Physics Correction
+### Current Development Version: v1.6.24 - TypeScript Cleanup & Info Panel
+
+---
+
+## [1.6.24] - 2025-10-13 (**Frontend: Info Panel + Variable Cleanup + Debug Logs**)
+
+### Added
+- **Info Panel** (Frontend - InfoPanel.tsx)
+  - New "Info" tab in navigation showing version history
+  - Displays current production version (v1.6.24)
+  - Changelog synthétique: v1.6.24 + v1.6.23 highlights
+  - Key features summary (physics, real-time data, interactive modes)
+  - Tech stack overview (Backend, Frontend, 3D, Maps)
+  - File: web/src/components/InfoPanel.tsx (157 lines)
+
+- **Deflection Debug Logs** (Backend - index.js)
+  - Added detailed logging to /api/simulate/deflection endpoint
+  - Logs all received parameters for debugging Game mode issues
+  - Shows exact values causing 400 errors
+  - File: api/src/index.js lines 344-352, 354-363
+
+### Fixed
+- **Navigation** (Frontend)
+  - Added 'info' to ViewMode type (web/src/types/index.ts:221)
+  - Added Info tab to Header desktop navigation (web/src/components/Header.tsx:82-88)
+  - Added Info tab to Header mobile menu (web/src/components/Header.tsx:164-169)
+  - Added InfoPanel route in App.tsx (web/src/App.tsx:84-87)
+
+### Verified
+- **TypeScript Unused Variables**
+  - Reviewed all `_` prefixed variables (intentionally unused)
+  - `_mapReady` in ImpactMap.tsx: setter IS used (line 11)
+  - `_progress` in OrbitVisualization3D.tsx: setter IS used (line 103)
+  - `_topic`, `_state`, etc.: Destructured parameters (correct pattern)
+  - ✅ All `_` variables are legitimately unused or have used setters
 
 ---
 

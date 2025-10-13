@@ -92,7 +92,7 @@ function Asteroid({
     };
   }, [params.angle]);
 
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
     if (asteroidRef.current) {
       // Rotate asteroid
       asteroidRef.current.rotation.x += delta * 0.5;
