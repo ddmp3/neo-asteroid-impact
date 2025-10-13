@@ -34,16 +34,12 @@ const usgsService = new USGSService();
 // Middleware
 app.use(express.json());
 
-// CORS configuration - allow multiple origins
+// CORS configuration - Production only (neo.lueger.fr)
 const allowedOrigins = [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://localhost:5173',
-    'https://neo.lueger.fr',  // ✅ Custom domain (production)
-    'https://jolly-tree-0b50d3d0f.1.azurestaticapps.net',  // ✅ Azure fallback
-    'https://jolly-tree-0b50d3d0f-preview.eastus2.1.azurestaticapps.net'
+    'https://neo.lueger.fr'  // ✅ Production domain
 ];
 
+// Optional: Allow additional origins via environment variable for testing
 if (process.env.FRONTEND_URL) {
     allowedOrigins.push(process.env.FRONTEND_URL);
 }
@@ -237,7 +233,7 @@ app.get('/', (req, res) => {
         <div class="section">
             <h2>🔗 Additional Resources</h2>
             <div class="links">
-                <a href="https://lively-water-02a3d060f-preview.eastus2.1.azurestaticapps.net" class="btn btn-secondary" target="_blank">🌍 Frontend App</a>
+                <a href="https://neo.lueger.fr" class="btn btn-secondary" target="_blank">🌍 Frontend App</a>
                 <a href="https://github.com/ddmp3/meteormadness" class="btn btn-secondary" target="_blank">💻 GitHub</a>
             </div>
         </div>

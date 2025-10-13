@@ -9,7 +9,7 @@ import type {
   SampleAsteroid,
 } from '../types';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:7071';
+const API_URL = import.meta.env.VITE_API_URL || 'https://api.neo.lueger.fr';
 
 const api = axios.create({
   baseURL: API_URL,

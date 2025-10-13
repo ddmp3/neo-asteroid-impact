@@ -4,7 +4,7 @@ async function testParisAPI() {
     console.log('\n=== Testing Full API with Paris 2360m Iron Asteroid ===\n');
 
     try {
-        const response = await axios.post('http://localhost:7071/api/simulate/impact', {
+        const response = await axios.post('https://api.neo.lueger.fr/api/simulate/impact', {
             diameter: 2360,
             velocity: 20,
             angle: 45,

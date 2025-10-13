@@ -3,7 +3,7 @@ const axios = require('axios');
 async function testAzureAPI() {
     console.log('\n=== Testing Azure DEV API v1.6.4 ===\n');
 
-    const apiUrl = 'https://ca-api-ckq6mn38.victoriousglacier-63962c13.canadacentral.azurecontainerapps.io';
+    const apiUrl = 'https://api.neo.lueger.fr';
 
     try {
         // Test Paris scenario

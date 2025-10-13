@@ -5,7 +5,7 @@
 
 const axios = require('axios');
 
-const BASE_URL = process.env.API_URL || 'http://localhost:7071';
+const BASE_URL = process.env.API_URL || 'https://api.neo.lueger.fr';
 
 console.log('🧪 API ENDPOINTS TEST');
 console.log('='.repeat(70));
