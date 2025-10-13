@@ -1,6 +1,6 @@
 {
   "name": "asteroid-impact-simulator-web",
-  "version": "1.0.0",
+  "version": "1.6.28",
   "description": "Frontend for Asteroid Impact Simulator - NASA Space Apps Challenge 2025",
   "type": "module",
   "scripts": {
