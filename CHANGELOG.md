@@ -16,7 +16,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - Development Branch
 
-### Current Development Version: v1.6.29 - Scientific Precision Overhaul
+### Current Development Version: v1.6.30 - NIVEAU 0 Infrastructure Fixes
+
+---
+
+## [1.6.30] - 2025-10-13 (**NIVEAU 0: Infrastructure & Bug Fixes**)
+
+### 🎯 Executive Summary
+**Infrastructure fixes for v1.6.30** - Correcting critical bugs in ocean detection and crater formation for iron meteorites.
+
+### Fixed
+- **Ocean Detection False Positives** (physicsEngine.js lines 745-773) 🐛
+  - **Issue**: Pacific Ocean detection too broad, catching Tokyo (139.6°E) and Sydney (151.2°E) as ocean
+  - **Fix**: Split Pacific into Eastern (-180 to -100°) and Western (120-180°) with explicit land exclusions
+  - **Exclusions Added**: Japan (30-46°N, 128-146°E), Australia (-44 to -10°S, 142-154°E), Philippines, New Zealand
+  - **Validation**: 15/15 tests passed (Tokyo ✅ LAND, Sydney ✅ LAND, Pacific ✅ OCEAN)
+
+- **Crater Parameters Not Passed** (physicsEngine.js lines 855-863) 🐛
+  - **Issue**: `calculateCraterSize()` called without composition and density parameters
+  - **Impact**: Iron meteorites treated as rocky → incorrect crater sizes
+  - **Fix**: Pass `composition`, `density`, and `targetDensity=2500` to crater function
+  - **Result**: Iron meteorites now form correct craters (50m iron → 1252m crater ✅)
+
+- **Composition-Independent Fragmentation Thresholds** (atmosphericFragmentation.js lines 320-340) 🐛
+  - **Issue**: Size thresholds hard-coded for rocky composition only
+  - **Impact**: Iron meteorites (100 MPa strength) fragmented like rocky ones (2 MPa)
+  - **Fix**: Made thresholds composition-dependent:
+    - **Iron**: <10m airburst, <20m partial (50× stronger than rocky)
+    - **Rocky**: <30m airburst, <70m partial (baseline)
+    - **Icy**: <80m airburst, <150m partial (50× weaker than rocky)
+  - **Scientific Justification**: Iron strength 100 MPa vs Rocky 2 MPa = 50× difference
+
+### Validation
+**Azure API Tests (api.neo.lueger.fr)** - 4/4 tests passed ✅
+
+| Test | Diameter | Composition | Crater | Energy | Status |
+|------|----------|-------------|--------|--------|--------|
+| Barringer-class | 50m | Iron | 1252m × 334m deep | 17.63 MT | ✅ |
+| Small iron | 20m | Iron | 589m × 157m deep | 1.37 MT | ✅ |
+| Medium iron | 30m | Iron | 947m × 253m deep | 5.92 MT | ✅ |
+| Chelyabinsk | 20m | Rocky | Airburst 23km | 0.80 MT | ✅ |
+
+### Deployment
+- **Azure Container Registry**: `acrasteroidimpactckq6mn38.azurecr.io/asteroid-api:v1.6.30`
+- **Container App Revision**: `ca-api-ckq6mn38--0000026`
+- **Deployed**: 2025-10-13 19:22 UTC
+- **Environment**: Azure DEV (dev-meteormadness subscription)
+- **Endpoints**: api.neo.lueger.fr (HTTPS)
 
 ---
 
