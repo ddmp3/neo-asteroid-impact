@@ -328,22 +328,34 @@ class PhysicsEngine {
         // Convert angle to radians
         const angleRad = angle * Math.PI / 180;
 
-        // 1. Calculate transient water cavity (same scaling as land craters)
-        // Using Collins et al. (2005) + Ward & Asphaug (2000)
-        const K_transient = 472; // Calibrated coefficient from crater scaling
-        const D_transient_meters = K_transient * Math.pow(energy / 1e15, 0.25);
+        // Ward & Asphaug (2000) - Asteroid Impact Tsunami
+        // Uses Schmidt-Holsapple crater scaling for water cavities
+        // Corrected for realistic tsunami heights (v1.6.23)
+
+        // 1. Calculate transient water cavity using Schmidt-Holsapple scaling
+        // For water: β = 0.22, CT = 1.88 (Ward & Asphaug 2000)
+        // Diameter scaling: dc = CT * (E / ρ_water)^β
+        // where E is kinetic energy, ρ_water = 1000 kg/m³
+        const rho_water = 1000; // kg/m³
+        const beta = 0.22; // Scaling exponent for water
+        const CT = 1.88; // Scaling coefficient for water
+
+        // Cavity diameter (meters)
+        const D_cavity = CT * Math.pow(energy / rho_water, beta);
+
+        // Apply angle correction (oblique impacts)
         const angleFactor = Math.pow(Math.sin(angleRad), 1/3);
-        const D_transient = D_transient_meters * angleFactor; // meters
+        const D_transient = D_cavity * angleFactor; // meters
+        const R_cavity = D_transient / 2; // cavity radius
 
-        // 2. Water cavity radius
-        const R_cavity = D_transient / 2; // meters
+        // 2. Initial wave height at cavity rim (Ward & Asphaug 2000)
+        // H_0 ≈ 0.1 × R_cavity (NOT 0.28 - that was too high!)
+        // Empirical from their simulations
+        const H_initial = 0.1 * R_cavity; // meters
 
-        // 3. Initial wave height at cavity rim (Ward & Asphaug 2000, empirical)
-        // H_max ≈ 0.28 × R_cavity
-        const H_initial = 0.28 * R_cavity; // meters
-
-        // 4. Maximum wave height cannot exceed water depth
-        const H_max = Math.min(H_initial, waterDepth);
+        // 3. Maximum wave height cannot exceed water depth
+        // Also cap at 500m for physical realism (even Chicxulub was ~300m)
+        const H_max = Math.min(H_initial, waterDepth, 500);
 
         // 5. Wavelength ≈ transient cavity diameter (Ward & Asphaug 2000)
         const wavelength = D_transient; // meters
@@ -352,23 +364,25 @@ class PhysicsEngine {
         // v = √(g × h) - valid for long waves where wavelength >> depth
         const speed = Math.sqrt(this.EARTH_SURFACE_GRAVITY * waterDepth); // m/s
 
-        // 7. Wave amplitude attenuation with distance (Ward & Asphaug empirical formula)
-        // A(r) = 45 × (h / r) × Y^0.25
-        // where Y = energy in kilotons TNT, r = distance in meters
+        // 7. Wave amplitude attenuation with distance (Ward & Asphaug 2000)
+        // CORRECTED FORMULA (v1.6.23):
+        // A(r) = H_0 × (R_cavity / r)  [geometric spreading + dispersion]
+        // More realistic: waves decay as 1/r, not as slowly as before
         const Y_kilotons = energy / 4.184e12; // Convert Joules to kilotons TNT
 
         // 8. Estimate affected radius (where amplitude drops to ~1 meter)
-        // Solving: 1 = 45 × (h / r) × Y^0.25 for r
-        // r = 45 × h × Y^0.25
-        const affectedRadiusMeters = 45 * waterDepth * Math.pow(Y_kilotons, 0.25);
+        // Solving: 1 = H_max × (R_cavity / r) for r
+        // r = H_max × R_cavity
+        // This gives MUCH more realistic distances
+        const affectedRadiusMeters = Math.min(H_max * R_cavity, 3000000); // Cap at 3000 km (Chicxulub was global but let's be reasonable)
         const affectedRadiusKm = affectedRadiusMeters / 1000;
 
         // 9. Calculate amplitude at several key distances for visualization
         const amplitudeAtDistances = [
-            { distanceKm: 100, amplitude: this.getTsunamiAmplitudeAt(100, waterDepth, Y_kilotons) },
-            { distanceKm: 500, amplitude: this.getTsunamiAmplitudeAt(500, waterDepth, Y_kilotons) },
-            { distanceKm: 1000, amplitude: this.getTsunamiAmplitudeAt(1000, waterDepth, Y_kilotons) },
-            { distanceKm: 2000, amplitude: this.getTsunamiAmplitudeAt(2000, waterDepth, Y_kilotons) }
+            { distanceKm: 100, amplitude: this.getTsunamiAmplitudeAt(100, waterDepth, Y_kilotons, H_max, R_cavity) },
+            { distanceKm: 500, amplitude: this.getTsunamiAmplitudeAt(500, waterDepth, Y_kilotons, H_max, R_cavity) },
+            { distanceKm: 1000, amplitude: this.getTsunamiAmplitudeAt(1000, waterDepth, Y_kilotons, H_max, R_cavity) },
+            { distanceKm: 2000, amplitude: this.getTsunamiAmplitudeAt(2000, waterDepth, Y_kilotons, H_max, R_cavity) }
         ].filter(item => item.amplitude >= 0.5); // Filter out negligible waves
 
         return {
@@ -391,17 +405,25 @@ class PhysicsEngine {
 
     /**
      * Calculate tsunami amplitude at a specific distance (Ward & Asphaug 2000)
-     * A(r) = 45 × (h / r) × Y^0.25
+     * CORRECTED (v1.6.23): A(r) = H_0 × (R_cavity / r)
+     * Geometric spreading approximation for far-field tsunami
      *
      * @param {number} distanceKm - Distance from impact in kilometers
-     * @param {number} waterDepth - Water depth in meters
+     * @param {number} waterDepth - Water depth in meters (unused now)
      * @param {number} Y_kilotons - Impact energy in kilotons TNT
+     * @param {number} H_initial - Initial wave height at cavity (meters)
+     * @param {number} R_cavity - Cavity radius (meters)
      * @returns {number} Wave amplitude in meters
      */
-    getTsunamiAmplitudeAt(distanceKm, waterDepth, Y_kilotons) {
+    getTsunamiAmplitudeAt(distanceKm, waterDepth, Y_kilotons, H_initial = 10, R_cavity = 1000) {
         const r = distanceKm * 1000; // convert to meters
-        const amplitude = 45 * (waterDepth / r) * Math.pow(Y_kilotons, 0.25);
-        return Math.max(0, Math.round(amplitude * 10) / 10); // Round to 1 decimal, min 0
+
+        // Geometric spreading: amplitude ∝ 1/r
+        // A(r) = H_0 × (R_cavity / r)
+        const amplitude = H_initial * (R_cavity / r);
+
+        // Physical minimum: waves below 0.1m are negligible
+        return amplitude >= 0.1 ? Math.round(amplitude * 10) / 10 : 0;
     }
 
     /**

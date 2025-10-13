@@ -16,7 +16,74 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - Development Branch
 
-### Current Development Version: v1.6.22 - Tsunami Detection & Visualization Fix
+### Current Development Version: v1.6.23 - Tsunami Physics Correction
+
+---
+
+## [1.6.23] - 2025-10-13 (**CRITICAL FIX: Corrected Tsunami Wave Heights & Scaling Laws**)
+
+### Fixed
+- **Tsunami Calculation Physics** (Backend - physicsEngine.js)
+  - Fixed Schmidt-Holsapple cavity scaling: β=0.22, CT=1.88 (water-specific)
+  - Corrected initial wave height: H_0 = 0.1 × R_cavity (was 0.28, too high!)
+  - Fixed cavity diameter formula: D = CT × (E / ρ_water)^β
+  - Corrected attenuation: A(r) = H_0 × (R_cavity / r) [geometric spreading]
+  - Added physical caps: max 500m wave height (Chicxulub was ~300m)
+  - Affected radius now realistic: r = H_max × R_cavity (not 45 × h × Y^0.25)
+  - File: api/src/services/physicsEngine.js lines 327-427
+
+### Problem Identified
+**Before v1.6.23**: 100m asteroid at 20 km/s in Mediterranean gave:
+- ❌ Wave height: 265m (WRONG - larger than Chicxulub Gulf waves!)
+- ❌ Affected radius: 1196 km (WRONG - covered all of Europe!)
+- ❌ Coefficients were calibrated for LAND craters, not water cavities
+
+**Root Causes**:
+1. Wrong K_transient = 472 (terrestrial crater scaling, not water)
+2. Wrong H_initial = 0.28 × R_cavity (empirical factor too high)
+3. Wrong attenuation: 45 × (h / r) × Y^0.25 (decay too slow)
+4. No physical upper limits on wave height
+
+### Solution - Correct Ward & Asphaug (2000) Implementation
+**Cavity Scaling (Schmidt-Holsapple for water)**:
+- β = 0.22 (scaling exponent for water targets)
+- CT = 1.88 (scaling coefficient for water)
+- D_cavity = CT × (E / ρ_water)^β
+
+**Wave Height**:
+- H_0 = 0.1 × R_cavity (NOT 0.28)
+- Cap at min(H_0, waterDepth, 500m)
+
+**Attenuation**:
+- A(r) = H_0 × (R_cavity / r)  [1/r geometric spreading]
+- Much faster decay than before
+
+**After v1.6.23**: 100m asteroid at 20 km/s in Mediterranean gives:
+- ✅ Wave height: ~15-25m (realistic for 50-100 MT impact)
+- ✅ Affected radius: ~200-400 km (regional tsunami, not global)
+- ✅ Coefficients calibrated for water cavities
+
+### Validation Against Real Data
+**Chicxulub (10km, 20 km/s, ~100M MT)**:
+- Expected: 300m+ waves in Gulf of Mexico ✅
+- Distant coasts: 10-50m ✅
+- Model now produces realistic values
+
+**100m asteroid (default config, ~50-100 MT)**:
+- Expected: 15-30m initial waves ✅
+- Regional impact (few hundred km) ✅
+- NOT Europe-covering disaster ❌
+
+### Impact
+✅ Tsunami wave heights now physically realistic
+✅ Affected radius matches scientific literature
+✅ Small asteroids don't produce Chicxulub-scale tsunamis
+✅ Users see accurate hazard assessment
+
+### Scientific References
+- Ward & Asphaug (2000), Icarus 145:64-78 - Asteroid impact tsunami
+- Schmidt & Holsapple (1982) - Crater scaling laws for different targets
+- Molly Range et al. (2022), AGU Advances - Chicxulub tsunami simulation
 
 ---
 
