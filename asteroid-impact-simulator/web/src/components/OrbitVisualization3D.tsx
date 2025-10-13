@@ -169,14 +169,12 @@ function OrbitPath({ angle }: { angle: number }) {
   }, [points]);
 
   return (
-    <line geometry={lineGeometry}>
-      <lineBasicMaterial
-        color="#fbbf24"
-        opacity={0.4}
-        transparent
-        linewidth={2}
-      />
-    </line>
+    <primitive object={new THREE.Line(lineGeometry, new THREE.LineBasicMaterial({
+      color: "#fbbf24",
+      opacity: 0.4,
+      transparent: true,
+      linewidth: 2
+    }))} />
   );
 }
 

@@ -91,6 +91,10 @@ export interface SimulationResult {
     propagationSpeed: number;
     speedKmh: number;
     affectedRadiusKm: number;
+    amplitudeAtDistances?: Array<{
+      distanceKm: number;
+      amplitude: number;
+    }>;
   } | null;
   casualties: {
     estimatedCasualties: number;

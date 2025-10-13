@@ -397,7 +397,7 @@ export default function ImpactMapLeaflet() {
                     </Circle>
 
                     {/* Amplitude rings at specific distances */}
-                    {simulationResult.tsunami.amplitudeAtDistances && simulationResult.tsunami.amplitudeAtDistances.map((ring, index) => {
+                    {simulationResult.tsunami.amplitudeAtDistances && simulationResult.tsunami.amplitudeAtDistances.map((ring: { distanceKm: number; amplitude: number }, index: number) => {
                       // Color intensity based on amplitude (darker blue = higher waves)
                       const opacity = Math.min(0.4, Math.max(0.1, ring.amplitude / 10));
                       const colorIntensity = Math.floor(Math.min(255, Math.max(100, 255 - ring.amplitude * 10)));

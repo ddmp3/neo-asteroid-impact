@@ -161,7 +161,7 @@ function ImpactEffect({ show }: { show: boolean }) {
       {/* Fireball sphere */}
       <mesh>
         <sphereGeometry args={[1.5, 32, 32]} />
-        <meshBasicMaterial
+        <meshStandardMaterial
           color="#ff3300"
           transparent
           opacity={0.7 * (1 - scale)}
