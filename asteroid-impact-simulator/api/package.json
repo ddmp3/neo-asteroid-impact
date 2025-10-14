@@ -1,7 +1,7 @@
 {
   "name": "asteroid-impact-simulator-api",
-  "version": "1.6.29",
-  "description": "Backend API for Asteroid Impact Simulator - NASA Space Apps Challenge 2025",
+  "version": "1.7.0",
+  "description": "Backend API for Asteroid Impact Simulator - NASA Space Apps Challenge 2025 - Rollback Stability + Empirical C Calibration (Rocky 16.24% error)",
   "license": "MIT",
   "main": "src/index.js",
   "scripts": {
