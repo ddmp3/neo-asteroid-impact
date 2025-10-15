@@ -11,7 +11,7 @@ const TerrainAnalysis = require('./terrainAnalysis');
 const USGSService = require('./usgsService');
 const AtmosphericFragmentation = require('./atmosphericFragmentation');
 const TerrainAwareBlastService = require('./terrainAwareBlast');
-const PhysicsEngineIronV2 = require('./physicsEngineIronV2');
+// const PhysicsEngineIronV2 = require('./physicsEngineIronV2'); // TODO: Implement v2.0 physics model
 
 class PhysicsEngine {
     constructor() {
@@ -34,7 +34,7 @@ class PhysicsEngine {
         this.terrainAwareBlastService = new TerrainAwareBlastService();
 
         // Initialize physics-based iron crater model v2.0 (optional, for advanced calculations)
-        this.ironPhysicsV2 = new PhysicsEngineIronV2();
+        // this.ironPhysicsV2 = new PhysicsEngineIronV2(); // TODO: Implement v2.0 physics model
     }
 
     /**
