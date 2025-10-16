@@ -232,7 +232,7 @@ export default function UncertaintyPanel() {
                     <tr className="border-b border-white/10">
                       <td className="py-2 px-3">Std. Deviation</td>
                       <td className="text-right py-2 px-3 font-mono">
-                        {formatNumber(monteCarloResult.statistics[selectedOutput]?.stdDev)}
+                        {formatNumber(monteCarloResult.statistics[selectedOutput]?.std)}
                       </td>
                     </tr>
                     <tr className="border-b border-white/10">
@@ -250,20 +250,20 @@ export default function UncertaintyPanel() {
                     <tr className="border-b border-white/10">
                       <td className="py-2 px-3">5th Percentile</td>
                       <td className="text-right py-2 px-3 font-mono">
-                        {formatNumber(monteCarloResult.statistics[selectedOutput]?.percentile_5)}
+                        {formatNumber(monteCarloResult.statistics[selectedOutput]?.percentiles?.p5)}
                       </td>
                     </tr>
                     <tr className="border-b border-white/10">
                       <td className="py-2 px-3">95th Percentile</td>
                       <td className="text-right py-2 px-3 font-mono">
-                        {formatNumber(monteCarloResult.statistics[selectedOutput]?.percentile_95)}
+                        {formatNumber(monteCarloResult.statistics[selectedOutput]?.percentiles?.p95)}
                       </td>
                     </tr>
                     <tr className="border-b border-white/10">
                       <td className="py-2 px-3">95% Confidence Interval</td>
                       <td className="text-right py-2 px-3 font-mono">
-                        [{formatNumber(monteCarloResult.statistics[selectedOutput]?.confidenceInterval_95.lower)},
-                        {formatNumber(monteCarloResult.statistics[selectedOutput]?.confidenceInterval_95.upper)}]
+                        [{formatNumber(monteCarloResult.statistics[selectedOutput]?.confidenceInterval?.lower)},
+                        {formatNumber(monteCarloResult.statistics[selectedOutput]?.confidenceInterval?.upper)}]
                       </td>
                     </tr>
                   </tbody>

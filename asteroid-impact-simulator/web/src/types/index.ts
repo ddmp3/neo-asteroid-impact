@@ -238,22 +238,32 @@ export interface MonteCarloParams {
 }
 
 export interface MonteCarloStatistics {
+  n: number;
   mean: number;
   median: number;
-  stdDev: number;
+  mode: number | null;
+  std: number;
   variance: number;
   min: number;
   max: number;
-  percentile_5: number;
-  percentile_25: number;
-  percentile_75: number;
-  percentile_95: number;
-  skewness: number;
-  kurtosis: number;
-  confidenceInterval_95: {
+  range: number;
+  coefficientOfVariation: number | null;
+  skewness: number | null;
+  kurtosis: number | null;
+  confidenceInterval: {
+    level: number;
     lower: number;
     upper: number;
+    margin: number;
   };
+  percentiles: {
+    p5: number;
+    p25: number;
+    p50: number;
+    p75: number;
+    p95: number;
+  };
+  standardError: number;
 }
 
 export interface MonteCarloOutputStatistics {
