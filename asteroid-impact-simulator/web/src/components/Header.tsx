@@ -45,6 +45,13 @@ export default function Header({ apiHealth }: HeaderProps) {
               Simulation
             </NavButton>
             <NavButton
+              active={viewMode === 'uncertainty'}
+              onClick={() => setViewMode('uncertainty')}
+              ariaLabel="Navigate to Uncertainty Quantification view"
+            >
+              Uncertainty
+            </NavButton>
+            <NavButton
               active={viewMode === '3d'}
               onClick={() => setViewMode('3d')}
               ariaLabel="Navigate to 3D Trajectory view"
@@ -130,6 +137,12 @@ export default function Header({ apiHealth }: HeaderProps) {
                 onClick={() => handleNavClick('simulation')}
               >
                 🎯 Simulation
+              </MobileNavButton>
+              <MobileNavButton
+                active={viewMode === 'uncertainty'}
+                onClick={() => handleNavClick('uncertainty')}
+              >
+                🎲 Uncertainty
               </MobileNavButton>
               <MobileNavButton
                 active={viewMode === '3d'}

@@ -13,6 +13,7 @@ import DefendEarthGame from './components/DefendEarthGame';
 import ScenarioSelector from './components/ScenarioSelector';
 import Simulation3D from './components/Simulation3D';
 import InfoPanel from './components/InfoPanel';
+import UncertaintyPanel from './components/UncertaintyPanel';
 
 function App() {
   const [apiHealth, setApiHealth] = useState<'checking' | 'healthy' | 'error'>('checking');
@@ -64,6 +65,10 @@ function App() {
         {viewMode === 'scenario' ? (
           <div className="container mx-auto px-4 py-6">
             <ScenarioSelector />
+          </div>
+        ) : viewMode === 'uncertainty' ? (
+          <div className="container mx-auto px-4 py-6">
+            <UncertaintyPanel />
           </div>
         ) : viewMode === 'mitigation' ? (
           <div className="container mx-auto px-4 py-6">

@@ -217,6 +217,107 @@ export interface SampleAsteroid {
   description: string;
 }
 
+// Monte Carlo Uncertainty types
+export interface MonteCarloParams {
+  diameter: number;
+  velocity: number;
+  angle: number;
+  density: number;
+  composition: 'rocky' | 'iron' | 'icy';
+  latitude: number;
+  longitude: number;
+  nSamples: number;
+  customUncertainties?: {
+    diameter?: { mean: number; stdDev: number };
+    velocity?: { mean: number; stdDev: number };
+    angle?: { mean: number; stdDev: number };
+    density?: { mean: number; stdDev: number };
+  };
+  includeVisualization?: boolean;
+  includeDecomposition?: boolean;
+}
+
+export interface MonteCarloStatistics {
+  mean: number;
+  median: number;
+  stdDev: number;
+  variance: number;
+  min: number;
+  max: number;
+  percentile_5: number;
+  percentile_25: number;
+  percentile_75: number;
+  percentile_95: number;
+  skewness: number;
+  kurtosis: number;
+  confidenceInterval_95: {
+    lower: number;
+    upper: number;
+  };
+}
+
+export interface MonteCarloOutputStatistics {
+  craterDiameter?: MonteCarloStatistics;
+  impactEnergy?: MonteCarloStatistics;
+  seismicMagnitude?: MonteCarloStatistics;
+  [key: string]: MonteCarloStatistics | undefined;
+}
+
+export interface SobolIndices {
+  firstOrder: number;
+  totalOrder: number;
+  interaction?: number;
+}
+
+export interface VarianceDecomposition {
+  [outputVariable: string]: {
+    [inputParameter: string]: SobolIndices;
+  };
+}
+
+export interface VisualizationData {
+  [outputVariable: string]: {
+    pdf: {
+      bins: number[];
+      frequencies: number[];
+    };
+    cdf: {
+      values: number[];
+      probabilities: number[];
+    };
+    boxPlot: {
+      min: number;
+      q1: number;
+      median: number;
+      q3: number;
+      max: number;
+      outliers: number[];
+    };
+  };
+}
+
+export interface MonteCarloResult {
+  nominalParams: {
+    diameter: number;
+    velocity: number;
+    angle: number;
+    density: number;
+    composition: string;
+    latitude: number;
+    longitude: number;
+  };
+  statistics: MonteCarloOutputStatistics;
+  metadata: {
+    nSamples: number;
+    successfulSamples: number;
+    successRate: number;
+    computationTime: number;
+    timestamp: string;
+  };
+  sensitivity?: VarianceDecomposition;
+  visualization?: VisualizationData;
+}
+
 // UI State types
-export type ViewMode = 'simulation' | 'scenario' | 'education' | 'mitigation' | 'game' | '3d' | 'info';
+export type ViewMode = 'simulation' | 'scenario' | 'education' | 'mitigation' | 'game' | '3d' | 'info' | 'uncertainty';
 export type SimulationStep = 'parameters' | 'location' | 'results' | 'mitigation';

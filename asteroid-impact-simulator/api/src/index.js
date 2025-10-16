@@ -11,6 +11,10 @@ const PhysicsEngine = require('./services/physicsEngine');
 const NASANeoService = require('./services/nasaNeoService');
 const RealTimeNeoService = require('./services/realTimeNeoService');
 const USGSService = require('./services/usgsService');
+const MonteCarloSimulation = require('./services/monteCarloSimulation');
+const StatisticalAnalysis = require('./services/statisticalAnalysis');
+const VarianceDecomposition = require('./services/varianceDecomposition');
+const VisualizationData = require('./services/visualizationData');
 
 // Initialize Application Insights (Azure monitoring)
 if (process.env.APPINSIGHTS_INSTRUMENTATIONKEY) {
@@ -30,6 +34,10 @@ const physicsEngine = new PhysicsEngine();
 const nasaNeoService = new NASANeoService();
 const realTimeNeoService = new RealTimeNeoService();
 const usgsService = new USGSService();
+const monteCarloSimulation = new MonteCarloSimulation();
+const statisticalAnalysis = new StatisticalAnalysis();
+const varianceDecomposition = new VarianceDecomposition();
+const visualizationData = new VisualizationData();
 
 // Middleware
 app.use(express.json());
@@ -448,6 +456,123 @@ app.post('/api/simulate/deflection', async (req, res) => {
         res.status(500).json({
             error: 'Deflection simulation failed',
             message: error.message
+        });
+    }
+});
+
+/**
+ * POST /api/simulate/uncertainty
+ * Run Monte Carlo uncertainty quantification for asteroid impact
+ * Returns statistical analysis, variance decomposition, and visualization data
+ */
+app.post('/api/simulate/uncertainty', async (req, res) => {
+    try {
+        const {
+            diameter,                    // meters (nominal value)
+            velocity,                    // km/s (nominal value)
+            angle = 45,                  // degrees (nominal value)
+            density = 3000,              // kg/m³ (nominal value)
+            composition = 'rocky',       // Material type
+            latitude = 0,                // Impact latitude
+            longitude = 0,               // Impact longitude
+            nSamples = 1000,             // Number of Monte Carlo samples (100-10000)
+            customUncertainties = null,  // Optional custom uncertainty specifications
+            includeVisualization = true, // Include visualization data (PDF/CDF/box plots)
+            includeDecomposition = true  // Include Sobol sensitivity analysis
+        } = req.body;
+
+        console.log('🎲 Monte Carlo simulation request:', {
+            diameter, velocity, angle, density, composition,
+            nSamples, includeVisualization, includeDecomposition
+        });
+
+        // Validation
+        if (!diameter || typeof diameter !== 'number' || diameter <= 0) {
+            return res.status(400).json({
+                error: 'Invalid diameter',
+                received: diameter,
+                expected: 'positive number (meters)'
+            });
+        }
+
+        if (!velocity || typeof velocity !== 'number' || velocity < 5 || velocity > 75) {
+            return res.status(400).json({
+                error: 'Invalid velocity',
+                received: velocity,
+                expected: '5 ≤ velocity ≤ 75 km/s'
+            });
+        }
+
+        if (nSamples < 100 || nSamples > 10000) {
+            return res.status(400).json({
+                error: 'Invalid nSamples',
+                received: nSamples,
+                expected: '100 ≤ nSamples ≤ 10000'
+            });
+        }
+
+        const startTime = Date.now();
+
+        // Define nominal parameters
+        const nominalParams = {
+            diameter,
+            velocity,
+            angle,
+            density,
+            composition,
+            latitude,
+            longitude
+        };
+
+        // Run Monte Carlo simulation
+        const mcResults = await monteCarloSimulation.simulate(
+            nominalParams,
+            nSamples,
+            customUncertainties || {}
+        );
+
+        // Compute statistical analysis
+        const statistics = statisticalAnalysis.analyzeMonteCarloResults(mcResults);
+
+        // Build response
+        const response = {
+            nominalParams,
+            statistics,
+            metadata: {
+                nSamples: mcResults.metadata.n_samples,
+                successfulSamples: mcResults.metadata.successfulSamples,
+                successRate: mcResults.metadata.successRate,
+                computationTime: Date.now() - startTime,
+                timestamp: new Date().toISOString()
+            }
+        };
+
+        // Add variance decomposition (Sobol sensitivity analysis)
+        if (includeDecomposition) {
+            const decomposition = varianceDecomposition.analyzeMultipleOutputs(mcResults, [
+                'craterDiameter',
+                'impactEnergy',
+                'seismicMagnitude'
+            ]);
+            response.sensitivity = decomposition;
+        }
+
+        // Add visualization data (PDF, CDF, box plots)
+        if (includeVisualization) {
+            const visualization = visualizationData.generateMultiVariableVisualization(mcResults);
+            response.visualization = visualization;
+        }
+
+        console.log(`✅ Monte Carlo completed: ${nSamples} samples in ${Date.now() - startTime}ms`);
+
+        res.json(response);
+
+    } catch (error) {
+        console.error('Monte Carlo simulation error:', error);
+        res.status(500).json({
+            error: 'Monte Carlo simulation failed',
+            message: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 });

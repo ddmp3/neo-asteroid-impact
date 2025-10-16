@@ -7,6 +7,8 @@ import type {
   DeflectionResult,
   NeoData,
   SampleAsteroid,
+  MonteCarloParams,
+  MonteCarloResult,
 } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.neo.lueger.fr';
@@ -64,6 +66,26 @@ export const simulationAPI = {
       method,
     });
     return response.data.deflection;
+  },
+
+  /**
+   * Monte Carlo uncertainty quantification
+   */
+  async simulateUncertainty(params: MonteCarloParams): Promise<MonteCarloResult> {
+    const response = await api.post('/api/simulate/uncertainty', {
+      diameter: params.diameter,
+      velocity: params.velocity,
+      angle: params.angle,
+      density: params.density,
+      composition: params.composition,
+      latitude: params.latitude,
+      longitude: params.longitude,
+      nSamples: params.nSamples,
+      customUncertainties: params.customUncertainties,
+      includeVisualization: params.includeVisualization,
+      includeDecomposition: params.includeDecomposition,
+    });
+    return response.data;
   },
 };
 

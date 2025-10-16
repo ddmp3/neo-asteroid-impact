@@ -7,6 +7,7 @@ import type {
   DeflectionResult,
   ViewMode,
   SimulationStep,
+  MonteCarloResult,
 } from '../types';
 
 interface SimulationStore {
@@ -22,9 +23,11 @@ interface SimulationStore {
   simulationResult: SimulationResult | null;
   zoneAnalysis: ZoneAnalysis | null;
   deflectionResult: DeflectionResult | null;
+  monteCarloResult: MonteCarloResult | null;
 
   setSimulationResult: (result: SimulationResult, zone: ZoneAnalysis) => void;
   setDeflectionResult: (result: DeflectionResult) => void;
+  setMonteCarloResult: (result: MonteCarloResult) => void;
 
   // UI State
   viewMode: ViewMode;
@@ -56,6 +59,7 @@ export const useSimulationStore = create<SimulationStore>((set) => ({
   simulationResult: null,
   zoneAnalysis: null,
   deflectionResult: null,
+  monteCarloResult: null,
   viewMode: 'simulation',
   simulationStep: 'parameters',
   isLoading: false,
@@ -81,6 +85,9 @@ export const useSimulationStore = create<SimulationStore>((set) => ({
   setDeflectionResult: (result) =>
     set({ deflectionResult: result }),
 
+  setMonteCarloResult: (result) =>
+    set({ monteCarloResult: result, isLoading: false }),
+
   setViewMode: (mode) =>
     set({ viewMode: mode }),
 
@@ -100,6 +107,7 @@ export const useSimulationStore = create<SimulationStore>((set) => ({
       simulationResult: null,
       zoneAnalysis: null,
       deflectionResult: null,
+      monteCarloResult: null,
       simulationStep: 'parameters',
       isLoading: false,
       error: null,
