@@ -9,11 +9,13 @@
 
 const UncertaintyQuantification = require('./uncertaintyQuantification');
 const PhysicsEngine = require('./physicsEngine');
+const StatisticalAnalysis = require('./statisticalAnalysis');
 
 class MonteCarloSimulation {
     constructor() {
         this.uq = new UncertaintyQuantification();
         this.physicsEngine = new PhysicsEngine();
+        this.stats = new StatisticalAnalysis();
 
         // Default configuration
         this.config = {
@@ -316,6 +318,54 @@ class MonteCarloSimulation {
         validations.allPassed = Object.values(validations).every(v => v === true || typeof v === 'number');
 
         return validations;
+    }
+
+    /**
+     * Analyze Monte Carlo results with comprehensive statistics
+     * Convenience method combining simulation results with statistical analysis
+     *
+     * @param {Object} mcResults - Results from simulate() or runSimulation()
+     * @param {Object} options - Optional statistical analysis configuration
+     * @returns {Object} Results with added statistical analysis
+     *
+     * @example
+     * const results = await mc.simulate(params, 1000);
+     * const analyzed = mc.analyzeResults(results);
+     * console.log(analyzed.statistics.craterDiameter.mean); // Mean crater diameter
+     * console.log(analyzed.statistics.craterDiameter.confidenceInterval); // 95% CI
+     */
+    analyzeResults(mcResults, options = {}) {
+        const statistics = this.stats.analyzeMonteCarloResults(mcResults, options);
+
+        return {
+            ...mcResults,
+            statistics: statistics
+        };
+    }
+
+    /**
+     * Run simulation with automatic statistical analysis
+     * Convenience method that combines simulate() and analyzeResults()
+     *
+     * @param {Object} nominalParams - Nominal impact parameters
+     * @param {number} n_samples - Number of Monte Carlo samples
+     * @param {Object} customUncertainties - Optional custom uncertainty specifications
+     * @param {Object} statisticsOptions - Optional statistical analysis options
+     * @returns {Object} Complete results with statistics
+     *
+     * @example
+     * const results = await mc.simulateWithStatistics({
+     *   diameter: 50,
+     *   velocity: 15,
+     *   angle: 45,
+     *   density: 7870,
+     *   composition: 'iron'
+     * }, 1000);
+     * console.log(results.statistics.craterDiameter);
+     */
+    async simulateWithStatistics(nominalParams, n_samples = 1000, customUncertainties = {}, statisticsOptions = {}) {
+        const results = await this.simulate(nominalParams, n_samples, customUncertainties);
+        return this.analyzeResults(results, statisticsOptions);
     }
 }
 
