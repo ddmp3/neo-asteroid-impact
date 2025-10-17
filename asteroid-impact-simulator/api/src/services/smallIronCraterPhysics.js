@@ -228,7 +228,8 @@ class SmallIronCraterPhysics {
             largest_fragment.velocity_m_s,
             params.angle,
             density,
-            params.targetDensity || this.RHO_TARGET_DEFAULT
+            params.targetDensity || this.RHO_TARGET_DEFAULT,
+            params.C_override  // Monte Carlo override if provided
         );
 
         const main_crater_depth = main_crater_diameter / 5;
@@ -302,9 +303,10 @@ class SmallIronCraterPhysics {
      * @param {number} angle - Angle impact (degrés)
      * @param {number} density_imp - Densité impacteur (kg/m³)
      * @param {number} density_target - Densité cible (kg/m³)
+     * @param {number} C_override - Override C value (for Monte Carlo uncertainty)
      * @returns {number} Diamètre cratère (m)
      */
-    calculateCraterFromMass(mass, velocity, angle, density_imp, density_target) {
+    calculateCraterFromMass(mass, velocity, angle, density_imp, density_target, C_override) {
         // Diamètre impacteur équivalent
         const D_imp = Math.pow((6 * mass) / (Math.PI * density_imp), 1/3);
 
@@ -332,7 +334,9 @@ class SmallIronCraterPhysics {
         // NOTE: Cette constante s'applique aux FRAGMENTS SURVIVANTS après FCM,
         // pas à l'objet initial. Le FCM réduit la masse effective, puis C est
         // appliqué à la masse qui atteint le sol.
-        const C = 14.10;
+        //
+        // PHASE 1.3: C peut être overridé par Monte Carlo (C ~ N(14.10, 1.13))
+        const C = C_override !== undefined ? C_override : 14.10;
 
         // FORMULE SIMPLIFIÉE (physique élémentaire)
         const D_crater = C * D_imp * Math.pow(density_ratio, 1/3) * velocity_factor * angle_factor;

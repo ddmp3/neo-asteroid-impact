@@ -4,6 +4,7 @@
  * OBJECTIF: Quantifier incertitude sur cratère due à variabilité physique
  *
  * PARAMÈTRES INCERTAINS (Physique Fondamentale):
+ * - C (constante cratère): 14.10 ± 1.13 (Bootstrap N=1000, Phase 1.2)
  * - σ (résistance): 20-120 MPa pour fer, 5-40 MPa pour rocheux
  * - θ (angle): ±10° incertitude orbitale
  * - v (vitesse): ±10% incertitude orbitale
@@ -15,7 +16,7 @@
  *
  * PHYSIQUE PURE - Pas de régression, seulement propagation incertitude
  *
- * v1.7.9 - Monte Carlo pour incertitude σ
+ * v1.7.11 - Phase 1.3: Ajout incertitude C (paramètre fondamental)
  */
 
 class MonteCarloCrater {
@@ -109,7 +110,15 @@ class MonteCarloCrater {
         const samples = {};
 
         for (const param of param_names) {
-            if (param === 'strength') {
+            if (param === 'C') {
+                samples.C = this.generateSamples(
+                    monte_carlo_config.C_distribution,
+                    N
+                );
+                const C_min = Math.min(...samples.C);
+                const C_max = Math.max(...samples.C);
+                console.log(`[Monte Carlo] C range: ${C_min.toFixed(2)} - ${C_max.toFixed(2)} (mean: ${monte_carlo_config.C_distribution.mean})`);
+            } else if (param === 'strength') {
                 samples.strength = this.generateSamples(
                     monte_carlo_config.strength_distribution,
                     N
@@ -136,6 +145,9 @@ class MonteCarloCrater {
             // Build parameter set for this iteration
             const iter_params = { ...base_params };
 
+            if (samples.C) {
+                iter_params.C_override = samples.C[i];
+            }
             if (samples.strength) {
                 iter_params.strength_override = samples.strength[i];
             }
@@ -155,6 +167,7 @@ class MonteCarloCrater {
                     diameter: crater_result.crater_diameter || crater_result.diameter,
                     depth: crater_result.crater_depth || crater_result.depth,
                     params_used: {
+                        C: iter_params.C_override,
                         strength: iter_params.strength_override,
                         angle: iter_params.angle,
                         velocity: iter_params.velocity

@@ -163,12 +163,19 @@ class CraterRouting {
             use_monte_carlo = false;
 
         } else if (P_ram_peak > sigma_max) {
-            // ROUTE 2: Definite fragmentation (Monte Carlo on σ only)
+            // ROUTE 2: Definite fragmentation (Monte Carlo on C + σ)
             route = 'fragmentation_certain';
             rationale = `P_ram_peak (${(P_ram_peak/1e6).toFixed(1)} MPa) > σ_max (${(sigma_max/1e6).toFixed(1)} MPa) → Fragmentation certain, uncertainty on extent`;
             use_monte_carlo = true;
             monte_carlo_params = {
-                parameters: ['strength'],
+                parameters: ['C', 'strength'],
+                C_distribution: {
+                    type: 'normal',
+                    mean: 14.10,
+                    std: 1.13,
+                    min: 11.0,  // ~3σ lower bound
+                    max: 17.0   // ~3σ upper bound
+                },
                 strength_distribution: {
                     type: 'uniform',
                     min: sigma_min,
@@ -179,27 +186,26 @@ class CraterRouting {
             };
 
         } else {
-            // ROUTE 3: Uncertain fragmentation (Monte Carlo on σ + other params)
+            // ROUTE 3: Uncertain fragmentation (Monte Carlo on C + σ only)
+            // Note: angle and velocity variations create too much variability in ram pressure,
+            // leading to unrealistic fragmentation outcomes. C and σ capture the primary uncertainties.
             route = 'fragmentation_uncertain';
             rationale = `σ_min (${(sigma_min/1e6).toFixed(1)} MPa) < P_ram_peak (${(P_ram_peak/1e6).toFixed(1)} MPa) < σ_max (${(sigma_max/1e6).toFixed(1)} MPa) → Fragmentation uncertain`;
             use_monte_carlo = true;
             monte_carlo_params = {
-                parameters: ['strength', 'angle', 'velocity'],
+                parameters: ['C', 'strength'],
+                C_distribution: {
+                    type: 'normal',
+                    mean: 14.10,
+                    std: 1.13,
+                    min: 11.0,  // ~3σ lower bound
+                    max: 17.0   // ~3σ upper bound
+                },
                 strength_distribution: {
                     type: 'uniform',
                     min: sigma_min,
                     max: sigma_max,
                     typical: sigma_typical
-                },
-                angle_distribution: {
-                    type: 'normal',
-                    mean: angle,
-                    std: 10  // ±10° uncertainty
-                },
-                velocity_distribution: {
-                    type: 'normal',
-                    mean: velocity,
-                    std: velocity * 0.1  // ±10% uncertainty
                 },
                 N_samples: 100
             };
