@@ -1,7 +1,7 @@
 {
   "name": "asteroid-impact-simulator-api",
-  "version": "1.7.7",
-  "description": "Backend API for Asteroid Impact Simulator - NASA Space Apps Challenge 2025 - Composition-Specific Physics + FCM V2 Validated",
+  "version": "1.7.10",
+  "description": "Backend API for Asteroid Impact Simulator - NASA Space Apps Challenge 2025 - Physics-Based Routing + Calibrated σ_typical=35MPa",
   "license": "MIT",
   "main": "src/index.js",
   "scripts": {
