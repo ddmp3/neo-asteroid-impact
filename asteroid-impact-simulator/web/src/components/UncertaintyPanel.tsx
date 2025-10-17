@@ -344,7 +344,7 @@ export default function UncertaintyPanel() {
                 Distribution Visualization
               </h3>
 
-              {monteCarloResult.visualization[selectedOutput] && (
+              {monteCarloResult.visualization[selectedOutput]?.boxPlot && (
                 <div className="space-y-6">
                   {/* Box Plot */}
                   <div>
@@ -354,6 +354,8 @@ export default function UncertaintyPanel() {
                         {(() => {
                           const boxPlot =
                             monteCarloResult.visualization[selectedOutput].boxPlot;
+                          if (!boxPlot) return null;
+
                           const range = boxPlot.max - boxPlot.min;
                           const scale = (val: number) =>
                             ((val - boxPlot.min) / range) * 100;

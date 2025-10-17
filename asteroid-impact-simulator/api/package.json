@@ -1,7 +1,7 @@
 {
   "name": "asteroid-impact-simulator-api",
-  "version": "1.7.0",
-  "description": "Backend API for Asteroid Impact Simulator - NASA Space Apps Challenge 2025 - Monte Carlo Uncertainty Quantification + Sobol Sensitivity Analysis",
+  "version": "1.7.7",
+  "description": "Backend API for Asteroid Impact Simulator - NASA Space Apps Challenge 2025 - Composition-Specific Physics + FCM V2 Validated",
   "license": "MIT",
   "main": "src/index.js",
   "scripts": {
