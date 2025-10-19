@@ -1,7 +1,7 @@
 {
-  "name": "asteroid-impact-simulator-api",
-  "version": "1.7.10",
-  "description": "Backend API for Asteroid Impact Simulator - NASA Space Apps Challenge 2025 - Physics-Based Routing + Calibrated σ_typical=35MPa",
+  "name": "neo-asteroid-impact-api",
+  "version": "2.0.0",
+  "description": "Backend API for NEO Asteroid Impact Simulator v2.0 - Physics-Based Impact Simulation with Scientific Rigor",
   "license": "MIT",
   "main": "src/index.js",
   "scripts": {

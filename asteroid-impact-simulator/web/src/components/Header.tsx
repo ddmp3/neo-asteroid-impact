@@ -31,7 +31,7 @@ export default function Header({ apiHealth }: HeaderProps) {
               <h1 className="text-base md:text-xl font-bold text-white">
                 Asteroid Impact Simulator
               </h1>
-              <p className="text-xs text-white/60 hidden sm:block">NASA Space Apps Challenge 2025</p>
+              <p className="text-xs text-white/60 hidden sm:block">NEO Impact Physics Simulator v2.0</p>
             </div>
           </div>
 
@@ -59,7 +59,7 @@ export default function Header({ apiHealth }: HeaderProps) {
               Learn
             </NavButton>
             <a
-              href="https://github.com/ddmp3/meteormadness#readme"
+              href="https://github.com/ddmp3/neo-asteroid-impact#readme"
               target="_blank"
               rel="noopener noreferrer"
               className="px-4 py-2 rounded-lg text-sm font-medium transition-all text-white/70 hover:bg-white/10 hover:text-white flex items-center gap-1"
@@ -125,7 +125,7 @@ export default function Header({ apiHealth }: HeaderProps) {
                 🎓 Learn
               </MobileNavButton>
               <a
-                href="https://github.com/ddmp3/meteormadness#readme"
+                href="https://github.com/ddmp3/neo-asteroid-impact#readme"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setMobileMenuOpen(false)}

@@ -232,7 +232,7 @@ D = K × (ρ_a/ρ_t)^μ × L^ν × v^β × sin(θ)^γ / g^δ
 ## Contact
 
 For questions about crater model limitations:
-- GitHub Issues: https://github.com/TawbeBaker/Cyber-and-Space/issues
+- GitHub Issues: https://github.com/ddmp3/neo-asteroid-impact/issues
 - Scientific Documentation: `/docs/SCIENTIFIC_DOCUMENTATION.md`
 
 ---

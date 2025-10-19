@@ -283,7 +283,7 @@ export default function EducationalTooltips({ topic: _topic, className = '' }: E
           Pour plus de détails techniques, formules complètes, et références scientifiques :
         </p>
         <a
-          href="https://github.com/ddmp3/meteormadness#readme"
+          href="https://github.com/ddmp3/neo-asteroid-impact#readme"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"

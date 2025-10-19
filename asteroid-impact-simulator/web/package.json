@@ -1,7 +1,7 @@
 {
   "name": "asteroid-impact-simulator-web",
-  "version": "1.7.10",
-  "description": "Frontend for Asteroid Impact Simulator - NASA Space Apps Challenge 2025 - Physics-Based Routing + Calibrated Strength",
+  "version": "2.0.0",
+  "description": "Asteroid Impact Simulator v2.0 - Post-Hackathon Refactoring - Scientific Rigor & Transparency",
   "license": "MIT",
   "type": "module",
   "scripts": {

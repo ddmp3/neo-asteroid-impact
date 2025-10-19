@@ -129,7 +129,7 @@ if (D_transient < 3.2 km) {
 ## 📧 Contact & Contributions
 
 **Questions about scientific accuracy?**
-- Open GitHub issue: https://github.com/TawbeBaker/Cyber-and-Space/issues
+- Open GitHub issue: https://github.com/ddmp3/neo-asteroid-impact/issues
 - Tag with: `scientific`, `documentation`, `crater-model`
 
 **Found a limitation not documented?**
