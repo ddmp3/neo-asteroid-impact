@@ -45,32 +45,11 @@ export default function Header({ apiHealth }: HeaderProps) {
               Simulation
             </NavButton>
             <NavButton
-              active={viewMode === 'uncertainty'}
-              onClick={() => setViewMode('uncertainty')}
-              ariaLabel="Navigate to Uncertainty Quantification view"
-            >
-              Uncertainty
-            </NavButton>
-            <NavButton
-              active={viewMode === '3d'}
-              onClick={() => setViewMode('3d')}
-              ariaLabel="Navigate to 3D Trajectory view"
-            >
-              3D Trajectory
-            </NavButton>
-            <NavButton
               active={viewMode === 'scenario'}
               onClick={() => setViewMode('scenario')}
               ariaLabel="Navigate to Scenarios view"
             >
               Scenarios
-            </NavButton>
-            <NavButton
-              active={viewMode === 'mitigation'}
-              onClick={() => setViewMode('mitigation')}
-              ariaLabel="Navigate to Mitigation strategies view"
-            >
-              Mitigation
             </NavButton>
             <NavButton
               active={viewMode === 'education'}
@@ -79,20 +58,15 @@ export default function Header({ apiHealth }: HeaderProps) {
             >
               Learn
             </NavButton>
-            <NavButton
-              active={viewMode === 'game'}
-              onClick={() => setViewMode('game')}
-              ariaLabel="Navigate to Defend Earth Game"
+            <a
+              href="https://github.com/ddmp3/meteormadness#readme"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-2 rounded-lg text-sm font-medium transition-all text-white/70 hover:bg-white/10 hover:text-white flex items-center gap-1"
+              aria-label="View project documentation on GitHub"
             >
-              Game
-            </NavButton>
-            <NavButton
-              active={viewMode === 'info'}
-              onClick={() => setViewMode('info')}
-              ariaLabel="Navigate to version info and changelog"
-            >
-              Info
-            </NavButton>
+              📖 Docs
+            </a>
           </nav>
 
           {/* Status & Actions */}
@@ -139,28 +113,10 @@ export default function Header({ apiHealth }: HeaderProps) {
                 🎯 Simulation
               </MobileNavButton>
               <MobileNavButton
-                active={viewMode === 'uncertainty'}
-                onClick={() => handleNavClick('uncertainty')}
-              >
-                🎲 Uncertainty
-              </MobileNavButton>
-              <MobileNavButton
-                active={viewMode === '3d'}
-                onClick={() => handleNavClick('3d')}
-              >
-                🌌 3D Trajectory
-              </MobileNavButton>
-              <MobileNavButton
                 active={viewMode === 'scenario'}
                 onClick={() => handleNavClick('scenario')}
               >
                 📋 Scenarios
-              </MobileNavButton>
-              <MobileNavButton
-                active={viewMode === 'mitigation'}
-                onClick={() => handleNavClick('mitigation')}
-              >
-                🛡️ Mitigation
               </MobileNavButton>
               <MobileNavButton
                 active={viewMode === 'education'}
@@ -168,18 +124,15 @@ export default function Header({ apiHealth }: HeaderProps) {
               >
                 🎓 Learn
               </MobileNavButton>
-              <MobileNavButton
-                active={viewMode === 'game'}
-                onClick={() => handleNavClick('game')}
+              <a
+                href="https://github.com/ddmp3/meteormadness#readme"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full px-4 py-2.5 rounded-lg text-sm font-medium transition-all text-white/70 hover:bg-white/10 hover:text-white text-left"
               >
-                🎮 Game
-              </MobileNavButton>
-              <MobileNavButton
-                active={viewMode === 'info'}
-                onClick={() => handleNavClick('info')}
-              >
-                ℹ️ Info
-              </MobileNavButton>
+                📖 Docs
+              </a>
               <button
                 onClick={() => {
                   resetSimulation();

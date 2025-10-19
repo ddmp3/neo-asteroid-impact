@@ -7,13 +7,8 @@ import ImpactMapLeaflet from './components/ImpactMapLeaflet';
 import ResultsDashboard from './components/ResultsDashboard';
 import LoadingScreen from './components/LoadingScreen';
 import ErrorBanner from './components/ErrorBanner';
-import MitigationPanel from './components/MitigationPanel';
 import EducationalTooltips from './components/EducationalTooltips';
-import DefendEarthGame from './components/DefendEarthGame';
 import ScenarioSelector from './components/ScenarioSelector';
-import Simulation3D from './components/Simulation3D';
-import InfoPanel from './components/InfoPanel';
-import UncertaintyPanel from './components/UncertaintyPanel';
 
 function App() {
   const [apiHealth, setApiHealth] = useState<'checking' | 'healthy' | 'error'>('checking');
@@ -66,31 +61,11 @@ function App() {
           <div className="container mx-auto px-4 py-6">
             <ScenarioSelector />
           </div>
-        ) : viewMode === 'uncertainty' ? (
-          <div className="container mx-auto px-4 py-6">
-            <UncertaintyPanel />
-          </div>
-        ) : viewMode === 'mitigation' ? (
-          <div className="container mx-auto px-4 py-6">
-            <MitigationPanel />
-          </div>
         ) : viewMode === 'education' ? (
           <div className="container mx-auto px-4 py-6">
             <EducationalTooltips />
           </div>
-        ) : viewMode === 'game' ? (
-          <div className="container mx-auto px-4 py-6">
-            <DefendEarthGame />
-          </div>
-        ) : viewMode === '3d' ? (
-          <div className="container mx-auto px-4 py-6">
-            <Simulation3D />
-          </div>
-        ) : viewMode === 'info' ? (
-          <div className="container mx-auto px-4 py-6">
-            <InfoPanel />
-          </div>
-        ) : viewMode === 'simulation' ? (
+        ) : (
           <div className="container mx-auto px-4 py-6">
             {/* Top Section - Parameters and Map */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
@@ -117,7 +92,7 @@ function App() {
               </div>
             )}
           </div>
-        ) : null}
+        )}
       </main>
 
     </div>
