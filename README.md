@@ -1,17 +1,16 @@
-# 🌌 Asteroid Impact Simulator - Meteor Madness
+# 🌌 Asteroid Impact Simulator - MeteorMadness
 
 <div align="center">
 
-![NASA Space Apps Challenge 2025](https://img.shields.io/badge/NASA%20Space%20Apps-2025-0B3D91?style=for-the-badge&logo=nasa)
-![Version](https://img.shields.io/badge/version-1.7.7-blue?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-1.7.11-blue?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-Apache%202.0-green?style=for-the-badge)
-![Status](https://img.shields.io/badge/status-Live-success?style=for-the-badge)
-![Compliance](https://img.shields.io/badge/NASA%20Score-19%2F19-gold?style=for-the-badge)
+![Status](https://img.shields.io/badge/status-Development-yellow?style=for-the-badge)
+![Scientific](https://img.shields.io/badge/Approach-Pure%20Physics-blueviolet?style=for-the-badge)
 
 **🌍 Live Demo**: [neo.lueger.fr](https://neo.lueger.fr)
-**🚀 Interactive API**: [Swagger UI](https://api.neo.lueger.fr/api-docs) ⭐ **NEW!**
-**📚 API Guide**: [Usage Documentation](./docs/API_USAGE.md)
+**🚀 Interactive API**: [Swagger UI](https://api.neo.lueger.fr/api-docs)
 **🔬 Scientific Docs**: [Physics & Formulas](./docs/SCIENTIFIC_DOCUMENTATION.md)
+**📊 Project Context**: [Post-Hackathon Refactoring](./CONTEXTE_PROJET_v2.0.md)
 
 </div>
 
@@ -20,47 +19,85 @@
 ## 📖 Table of Contents
 
 - [Overview](#overview)
+- [Project Status](#project-status)
 - [Features](#features)
-- [NASA Data Integration](#nasa-data-integration)
 - [Scientific Basis](#scientific-basis)
 - [Quick Start](#quick-start)
 - [API Documentation](#api-documentation)
 - [Architecture](#architecture)
-- [Deployment](#deployment)
+- [Roadmap](#roadmap)
 - [Contributing](#contributing)
-- [Educational Use](#educational-use)
 - [License](#license)
 
 ---
 
 ## 🎯 Overview
 
-**Asteroid Impact Simulator** is an educational web application developed for the **NASA Space Apps Challenge 2025 - Meteor Madness** challenge. It provides:
+**MeteorMadness** is an open-source asteroid impact simulator built with **pure fundamental physics** (zero empirical regressions). The project aims to become the **world reference tool** for asteroid impact education and uncertainty quantification.
 
-- **Real-time asteroid impact simulations** with scientifically-based physics calculations
-- **3D orbital trajectory visualizations** of 200+ Near-Earth Objects from NASA data
-- **Planetary defense strategy simulations** (kinetic impactor, gravity tractor, nuclear)
-- **Public educational API** for researchers, educators, and students
-- **Interactive learning modules** covering impact physics, orbital mechanics, and planetary defense
+### Core Objectives
 
-### 🏆 Challenge Status
+1. **🔬 Scientific Rigor**: Pure physics models (Holsapple pi-groups, Hills-Goda fragmentation)
+2. **📊 Uncertainty Quantification**: Monte Carlo for all parameters (D, V, θ, ρ, σ, C)
+3. **✅ Extensive Validation**: 75+ historical craters (currently 20)
+4. **🎯 High Precision**: <20% Mean Absolute Error (currently 32%)
+5. **🌐 Open Educational API**: Public access for researchers, educators, students
 
-**NASA Space Apps Challenge 2025 - Meteor Madness**
+### Key Differentiators
 
-| Metric | Status |
-|--------|--------|
-| **NASA Compliance** | **19/19 (100%)** 🎯 |
-| **Version** | **1.7.7** (Composition-specific validated) |
-| **Submission** | **Oct 4-5, 2025** |
-| **Repository** | [TawbeBaker/Cyber-and-Space](https://github.com/TawbeBaker/Cyber-and-Space) |
+- ✅ **Zero linear regressions** - Only fundamental physics equations
+- ✅ **Complete uncertainty propagation** - Monte Carlo simulation engine
+- ✅ **Transparent limitations** - All assumptions documented
+- ✅ **Peer-reviewed models** - Collins, Holsapple, Hills-Goda, Wheeler
+- ✅ **Open source** - Full code transparency
 
-**Key Features:**
-- ✅ Complete NASA/USGS data integration (NEO API, JPL SBDB, Horizons)
-- ✅ Peer-reviewed physics models (Collins et al., Holsapple, Schultz & Gault)
-- ✅ Validated against historical events (Tunguska, Chelyabinsk)
-- ✅ Full accessibility (WCAG 2.1 Level AA)
-- ✅ Public educational API (100 req/15min rate limit)
-- ✅ 200 real Near-Earth Objects with orbital mechanics
+---
+
+## 📊 Project Status
+
+### Current Version: v1.7.11 (Phase 1.3 Complete)
+
+**Released**: 2025-10-17
+
+**Major Milestone**: C uncertainty integration into Monte Carlo engine
+
+**Branch**: `feature/sprint-1.1-monte-carlo`
+
+### Historical Context
+
+- **October 2025**: Participated in NASA Space Apps Challenge (Montréal) with v1.6.x
+- **Result**: ❌ Not selected by jury
+- **Decision**: 🔄 **Complete refactoring** to create world-class scientific tool
+- **Base version**: v1.7.11 (robust Monte Carlo foundation)
+
+📖 **Full context**: [CONTEXTE_PROJET_v2.0.md](./CONTEXTE_PROJET_v2.0.md)
+
+###Precision Metrics (v1.7.11)
+
+| Component | Current MAE | Target v2.0 | Status |
+|-----------|-------------|-------------|--------|
+| **Crater Diameter** | 16-21% | <15% | ⚠️ Good |
+| **Blast Zones** | 8% | <5% | ✅ Excellent |
+| **Felt Radius** | <1% | <1% | ✅ Perfect |
+| **Fragmentation Altitude** | <1% | <1% | ✅ Perfect |
+| **Overall MAE** | ~32% | <20% | ⚠️ Needs work |
+
+### Validated Craters
+
+- **Current**: 20 craters (Barringer, Ries, Chicxulub, etc.)
+- **Target v2.0**: 75 craters (statistical power 95%)
+- **Database**: [CRATER_DATABASE.md](./.claude/validation/CRATER_DATABASE.md)
+
+### Uncertainty Quantification
+
+| Parameter | Distribution | Status |
+|-----------|--------------|--------|
+| **C (crater constant)** | N(14.10, 1.13) | ✅ Phase 1.3 |
+| **σ (material strength)** | U(20, 120) MPa | ✅ Phase 1.2 |
+| **D (diameter)** | ±10% | 🚧 Phase 1.4 |
+| **V (velocity)** | ±5% | 🚧 Phase 1.4 |
+| **θ (angle)** | ±10° | 🚧 Phase 1.4 |
+| **ρ (density)** | ±15% | 🚧 Phase 1.4 |
 
 ---
 
@@ -72,176 +109,160 @@
   - Asteroid diameter: 1m - 100km
   - Impact velocity: 11 - 72 km/s (cosmic velocity range)
   - Impact angle: 0° - 90°
-  - Asteroid density: 1,000 - 8,000 kg/m³ (C-type to M-type)
+  - Composition: Rocky, Iron, Icy (affects fragmentation)
   - Impact location: Click anywhere on Earth
 
 - **Calculated Results**:
   - Impact energy (Joules and megaton TNT equivalent)
-  - Crater dimensions (diameter, depth, volume)
+  - **Crater dimensions** with uncertainty bands (Monte Carlo)
+  - **Fragmentation analysis** (FCM V2 - Wheeler et al. 2017)
   - Seismic magnitude (Richter scale)
   - Blast zones (fireball, thermal, air blast, ground shock)
-  - Population-based casualty estimates (45 major cities)
+  - Population-based casualty estimates
 
-- **Real-World Comparisons**:
-  - Tunguska (1908): 50m, 15 megatons
-  - Chelyabinsk (2013): 18m, 500 kilotons
-  - Chicxulub (66 Mya): 10km, 100 million megatons
+- **Real-World Validated**:
+  - Tunguska (1908): 65m, 15 MT @ 8km altitude
+  - Chelyabinsk (2013): 20m, 0.5 MT @ 23km altitude
+  - Barringer: 50m iron crater
+  - Chicxulub (66 Mya): 10km extinction event
 
 ### 🌌 3D Orbital Trajectory Mode
 
-- **200 Real Asteroids** from NASA JPL SBDB (closest approaches 1975-2025)
-- **Interactive Selector**: Choose 10-200 objects to visualize
-- **Search & Filters**: Find by name, filter by hazard status
-- **Keplerian Orbital Mechanics**: High-precision orbital calculations
-- **Real-Time Earth Position**: See Earth's current location in orbit
-- **Asteroid Details**: Orbital elements, diameter, magnitude, close approaches
+- **200 Real Asteroids** from NASA JPL SBDB
+- **Interactive 3D Visualization** (Three.js)
+- **Keplerian Orbital Mechanics**: High-precision calculations
+- **Real-Time Earth Position**: See current locations
+- **Asteroid Details**: Orbital elements, diameter, close approaches
 
 ### 🛡️ Planetary Defense
 
 - **Deflection Methods**:
-  - **Kinetic Impactor** (DART mission, 2022)
+  - **Kinetic Impactor** (DART mission validated)
   - **Gravity Tractor** (slow, precise deflection)
   - **Nuclear** (last-resort option)
 
 - **Simulates**:
   - Required delta-V for deflection
-  - Mission cost and timeline
-  - Success probability based on warning time
+  - Mission timeline and warning time
+  - Success probability
   - Momentum transfer calculations
-
-### 📋 Pre-configured Scenarios
-
-- Chelyabinsk (2013): 18m airburst over Russia
-- Tunguska (1908): 50m forest devastation
-- Apophis (future): 370m close approach
-- Bennu (future): 500m potential impact
-- Fictional large impactors (1-10km)
 
 ### 🎓 Educational Features
 
 - **16 Learning Modules**: Impact physics, orbital mechanics, planetary defense
-- **Defend Earth Game**: 6 progressive levels teaching deflection strategies
-- **Interactive Tooltips**: Scientific explanations throughout
-- **Mobile-Responsive**: Full functionality on iPhone/Android
-
----
-
-## 🛰️ NASA Data Integration
-
-### Data Sources (All Public & Attributed)
-
-| Source | Data Used | Update Frequency | Attribution |
-|--------|-----------|------------------|-------------|
-| **NASA NEO API** | Real-time asteroid tracking, close approaches, PHAs | Daily | NASA/JPL-Caltech |
-| **NASA JPL SBDB** | 200 closest asteroids, orbital elements, physical data | Static dataset (2025) | NASA/JPL |
-| **NASA Horizons** | Orbital element reference | On-demand | NASA/JPL |
-| **USGS Elevation API** | Terrain elevation at impact location | Real-time | USGS |
-| **USGS Earthquakes** | Seismic magnitude comparison data | Real-time | USGS |
-
-### API Endpoints Using NASA Data
-
-```bash
-# Get NASA NEO feed (next 7 days)
-GET /api/neo/feed?start_date=2025-10-01&end_date=2025-10-07
-
-# Get specific asteroid (e.g., Apophis)
-GET /api/neo/asteroid/99942
-
-# Get potentially hazardous asteroids
-GET /api/neo/potentially-hazardous
-
-# Get close approach events
-GET /api/neo/close-approaches?dist_max=0.05
-```
-
-**Live API Base URL**: `https://api.neo.lueger.fr`
-
-See [API Usage Guide](./docs/API_USAGE.md) for full documentation.
+- **Defend Earth Game**: 6 progressive levels
+- **Interactive Tooltips**: Scientific explanations
+- **Mobile-Responsive**: Full functionality on all devices
+- **WCAG 2.1 Level AA**: Fully accessible (keyboard nav, ARIA, focus management)
 
 ---
 
 ## 🔬 Scientific Basis
 
-### Physics Models (Peer-Reviewed)
+### Physics Models (Peer-Reviewed Only)
 
-#### Impact Energy
+#### 1. Holsapple Pi-Group Scaling (1993)
+
+**Crater Diameter**:
 ```
-E = ½mv²
+D = C × D_imp × (ρ/ρ_target)^(1/3) × (v/v_ref)^(2/3) × sin^(1/3)(θ)
 ```
-- **E**: Impact energy (Joules)
-- **m**: Asteroid mass = ρ × (4/3)πr³
+
+**Parameters**:
+- **C**: Crater constant = 14.10 ± 1.13 (bootstrap calibrated, N=1000)
+- **D_imp**: Impactor diameter (m)
+- **ρ**: Impactor density (kg/m³)
+- **ρ_target**: Target density (2500 kg/m³ for rock, 1000 kg/m³ for water)
 - **v**: Impact velocity (m/s)
+- **v_ref**: Reference velocity (15 km/s - **⚠️ Under review Phase 1.4**)
+- **θ**: Impact angle from horizontal (degrees)
 
-#### Crater Formation (Collins et al., 2005)
+**Exponents** (Holsapple 1993):
+- **μ = 1/3** (density scaling)
+- **β = 2/3** (velocity scaling)
+- **ε = 1/3** (angle scaling)
+
+**Precision**: ±16% MAE (rocky targets, N=20 craters)
+
+#### 2. FCM V2 Atmospheric Fragmentation (Wheeler et al. 2017)
+
+**Progressive Fragmentation Model**:
+- **Hills-Goda criterion**: P_ram vs σ (material strength)
+- **Energy conservation**: <7% error across all regimes
+- **Weibull strength scaling**: σ(m) = σ_0 × (m/m_0)^(-1/6)
+- **Debris cloud formation**: Fragment dispersion modeling
+
+**Physics-Based Routing** (Phase 1.2):
+- **Route 1 (Intact)**: P_ram < σ_min → No fragmentation
+- **Route 2 (Certain Fragmentation)**: P_ram > σ_max → Monte Carlo (C + σ)
+- **Route 3 (Uncertain Fragmentation)**: σ_min < P_ram < σ_max → Monte Carlo (C + σ)
+
+**Precision**: <1% error on burst altitude (Chelyabinsk, Tunguska)
+
+#### 3. Monte Carlo Uncertainty Quantification (Phase 1.3)
+
+**Statistical Sampling**:
+- **Box-Muller transform**: Exact Normal distribution sampling
+- **Reproducible**: RNG seed = 42 for deterministic results
+- **Convergence**: N=100 samples sufficient for stable P10/P90 percentiles
+
+**Parameter Distributions**:
+```javascript
+C ~ Normal(mean=14.10, std=1.13, bounds=[11.0, 17.0])  // 8.04% uncertainty
+σ ~ Uniform(min=20 MPa, max=120 MPa)                    // Material strength range
 ```
-D = 1.161 × ρ_a^0.33 × L^0.78 × v^0.44 × sin(θ)^0.33 / ρ_t^0.33
+
+**Outputs**:
+- Mean, median, std, mode
+- Confidence intervals: 68%, 95%, 99.7%
+- Percentiles: P5, P10, P25, P50, P75, P90, P95
+
+**Precision**: ~20% CI width for 80% confidence interval
+
+#### 4. Seismic Effects (Schultz & Gault 1975)
+
+**Gutenberg-Richter Relation**:
 ```
-- **D**: Crater diameter (m)
-- **L**: Impactor diameter (m)
-- **ρ_a**: Asteroid density
-- **ρ_t**: Target density
-- **θ**: Impact angle
-
-#### Seismic Magnitude (Schultz & Gault, 1975)
-```
-M = 0.67 × log₁₀(E) - 5.87
+M = (2/3) × log₁₀(E) - 5.87
 ```
 
-#### Orbital Mechanics (Keplerian Elements)
-- **Newton-Raphson solver** for Kepler's equation
-- **3 Euler rotations** for 3D position (Ω, i, ω)
-- **Tolerance**: 1e-8 radians
+**Felt Radius**: High-precision interpolation (7 anchor points)
+- Precision: <1% error (Tunguska, Chelyabinsk, Chicxulub)
 
-### Physics Models - Two Approaches
+**Airburst Correction**: -1.0 magnitude for airbursts (reduced seismic coupling)
 
-**🚀 RK4 Model (Production - Fast)**:
-- Single-body atmospheric entry with drag + ablation
-- Runge-Kutta 4th order numerical integration
-- Speed: ~0.1s per simulation
-- Accuracy: 23% error vs Chelyabinsk
+### Limitations & Transparency
 
-**🔬 FCM V2 (Research - Rigorous)**:
-- Wheeler et al. 2017 Fragment-Cloud Model
-- Progressive fragmentation with Hills-Goda criterion
-- Debris cloud formation and dispersion
-- Weibull strength scaling for fragments
-- Speed: ~2-5s per simulation
-- Accuracy: 19.5% error vs Chelyabinsk (Case C macro-porosity)
-- **✅ Perfect energy conservation (<0.01%)**
+⚠️ **See [LIMITATIONS.md](./LIMITATIONS.md) for complete technical constraints**
 
-See [FCM V2 Validation Summary](./FCM_V2_VALIDATION_SUMMARY.md) for full calibration details.
+**Model Constraints**:
+- Spherical impactors (orientation effects not modeled)
+- Uniform target density (no subsurface layering)
+- 45 major cities (rural populations underestimated)
+- Earth-specific (transition thresholds not valid for Moon, Mars)
 
-### Limitations & Assumptions
+**Known Issues** (Phase 1.4 Roadmap):
+1. 🔴 **v_ref inconsistency**: Code uses 15 km/s, docs mention 12 km/s
+2. ⚠️ **Sikhote-Alin mismatch**: Predicted 2-10m vs observed 26m (σ range too wide)
+3. ⚠️ **High-altitude airbursts**: Chelyabinsk (23km) blast zones underestimated
 
-**⚠️ Model Constraints** (See [Scientific Documentation](./docs/SCIENTIFIC_DOCUMENTATION.md) for full details):
-
-- Assumes spherical asteroids (RK4) or symmetric fragmentation (FCM V2)
-- Two-body orbital mechanics (no planetary perturbations)
-- Statistical population casualties (not individual building/terrain)
-- Idealized target properties (uniform rock or ocean)
-
-**Accuracy**:
-- ✅ Suitable for: Education, relative comparisons, concept demonstration
-- ❌ NOT suitable for: Actual planetary defense, mission planning, policy decisions
-
-### Validation
-
-Compared against:
-- **Imperial College London** "Impact Earth!" calculator
-- **Purdue University** Impact Effects Program
-- **Historical events**: Tunguska (1908), Chelyabinsk (2013)
-
-**Agreement**: Within 20-30% for major parameters ✓
+**Accuracy Classification**:
+- ✅ **Suitable for**: Education, relative comparisons, concept demonstrations
+- ❌ **NOT suitable for**: Operational planetary defense, mission planning, policy decisions
 
 ### Scientific References
 
-1. Collins, G. S., Melosh, H. J., & Marcus, R. A. (2005). *Meteoritics & Planetary Science*, 40(6), 817-840.
-2. Holsapple, K. A. (1993). *Annual Review of Earth and Planetary Sciences*, 21(1), 333-373.
-3. Hills, J. G., & Goda, M. P. (1993). *The Astronomical Journal*, 105(3), 1114-1144.
-4. **Wheeler, L. F., et al. (2017).** *Icarus*, 295, 149-169. DOI: 10.1016/j.icarus.2017.02.011
-5. Schultz, P. H., & Gault, D. E. (1975). *The Moon*, 12(2), 159-177.
+1. **Holsapple, K. A. (1993).** "The scaling of impact processes in planetary sciences." *Annual Review of Earth and Planetary Sciences*, 21(1), 333-373.
 
-**Full references**: [SCIENTIFIC_DOCUMENTATION.md](./docs/SCIENTIFIC_DOCUMENTATION.md)
+2. **Wheeler, L. F., et al. (2017).** "A Fragment-Cloud Model for asteroid breakup and atmospheric energy deposition." *Icarus*, 295, 149-169. DOI: 10.1016/j.icarus.2017.02.011
+
+3. **Hills, J. G., & Goda, M. P. (1993).** "The fragmentation of small asteroids in the atmosphere." *The Astronomical Journal*, 105(3), 1114-1144.
+
+4. **Collins, G. S., Melosh, H. J., & Marcus, R. A. (2005).** "Earth Impact Effects Program." *Meteoritics & Planetary Science*, 40(6), 817-840.
+
+5. **Schultz, P. H., & Gault, D. E. (1975).** "Seismic effects from major basin formations on the moon and mercury." *The Moon*, 12(2), 159-177.
+
+📚 **Full references**: [SCIENTIFIC_DOCUMENTATION.md](./docs/SCIENTIFIC_DOCUMENTATION.md)
 
 ---
 
@@ -262,7 +283,7 @@ Visit: **[https://neo.lueger.fr](https://neo.lueger.fr)**
 cd asteroid-impact-simulator/api
 npm install
 npm start
-# → https://api.neo.lueger.fr
+# → http://localhost:7071
 ```
 
 **Frontend**:
@@ -270,7 +291,7 @@ npm start
 cd asteroid-impact-simulator/web
 npm install
 npm run dev
-# → https://neo.lueger.fr
+# → http://localhost:3000
 ```
 
 **Environment Variables** (optional):
@@ -283,7 +304,19 @@ NASA_API_KEY=your_key_here  # Optional (uses DEMO_KEY by default)
 
 **Frontend** (`web/.env`):
 ```bash
-VITE_API_URL=https://api.neo.lueger.fr
+VITE_API_URL=http://localhost:7071
+```
+
+### Testing
+
+```bash
+# API tests
+cd asteroid-impact-simulator/api
+npm test
+
+# Specific validation tests
+node src/tests/testSikhotealinMonteCarlo_Phase1_3.js
+node src/tests/testSamplingUtils.js
 ```
 
 ---
@@ -300,11 +333,6 @@ VITE_API_URL=https://api.neo.lueger.fr
 
 **No Authentication Required** (educational use)
 
-**Quick Access**:
-- 🏠 [API Landing Page](https://api.neo.lueger.fr/) - Beautiful NASA-branded welcome page
-- 📖 [Interactive Swagger UI](https://api.neo.lueger.fr/api-docs) - Try all endpoints live
-- 💚 [Health Check](https://api.neo.lueger.fr/api/health) - API status
-
 ### Quick Example
 
 ```bash
@@ -314,6 +342,7 @@ curl -X POST https://api.neo.lueger.fr/api/simulate/impact \
   -d '{
     "diameter": 100,
     "velocity": 20,
+    "composition": "rocky",
     "impactLocation": {"lat": 48.8566, "lon": 2.3522}
   }'
 ```
@@ -323,188 +352,162 @@ curl -X POST https://api.neo.lueger.fr/api/simulate/impact \
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/health` | GET | Health check |
-| `/api/simulate/impact` | POST | Simulate asteroid impact |
+| `/api/simulate/impact` | POST | Simulate asteroid impact (with Monte Carlo) |
 | `/api/simulate/deflection` | POST | Simulate planetary defense |
-| `/api/neo/feed` | GET | NASA NEO feed |
-| `/api/neo/asteroid/:id` | GET | Specific asteroid data |
-| `/api/neo/potentially-hazardous` | GET | PHAs list |
-| `/api/usgs/elevation` | GET | Terrain elevation |
+| `/api/neo/realtime/upcoming` | GET | Upcoming close approaches (JPL SBDB CAD) |
+| `/api/neo/realtime/details/:designation` | GET | Asteroid orbital elements |
+| `/api/neo/realtime/phas` | GET | Potentially Hazardous Asteroids |
+| `/api/neo/realtime/statistics` | GET | Real-time aggregated statistics |
 
-### Documentation
-
-- **🚀 Interactive Swagger UI**: [Live API Docs](https://api.neo.lueger.fr/api-docs) - **Try it now!**
-- **📚 Full API Guide**: [docs/API_USAGE.md](./docs/API_USAGE.md) - Complete usage examples
-- **📄 OpenAPI Spec**: [swagger.yaml](./asteroid-impact-simulator/api/swagger.yaml) - OpenAPI 3.0.3 specification
-- **🔬 Scientific Details**: [docs/SCIENTIFIC_DOCUMENTATION.md](./docs/SCIENTIFIC_DOCUMENTATION.md) - Physics & formulas
-
-### Code Examples
-
-**JavaScript**:
-```javascript
-const axios = require('axios');
-
-const result = await axios.post('https://api.neo.lueger.fr/api/simulate/impact', {
-  diameter: 140,
-  velocity: 20,
-  impactLocation: { lat: 40.7128, lon: -74.0060 } // NYC
-});
-
-console.log(`Energy: ${result.data.simulation.impactEnergy.megatonsTNT} MT`);
-```
-
-**Python**:
-```python
-import requests
-
-response = requests.post('https://api.neo.lueger.fr/api/simulate/impact', json={
-    'diameter': 140,
-    'velocity': 20,
-    'impactLocation': {'lat': 35.6762, 'lon': 139.6503}  # Tokyo
-})
-
-print(f"Energy: {response.json()['simulation']['impactEnergy']['megatonsTNT']} MT")
-```
+📚 **Full API Guide**: [docs/API_USAGE.md](./docs/API_USAGE.md)
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-asteroid-impact-simulator/
-├── api/                          # Backend (Node.js/Express)
-│   ├── src/
-│   │   ├── index.js             # API server + CORS
-│   │   ├── services/
-│   │   │   ├── physicsEngine.js        # Impact physics calculations
-│   │   │   ├── nasaNeoService.js       # NASA NEO API integration
-│   │   │   ├── populationService.js    # Casualty estimation
-│   │   │   └── usgsService.js          # USGS data integration
-│   │   └── swagger.yaml         # OpenAPI documentation
-│   ├── Dockerfile
-│   └── package.json
+dev-meteormadness/
+├── asteroid-impact-simulator/
+│   ├── api/                              # Backend (Node.js/Express)
+│   │   ├── src/
+│   │   │   ├── services/
+│   │   │   │   ├── smallIronCraterPhysics.js    # Pure Holsapple pi-groups
+│   │   │   │   ├── atmosphericFragmentation.js  # FCM V2 (Wheeler 2017)
+│   │   │   │   ├── monteCarloCrater.js          # Monte Carlo engine
+│   │   │   │   ├── craterRouting.js             # Physics-based routing
+│   │   │   │   ├── realTimeNeoService.js        # JPL SBDB CAD API
+│   │   │   │   └── populationService.js         # Casualty estimation
+│   │   │   ├── utils/
+│   │   │   │   └── sampling.js                  # Box-Muller Normal, Uniform
+│   │   │   └── tests/
+│   │   │       ├── testSamplingUtils.js
+│   │   │       ├── testSikhotealinMonteCarlo_Phase1_3.js
+│   │   │       └── testSikhotealinDeterministic_Phase1_3.js
+│   │   └── swagger.yaml                  # OpenAPI 3.0.3 spec
+│   │
+│   └── web/                              # Frontend (React + TypeScript)
+│       ├── src/
+│       │   ├── components/
+│       │   │   ├── ParameterPanel.tsx
+│       │   │   ├── ResultsDashboard.tsx
+│       │   │   ├── ImpactMapLeaflet.tsx
+│       │   │   └── OrbitalViewMode.tsx
+│       │   └── utils/
+│       │       └── orbitalMechanics.ts   # Kepler solver
+│       └── public/data/
+│           └── asteroids.json            # 200 NEOs from JPL SBDB
 │
-├── web/                          # Frontend (React + TypeScript)
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── Simulation3D.tsx           # 3D impact mode
-│   │   │   ├── OrbitalViewMode.tsx        # 3D orbital view
-│   │   │   ├── AsteroidSelector.tsx       # 10-200 selector
-│   │   │   ├── ImpactMapLeaflet.tsx       # Leaflet map
-│   │   │   ├── ParameterPanel.tsx         # Input controls
-│   │   │   ├── ResultsDashboard.tsx       # Results display
-│   │   │   ├── DefendEarthGame.tsx        # Game mode
-│   │   │   └── Header.tsx                 # Nav (mobile menu)
-│   │   ├── services/
-│   │   │   ├── api.ts                     # API client
-│   │   │   └── nasaDataLoader.ts          # Load 200 asteroids
-│   │   ├── utils/
-│   │   │   └── orbitalMechanics.ts        # Kepler solver
-│   │   └── public/data/
-│   │       └── asteroids.json             # 200 NEOs (8.6 MB)
-│   ├── Dockerfile
-│   └── package.json
+├── docs/                                 # Documentation
+│   ├── SCIENTIFIC_DOCUMENTATION.md
+│   ├── API_USAGE.md
+│   └── ...
 │
-├── terraform/                    # Infrastructure as Code
-│   ├── main.tf                  # Azure resources
-│   └── deploy.sh
+├── phases/                               # Technical reports
+│   ├── PHASE_1_2_COMPLETE_SUMMARY.md    # Bootstrap C calibration
+│   └── PHASE_1_3_SUMMARY.md             # C uncertainty integration
 │
-├── docs/                         # Documentation
-│   ├── API_USAGE.md             # Public API guide
-│   ├── SCIENTIFIC_DOCUMENTATION.md  # Physics & formulas
-│   └── DNS_CONFIGURATION_neo.lueger.fr.md
+├── archive/                              # Archived obsolete docs
+│   ├── hackathon-montreal-2025/
+│   ├── azure-optimization/
+│   └── old-versions/
 │
-└── LICENSE                       # MIT (Educational Use)
+├── CONTEXTE_PROJET_v2.0.md              # Post-hackathon context
+├── LIMITATIONS.md                        # Technical constraints
+├── CHANGELOG.md                          # Version history
+└── README.md                             # This file
 ```
 
 ### Tech Stack
 
 **Backend**:
 - Node.js, Express
-- Axios (NASA/USGS API calls)
-- Application Insights (Azure monitoring)
+- Pure JavaScript (no TypeScript compilation overhead)
+- Statistical sampling (Box-Muller transform)
+- Docker (linux/amd64)
 
 **Frontend**:
 - React 18, TypeScript, Vite
-- Three.js, React Three Fiber (3D)
-- Leaflet (maps)
+- Three.js, React Three Fiber (3D visualization)
+- Leaflet (2D maps)
 - Tailwind CSS (styling)
 - Zustand (state management)
 
 **Hosting**:
 - **Frontend**: Azure Static Web Apps
 - **Backend API**: Azure Container Apps
-- **Infrastructure**: Terraform
 - **Custom Domain**: neo.lueger.fr
 
 ---
 
-## 🌐 Deployment
+## 🗺️ Roadmap
 
-### Production URLs
+### Current: Phase 1.4 (November 2025)
 
-- **Frontend**: https://neo.lueger.fr
-- **Frontend (www)**: https://www.neo.lueger.fr
-- **API**: https://api.neo.lueger.fr
+**Objective**: Resolve technical inconsistencies
 
-### Azure Resources
+- [ ] **v_ref resolution**: Verify correct value (12 vs 15 km/s)
+- [ ] **σ_typical refinement**: Calibrate for small irons (inverse analysis)
+- [ ] **FCM V2 validation**: Cross-check on more historical events
+- [ ] **Angle/velocity sensitivity**: Separate Monte Carlo analysis
 
-| Resource | Type | Region |
-|----------|------|--------|
-| `swa-asteroid-impact-92nppgw4` | Static Web App | Canada Central |
-| `ca-api-92nppgw4` | Container App | Canada Central |
-| `acrasteroidimpact92nppgw4` | Container Registry | Canada Central |
+**Duration**: 2-3 weeks (30-40 hours)
 
-### Deploy Frontend
+### Phase 1.5: Complete Monte Carlo (December 2025 - v1.8.0)
 
-```bash
-cd asteroid-impact-simulator/web
-npm run build
+**Objective**: All 6 parameters with uncertainties
 
-# Get deployment token
-export TOKEN=$(az staticwebapp secrets list --name swa-asteroid-impact-92nppgw4 --query "properties.apiKey" -o tsv)
+- [ ] **Diameter uncertainty**: D ~ Normal(μ, 0.10μ)
+- [ ] **Velocity uncertainty**: V ~ Normal(μ, 0.05μ)
+- [ ] **Angle uncertainty**: θ ~ Uniform(θ-10°, θ+10°)
+- [ ] **Density uncertainty**: ρ ~ Normal(μ, 0.15μ)
+- [ ] **Full sensitivity analysis**: Sobol indices for variance decomposition
+- [ ] **API endpoint**: `/simulate/uncertainty` with N_samples parameter
 
-# Deploy
-npx @azure/static-web-apps-cli deploy dist --deployment-token "$TOKEN" --env default
-```
+**Duration**: 6-8 weeks (80-100 hours)
 
-### Deploy Backend API
+### Phase 2: Dataset Expansion (January-February 2026 - v2.0.0)
 
-```bash
-cd asteroid-impact-simulator/api
+**Objective**: Statistical validation on 75+ craters
 
-# Build Docker image
-docker build --platform linux/amd64 -t acrasteroidimpact92nppgw4.azurecr.io/asteroid-impact-api:v1.5.0 .
+- [ ] **Crater database**: Expand from 20 to 75 validated craters
+- [ ] **Precision improvement**: MAE 32% → <25%
+- [ ] **Statistical power**: 95% confidence (N=75 adequate)
+- [ ] **Publication**: Peer-reviewed article submission
 
-# Push to Azure Container Registry
-az acr login --name acrasteroidimpact92nppgw4
-docker push acrasteroidimpact92nppgw4.azurecr.io/asteroid-impact-api:v1.5.0
+**Duration**: 8-10 weeks (120-150 hours)
 
-# Update Container App
-az containerapp update \
-  --name ca-api-92nppgw4 \
-  --resource-group rg-asteroid-impact-92nppgw4 \
-  --image acrasteroidimpact92nppgw4.azurecr.io/asteroid-impact-api:v1.5.0
-```
+### Phase 3: RK45 Integration (March-April 2026 - v2.5.0)
+
+**Objective**: High-precision numerical fragmentation
+
+- [ ] **RK45 solver**: Adaptive step-size Runge-Kutta
+- [ ] **Full 3D geometry**: Orientation, elliptical shape
+- [ ] **Precision target**: MAE <20%
+- [ ] **Performance**: <5s per simulation (with N=100 Monte Carlo)
+
+**Duration**: 10-12 weeks (150-180 hours)
+
+📋 **Full roadmap**: [PROJECT_ROADMAP.md](./PROJECT_ROADMAP.md)
 
 ---
 
 ## 🤝 Contributing
 
-Contributions welcome! This is an educational open-source project.
+Contributions welcome! This is an open-source research project.
 
 ### How to Contribute
 
-1. **Report bugs/inaccuracies**: [GitHub Issues](https://github.com/TawbeBaker/Cyber-and-Space/issues)
+1. **Report bugs/inaccuracies**: [GitHub Issues](https://github.com/ddmp3/meteormadness/issues)
 2. **Improve physics models**: See [SCIENTIFIC_DOCUMENTATION.md](./docs/SCIENTIFIC_DOCUMENTATION.md)
 3. **Add features**: Fork, develop, submit PR
-4. **Educational use**: Adapt for your curriculum
+4. **Educational use**: Adapt for your curriculum (attribution required)
 
 ### Development Workflow
 
 ```bash
-# Fork the repo
-git clone https://github.com/YOUR_USERNAME/Cyber-and-Space.git
-cd Cyber-and-Space
+# Clone the repo
+git clone https://github.com/ddmp3/meteormadness.git
+cd meteormadness
 
 # Create feature branch
 git checkout -b feature/your-feature
@@ -519,55 +522,19 @@ git push origin feature/your-feature
 
 ### Code of Conduct
 
-- Maintain scientific accuracy
-- Document assumptions and limitations
-- Provide references for models
-- Write clear, educational code comments
-
----
-
-## 🎓 Educational Use
-
-### For Educators
-
-**Recommended Use Cases**:
-- Physics classes: Impact energy, momentum, scaling laws
-- Astronomy classes: Orbital mechanics, NEOs, close approaches
-- Programming classes: API integration, data visualization, React/TypeScript
-- Public outreach: Planetarium shows, science fairs
-
-**Curriculum Integration**:
-- Compare asteroid sizes and energies
-- Analyze deflection strategies
-- Explore NASA datasets
-- Understand planetary defense
-
-### For Students
-
-**Learning Outcomes**:
-- Understand kinetic energy at cosmic scales
-- Learn Keplerian orbital mechanics
-- Explore real NASA data sources
-- Practice API programming
-- Visualize 3D orbital dynamics
-
-### For Researchers
-
-**Research Applications**:
-- Benchmark simplified models vs. complex simulations
-- Analyze deflection feasibility spaces
-- Study orbital dynamics patterns
-- Develop educational materials
-
-**API Rate Limits**: Contact us for higher limits for research projects.
+- **Scientific rigor**: Only peer-reviewed models
+- **Zero regressions**: No empirical curve-fitting
+- **Document limitations**: Be transparent about assumptions
+- **Provide references**: Cite all physics models
+- **Educational focus**: Write clear code comments
 
 ---
 
 ## 📄 License
 
-**MIT License (Educational Use)**
+**Apache 2.0 License (Open Source Educational)**
 
-Copyright (c) 2025 Meteor Madness Team - NASA Space Apps Challenge 2025
+Copyright (c) 2025 MeteorMadness Project
 
 See [LICENSE](./LICENSE) for full terms.
 
@@ -583,9 +550,9 @@ See [LICENSE](./LICENSE) for full terms.
 
 **Required Citation**:
 ```
-Asteroid Impact Simulator - Meteor Madness
-NASA Space Apps Challenge 2025
-Data sources: NASA/JPL-Caltech, USGS
+MeteorMadness - Asteroid Impact Simulator
+Open-source research project (v1.7.11+)
+Data sources: NASA/JPL-Caltech (SBDB, CAD API), USGS
 https://neo.lueger.fr
 ```
 
@@ -593,37 +560,34 @@ https://neo.lueger.fr
 
 This simulator uses **simplified physics models** for educational purposes. Results should NOT be used for:
 - Actual planetary defense planning
-- Published scientific research (without validation)
+- Published scientific research (without independent validation)
 - Policy or risk assessment decisions
 
 For real planetary defense:
 - **NASA Planetary Defense Coordination Office**: https://www.nasa.gov/planetarydefense
-- **ESA SSA Programme**: https://www.esa.int/Safety_Security/SSA_Programme
+- **ESA Space Safety Programme**: https://www.esa.int/Safety_Security/Space_Safety
 
 ---
 
 ## 🙏 Acknowledgments
 
-### Team
-
-- **Development**: Meteor Madness Team
-- **Orbital Mechanics Enhancement**: Luis (contributor)
-
-### Data Providers
-
-- **NASA/JPL**: NEO API, SBDB, Horizons System
-- **USGS**: Elevation and Earthquake data
-
 ### Scientific Community
 
 - Dr. Gareth Collins (Imperial College London) - Impact Earth calculator
-- Dr. Keith Holsapple (University of Washington) - Scaling laws
+- Dr. Keith Holsapple (University of Washington) - Scaling laws theory
+- Dr. Lorien Wheeler (NASA JSC) - FCM V2 fragmentation model
 - NASA DART Mission Team - Kinetic impactor validation
+
+### Data Providers
+
+- **NASA/JPL**: NEO API, SBDB CAD API, Horizons System
+- **USGS**: Elevation and Earthquake data
 
 ### Technologies
 
 - React, Three.js, Leaflet
-- Azure (hosting), Terraform (IaC)
+- Node.js, Express
+- Azure (hosting), Docker
 - Claude Code (development assistance)
 
 ---
@@ -631,36 +595,37 @@ For real planetary defense:
 ## 📞 Contact & Support
 
 - **Live Demo**: https://neo.lueger.fr
-- **GitHub**: https://github.com/TawbeBaker/Cyber-and-Space
-- **Issues**: https://github.com/TawbeBaker/Cyber-and-Space/issues
-- **API Docs**: [docs/API_USAGE.md](./docs/API_USAGE.md)
+- **GitHub**: https://github.com/ddmp3/meteormadness
+- **Issues**: https://github.com/ddmp3/meteormadness/issues
+- **Documentation**: [docs/](./docs/)
+- **Project Context**: [CONTEXTE_PROJET_v2.0.md](./CONTEXTE_PROJET_v2.0.md)
 
 ### For Educational Institutions
 
 Interested in collaboration, custom scenarios, or higher API limits?
-Open an issue or visit our website.
+Open an issue on GitHub.
 
 ---
 
 ## 🌟 Star Us!
 
-If you find this project useful for education, please ⭐ star the repo!
+If you find this project useful for education or research, please ⭐ star the repo!
 
 ---
 
 <div align="center">
 
-### 🌍 Protecting Earth, One Simulation at a Time 🛡️
+### 🌍 Building the World's Reference Asteroid Impact Simulator 🛡️
 
-**NASA Space Apps Challenge 2025 - Meteor Madness**
+**Open-Source Research Project - Pure Physics Approach**
 
-*Built with ❤️ for science education and planetary defense awareness*
+*Built with scientific rigor for planetary defense education*
 
-[![NASA](https://img.shields.io/badge/Data-NASA%2FJPL-0B3D91?style=flat-square&logo=nasa)](https://api.nasa.gov/)
-[![USGS](https://img.shields.io/badge/Data-USGS-006634?style=flat-square)](https://www.usgs.gov/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-green?style=flat-square)](./LICENSE)
 [![Live](https://img.shields.io/badge/Demo-Live-success?style=flat-square)](https://neo.lueger.fr)
-[![License](https://img.shields.io/badge/License-MIT%20Educational-green?style=flat-square)](./LICENSE)
+[![Version](https://img.shields.io/badge/Version-1.7.11-blue?style=flat-square)](./CHANGELOG.md)
+[![Precision](https://img.shields.io/badge/MAE-32%25%20→%2020%25%20target-orange?style=flat-square)](./LIMITATIONS.md)
 
-**Version 1.7.0** | October 2025
+**Version 1.7.11** | October 2025 | Phase 1.3 Complete
 
 </div>
