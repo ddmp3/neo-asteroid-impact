@@ -1155,10 +1155,8 @@ class PhysicsEngine {
 
             // Apply atmospheric retention factor to energy (old method)
             const retentionFactor = this.atmosphericFragmentation.getAtmosphericRetentionFactor(
-                diameter,
-                finalVelocity,
-                composition,
-                density
+                fragmentation,
+                diameter
             );
 
             // Apply retention to both total and effective energy
@@ -1182,6 +1180,19 @@ class PhysicsEngine {
         // Calculate crater ONLY if object reaches ground
         let baseCrater, crater;
         if (fragmentation.craterFormed) {
+            // PHYSICS CORRECTION #1: Use FINAL velocity from RK4, not initial velocity
+            // Impact velocity determines crater size via π₂ = v²/(gL) and π_V = ρv²/Y
+            let impactVelocity;
+            if (use_rk4 && rk4Result && rk4Result.summary.final_velocity_m_s) {
+                // RK4 mode: Use actual final velocity after atmospheric drag
+                impactVelocity = rk4Result.summary.final_velocity_m_s;
+                console.log(`[PhysicsEngine] Using RK4 final velocity: ${impactVelocity.toFixed(1)} m/s (initial: ${velocity.toFixed(1)} m/s)`);
+            } else {
+                // Legacy mode: Use simplified calculation
+                impactVelocity = finalVelocity;
+                console.log(`[PhysicsEngine] Using legacy velocity: ${impactVelocity.toFixed(1)} m/s`);
+            }
+
             // v2.1.0 Phase 1.4: Use EFFECTIVE CRATER ENERGY (angle-dependent coupling applied)
             // v1.7.8: Pass ALL parameters for Pi-groupe complete physics (async for small iron FCM)
             baseCrater = await this.calculateCraterSize(
@@ -1191,7 +1202,7 @@ class PhysicsEngine {
                 density,
                 2500, // targetDensity: Earth's average crustal rock density
                 diameter, // impactorDiameter: for Pi-groupe calculation
-                velocity // velocity: CRITICAL for Pi-groupe π₂ and π₃ calculation
+                impactVelocity // CORRECTED: Use final velocity from RK4, not initial velocity
             );
             crater = await this.terrainAnalysis.calculateTerrainModifiedCrater(
                 { lat: impactLocation.lat, lon: impactLocation.lon },

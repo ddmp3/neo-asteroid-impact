@@ -44,22 +44,35 @@ const G_EARTH = 9.81; // m/s²
  */
 class CompletePiGroupCraterModel {
     constructor() {
-        // PARAMETRES À CALIBRER (valeurs initiales de la littérature)
-        this.params = {
-            // Scaling constant
-            K: 1.0,  // À calibrer
+        // PHYSICS CORRECTION #2: Use TRUE Holsapple (1993) values from Table 3
+        // Reference: Holsapple, K. A. (1993). "The Scaling of Impact Processes in Planetary Sciences"
+        //            Annual Review of Earth and Planetary Sciences, 21, 333-373.
+        //            Table 3: Scaling Parameters for Crater Formation
+        //
+        // PREVIOUS: Generic "nominal" values (K=1.0, μ=0.33) - INCORRECT
+        // CORRECT: Published values calibrated against experimental data
+        //
+        // NOTE: These values are for GRAVITY-DOMINATED regime (large impactors)
+        //       For strength regime (small, fast projectiles), different values apply
 
-            // Exponents (Holsapple 1993 nominal values)
-            mu: 0.33,     // Density coupling (ρ_imp/ρ_target)
-            nu: 0.217,    // Gravity scaling (gravity regime)
-            beta: 0.67,   // Velocity coupling (strength regime)
-            gamma: 0.0,   // Strength-gravity transition
-            delta: 0.0,   // Gravity correction
-            epsilon: 0.33, // Angle coupling sin(θ)
+        this.params = {
+            // Scaling constant (Holsapple 1993, Table 3, rocky targets, gravity regime)
+            K: 1.03,  // CORRECTED from 1.0 (gravity-dominated craters, rocky targets)
+
+            // Exponents (Holsapple 1993, Table 3)
+            mu: 0.55,     // CORRECTED from 0.33: Density coupling for 3D craters (π₁^μ)
+                          // Physical meaning: ρ_projectile matters more than previously thought
+            nu: 0.217,    // CORRECT: Gravity scaling exponent (gravity regime, π₂^ν)
+                          // Determines how crater size scales with impact velocity
+            beta: 0.67,   // Velocity coupling (strength regime, less relevant for large impacts)
+            gamma: 0.0,   // Strength-gravity transition (set to 0 for pure gravity regime)
+            delta: 0.0,   // Gravity correction (Earth only, δ=0)
+            epsilon: 0.33, // CORRECT: Angle coupling (Pierazzo & Melosh 2000 confirms sin(θ)^(1/3))
+                          // Oblique impacts: D ~ sin(θ)^(1/3)
 
             // Physical parameters
             rho_target_default: 2500,  // kg/m³ (average crustal rock)
-            Y_target_default: 1e6,     // Pa (target strength, ~1 MPa)
+            Y_target_default: 1e6,     // Pa (target strength, ~1 MPa for competent rock)
             g_default: G_EARTH         // m/s²
         };
 
