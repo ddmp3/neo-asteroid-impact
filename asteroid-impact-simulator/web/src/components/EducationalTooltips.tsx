@@ -8,6 +8,7 @@ interface ContentItem {
   scientist?: string;
   scientistBio?: string;
   whyThisOrder?: string;
+  reference?: string;
   category: 'physics' | 'limitations' | 'validation' | 'history' | 'scientists' | 'workflow';
 }
 
@@ -98,6 +99,7 @@ const EDUCATIONAL_CONTENT: ContentItem[] = [
     formula: 'P_ram = ½ × ρ_air(h) × v² ≥ σ (résistance structurelle)',
     scientist: 'Jack G. Hills & Mildred Shapley Goda (1993)',
     scientistBio: 'Hills et Goda ont publié leur modèle de fragmentation en 1993 dans "The Fragmentation of Small Asteroids in the Atmosphere". Hills, physicien au Los Alamos National Laboratory, a révolutionné notre compréhension des impacts atmosphériques en établissant mathématiquement le seuil de fragmentation.',
+    reference: 'Hills, J. G., & Goda, M. P. (1993). The Astronomical Journal, 105(3), 1114-1144. DOI: 10.1086/116499',
     category: 'physics'
   },
   {
@@ -107,6 +109,7 @@ const EDUCATIONAL_CONTENT: ContentItem[] = [
     formula: 'Système d\'équations différentielles: dv/dt, dm/dt, dL/dt (vitesse, masse, dispersion)',
     scientist: 'Lorien F. Wheeler (2017)',
     scientistBio: 'Wheeler, chercheur à la NASA Ames Research Center, a développé le FCM V2 en 2017 pour le Planetary Defense Coordination Office. Son modèle améliore le FCM original de Chyba et al. (1993) en incluant la physique complète de l\'expansion du nuage de fragments. Validé sur Tunguska et Chelyabinsk.',
+    reference: 'Wheeler, L. F. (2017). Icarus, 295, 149-169. DOI: 10.1016/j.icarus.2017.02.011',
     category: 'physics'
   },
   {
@@ -116,6 +119,7 @@ const EDUCATIONAL_CONTENT: ContentItem[] = [
     formula: 'η(θ) = 0.556 + 0.444 × sin²(θ) puis E_cratère = E_totale × η(θ)',
     scientist: 'Elisabetta Pierazzo & H. Jay Melosh (2000)',
     scientistBio: 'Pierazzo (1963-2011) était une planétologue italienne pionnière dans la modélisation numérique des impacts. Avec Melosh (professeur émérite Purdue University), elle a publié en 2000 "Understanding Oblique Impacts" basé sur 200+ simulations hydrocode. Melosh est l\'auteur du livre référence "Impact Cratering: A Geologic Process" (1989).',
+    reference: 'Pierazzo, E., & Melosh, H. J. (2000). Annual Review of Earth and Planetary Sciences, 28(1), 141-167. DOI: 10.1146/annurev.earth.28.1.141',
     category: 'physics'
   },
   {
@@ -125,6 +129,7 @@ const EDUCATIONAL_CONTENT: ContentItem[] = [
     formula: 'D_transient = K × (E/10¹⁵)^(1/4) × sin^(1/3)(θ) × (ρ_imp/ρ_target)^(1/3)',
     scientist: 'Keith A. Holsapple (1993)',
     scientistBio: 'Holsapple, professeur à l\'University of Washington, a publié "The Scaling of Impact Processes in Planetary Sciences" (1993), établissant les lois fondamentales de scaling des cratères. Son approche pi-groupe utilise le théorème de Buckingham (1914) pour dériver les relations dimensionnelles sans régression empirique.',
+    reference: 'Holsapple, K. A. (1993). Annual Review of Earth and Planetary Sciences, 21(1), 333-373. DOI: 10.1146/annurev.ea.21.050193.002001',
     category: 'physics'
   },
   {
@@ -134,6 +139,7 @@ const EDUCATIONAL_CONTENT: ContentItem[] = [
     formula: 'Si D_tc < 3.2 km: D_final = 1.25 × D_tc (simple). Sinon: D_final = 1.201 × D_tc^1.13 (complexe)',
     scientist: 'Gareth S. Collins, H. Jay Melosh, Robert A. Marcus (2005)',
     scientistBio: 'Collins (Imperial College London) a co-développé le Earth Impact Effects Program avec Melosh en 2005. Ce programme en ligne calcule les effets des impacts et a été utilisé par la NASA, l\'ESA, et des milliers d\'étudiants. Il a aussi créé iSALE, le code hydrocode de référence pour simuler les impacts.',
+    reference: 'Collins, G. S., Melosh, H. J., & Marcus, R. A. (2005). Meteoritics & Planetary Science, 40(6), 817-840. DOI: 10.1111/j.1945-5100.2005.tb00157.x',
     category: 'physics'
   },
   {
@@ -384,6 +390,13 @@ export default function EducationalTooltips({ topic: _topic, className = '' }: E
                     )}
                   </div>
                 )}
+
+                {item.reference && (
+                  <div className="p-3 bg-gray-500/10 rounded border border-gray-500/30">
+                    <div className="text-xs font-semibold text-gray-300 mb-1">📖 Référence scientifique:</div>
+                    <p className="text-xs text-gray-200/80 leading-relaxed font-mono">{item.reference}</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -424,19 +437,34 @@ export default function EducationalTooltips({ topic: _topic, className = '' }: E
       {/* Documentation link */}
       <div className="mt-6 p-4 bg-white/5 border border-white/10 rounded-lg">
         <h4 className="font-semibold mb-2 text-white flex items-center gap-2">
-          📚 Complete Documentation
+          📚 Documentation Scientifique Complète
         </h4>
         <p className="text-sm text-white/70 mb-3">
-          Pour plus de détails techniques, formules complètes, et références scientifiques :
+          Cette page présente une version condensée adaptée au niveau secondaire.
+          Pour la documentation scientifique complète avec toutes les formules, dérivations mathématiques,
+          et références bibliographiques peer-reviewed :
         </p>
-        <a
-          href="https://github.com/ddmp3/neo-asteroid-impact#readme"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
-        >
-          View on GitHub →
-        </a>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <a
+            href="https://github.com/ddmp3/neo-asteroid-impact/blob/main/docs/EDUCATIONAL_CONTENT_SCIENTIFIC.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
+          >
+            📖 Documentation Académique →
+          </a>
+          <a
+            href="https://github.com/ddmp3/neo-asteroid-impact#readme"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
+          >
+            💻 Code Source GitHub →
+          </a>
+        </div>
+        <div className="mt-3 text-xs text-white/50">
+          Toutes les formules incluent leurs références DOI pour vérification scientifique.
+        </div>
       </div>
     </div>
   );
