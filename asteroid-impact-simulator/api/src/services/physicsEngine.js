@@ -531,40 +531,52 @@ class PhysicsEngine {
 
     /**
      * Calculate blast radius and overpressure zones
-     * Calibrated on Tunguska (1908) - v1.6.9
+     *
+     * v1.6.9: Calibrated on Tunguska (1908)
+     * v2.0.1 Task 2.2: Rankine-Hugoniot physics
+     * v2.0.1 Task 3.1: USSA 1976 atmosphere + Mach reflection
+     *
      * @param {number} energy - Impact energy in Joules
+     * @param {number} altitude - Burst altitude in meters (default 0 = ground burst)
      * @returns {Object} Blast zones with radii in meters
      */
-    calculateBlastRadius(energy) {
+    calculateBlastRadius(energy, altitude = 0) {
         const megatons = energy / (4.184e15);
 
         // ========== PHYSICS-BASED BLAST CALCULATIONS ==========
         // Phase 1.4 - Task 2.2: Replace empirical scaling with Rankine-Hugoniot shock physics
+        // Phase 1.4 - Task 3.1: Add USSA 1976 atmosphere + Mach reflection
         //
         // PREVIOUS (v1.6.9 - empirical):
         //   - Power law scaling: R ~ E^0.33 (dimensional analysis)
         //   - Calibrated to Tunguska (1908): 8.0% average error
         //   - No physical basis, only statistical fit
         //
-        // NEW (v2.0.1 - Rankine-Hugoniot):
+        // v2.0.1 Task 2.2 (Rankine-Hugoniot):
         //   - Physics-based shock wave propagation
         //   - Overpressure thresholds from nuclear test data
         //   - Sedov-Taylor blast wave solution
-        //   - Validated against Trinity, Hiroshima, Tunguska
+        //
+        // v2.0.1 Task 3.1 (USSA 1976 + Mach Reflection):
+        //   - Atmospheric stratification: P(h), ρ(h), T(h)
+        //   - Mach reflection enhancement for airbursts
+        //   - Optimal burst height calculations
         //
         // REFERENCES:
         //   - Melosh (1989) Chapter 5: Shock wave physics
         //   - Zel'dovich & Raizer (1966): Blast wave propagation
         //   - Brode (1955): Overpressure scaling
         //   - Collins et al. (2005): Impact Effects Program
+        //   - NOAA/NASA/USAF (1976): U.S. Standard Atmosphere
 
         const RankineHugoniot = require('./rankineHugoniot');
         const energy_joules = megatons * 4.184e15; // Convert MT TNT to Joules
 
-        // Calculate blast zones using Rankine-Hugoniot physics
+        // Calculate blast zones using Rankine-Hugoniot physics + USSA 1976 + Mach reflection
         const blast_zones = RankineHugoniot.calculateBlastZones(
             energy_joules,
-            0  // Assume ground burst for default calculation (altitude handled elsewhere)
+            altitude,  // Task 3.1: Pass actual burst altitude (meters)
+            true       // Task 3.1: Apply Mach reflection correction for airbursts
         );
 
         // ZONE DEFINITIONS (from Rankine-Hugoniot damage thresholds):
@@ -864,8 +876,8 @@ class PhysicsEngine {
         const megatons = energy / 4.184e15;
         const altitudeKm = burstAltitude / 1000;
 
-        // Base blast zones (Tunguska-calibrated formulas)
-        const baseBlast = this.calculateBlastRadius(energy);
+        // Task 3.1: Calculate blast zones with altitude-dependent physics (USSA 1976 + Mach reflection)
+        const baseBlast = this.calculateBlastRadius(energy, burstAltitude);
 
         // Altitude adjustments for airbursts
         // High-altitude airbursts have LARGER blast zones due to atmospheric coupling
@@ -1205,11 +1217,17 @@ class PhysicsEngine {
         // Calculate seismic effects
         const seismic = this.calculateSeismicEffects(energy.joules);
 
-        // Calculate blast effects with airburst adjustments
-        let blast = this.calculateBlastRadius(energy.joules);
+        // Task 3.1: Calculate blast effects with altitude-dependent physics (USSA 1976 + Mach reflection)
+        // Extract burst altitude from fragmentation data or RK4 results
+        const burstAltitudeForBlast = (fragmentation && fragmentation.altitude) ? fragmentation.altitude : 0;
 
-        // Apply airburst altitude adjustments to blast zones
-        if (blastAdjustment) {
+        // Calculate blast zones with Rankine-Hugoniot + USSA 1976 + Mach reflection
+        let blast = this.calculateBlastRadius(energy.joules, burstAltitudeForBlast);
+
+        // DEPRECATED: Old airburst adjustment factor (replaced by Mach reflection in Task 3.1)
+        // Keep this code for backward compatibility with existing adjustment logic
+        if (blastAdjustment && !blast.mach_reflection) {
+            // Only apply old factor if Mach reflection not already applied
             const factor = blastAdjustment.adjustmentFactor;
             blast = {
                 fireball: blast.fireball * factor,
@@ -1220,7 +1238,7 @@ class PhysicsEngine {
                     altitudeKm: blastAdjustment.altitudeKm,
                     factor: factor,
                     damageType: blastAdjustment.damageType,
-                    note: blastAdjustment.note
+                    note: blastAdjustment.note + ' (DEPRECATED: Use Mach reflection instead)'
                 }
             };
         }

@@ -243,15 +243,26 @@ function categorizeBlastDamage(overpressure_kPa) {
  * Calculate blast zone radii for different damage thresholds
  *
  * REPLACES: Empirical scaling laws (nuclear-derived)
- * WITH: Physics-based Rankine-Hugoniot + Sedov-Taylor
+ * WITH: Physics-based Rankine-Hugoniot + Sedov-Taylor + Mach reflection (Task 3.1)
  *
  * @param {number} energy - Explosion energy in Joules
  * @param {number} altitude - Explosion altitude in meters (0 = ground level)
+ * @param {boolean} apply_mach_reflection - Apply Mach reflection correction for airbursts (default true)
  * @returns {Object} Blast zone radii in meters
  */
-function calculateBlastZones(energy, altitude = 0) {
-    const P0 = 101325;   // 1 atm
-    const rho0 = 1.225;  // kg/m³
+function calculateBlastZones(energy, altitude = 0, apply_mach_reflection = true) {
+    // Get atmospheric properties at burst altitude (Task 3.1: USSA 1976)
+    let P0, rho0;
+    try {
+        const atmosphere = require('./atmosphereModel');
+        const atm = atmosphere.getAtmosphericProperties(altitude);
+        P0 = atm.pressure;
+        rho0 = atm.density;
+    } catch (err) {
+        // Fallback to sea level if atmosphereModel not available
+        P0 = 101325;   // 1 atm
+        rho0 = 1.225;  // kg/m³
+    }
 
     // Find radius where overpressure reaches threshold
     // Binary search for each threshold
@@ -276,37 +287,66 @@ function calculateBlastZones(energy, altitude = 0) {
         return (r_min + r_max) / 2;
     }
 
-    // Calculate radii for damage thresholds
-    const zones = {
+    // Calculate radii for damage thresholds (SPHERICAL blast wave at burst altitude)
+    const zones_base = {
         crater_formation: findRadiusForOverpressure(200),      // 200 kPa
         total_destruction: findRadiusForOverpressure(70),      // 70 kPa
         severe_collapse: findRadiusForOverpressure(20),        // 20 kPa
         moderate_structural: findRadiusForOverpressure(7),     // 7 kPa
         minor_structural: findRadiusForOverpressure(3.5),      // 3.5 kPa
         window_shattering: findRadiusForOverpressure(0.7),     // 0.7 kPa
-
-        // Metadata
-        energy: energy,
-        altitude: altitude,
-        physics_model: 'Rankine-Hugoniot + Sedov-Taylor'
     };
 
-    // Altitude adjustment (if airburst)
-    // Geometric factor: blast reaches ground at angle
-    if (altitude > 0) {
-        // For each zone, adjust for slant distance vs ground distance
-        // Ground radius = √(slant_radius² - altitude²)
-        for (const key of Object.keys(zones)) {
-            if (typeof zones[key] === 'number') {
-                const slant = zones[key];
-                const ground = Math.sqrt(Math.max(0, slant * slant - altitude * altitude));
-                zones[key] = ground;
+    // Task 3.1: Apply Mach reflection enhancement for airbursts
+    // PHYSICS: For airbursts, the blast wave reflects off the ground creating a Mach stem
+    // This INCREASES ground overpressure compared to spherical wave alone
+    const zones_final = {};
+    let mach_reflection_applied = false;
+
+    if (apply_mach_reflection && altitude > 0) {
+        // Load atmosphere module for Mach reflection calculation
+        try {
+            const atmosphere = require('./atmosphereModel');
+
+            // Apply Mach reflection to each zone
+            // Input: spherical blast radius at burst altitude
+            // Output: enhanced ground radius due to Mach stem formation
+            for (const [zone_name, radius_spherical] of Object.entries(zones_base)) {
+                const mach = atmosphere.calculateMachReflection(altitude, radius_spherical);
+                zones_final[zone_name] = mach.enhanced_radius;
+
+                // Store Mach reflection metadata for most important zone (severe_collapse)
+                if (zone_name === 'severe_collapse') {
+                    zones_final.mach_reflection = {
+                        enhancement_factor: mach.enhancement_factor,
+                        height_ratio: mach.height_ratio,
+                        burst_type: mach.type,
+                        optimal_height: mach.optimal_height
+                    };
+                }
             }
+
+            mach_reflection_applied = true;
+        } catch (err) {
+            // Fallback: no Mach reflection if atmosphere module unavailable
+            Object.assign(zones_final, zones_base);
         }
-        zones.altitude_adjusted = true;
+    } else {
+        // Ground burst or Mach reflection disabled: use base radii
+        Object.assign(zones_final, zones_base);
     }
 
-    return zones;
+    // Add metadata
+    zones_final.energy = energy;
+    zones_final.altitude = altitude;
+    zones_final.ambient_pressure = P0;
+    zones_final.ambient_density = rho0;
+    zones_final.physics_model = mach_reflection_applied ?
+        'Rankine-Hugoniot + Sedov-Taylor + Mach Reflection (USSA 1976)' :
+        'Rankine-Hugoniot + Sedov-Taylor';
+    zones_final.altitude_adjusted = altitude > 0;
+
+    return zones_final;
 }
 
 /**
