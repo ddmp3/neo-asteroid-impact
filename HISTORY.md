@@ -7,17 +7,22 @@ Complete chronological history from NASA Space Apps hackathon to v2.0.0 producti
 ## 📅 Timeline Overview
 
 ```
-Oct 2025    │ NASA Space Apps Montreal (v1.6)
-            │ ❌ NOT SELECTED BY JURY
+Oct 4       │ NASA Space Apps Montreal - LOCAL JURY
+            │ ✅ "COUP DE CŒUR" DU JURY 🎉
+            │ (Jury's favorite project)
             ▼
-Oct 11-13   │ Post-Hackathon Analysis & Decision
-            │ → Complete refactoring planned
+Oct 16      │ FINAL DECISION
+            │ ❌ NOT SELECTED FOR NASA SUBMISSION
+            │ (Despite being "coup de cœur")
             ▼
-Oct 13-17   │ Phase 1: Scientific Rigor (v1.7.0-1.7.11)
+Oct 11-17   │ Post-Hackathon Analysis & Pivot
+            │ → Complete refactoring decision
+            │ → Phase 1: Scientific Rigor (v1.7.0-1.7.11)
             │ → Monte Carlo, FCM V2, Physics-based routing
             ▼
 Oct 18      │ v2.0.0 Rebrand & Production Deployment
             │ ✅ Live at neo.lueger.fr
+            │ Independent scientific tool
 ```
 
 ---
@@ -48,28 +53,46 @@ Oct 18      │ v2.0.0 Rebrand & Production Deployment
 ⚠️ Simplified physics models
 ⚠️ No fragmentation modeling
 
-### Hackathon Result
-**❌ NOT SELECTED BY MONTREAL JURY**
+### Hackathon Results Timeline
 
-**Hypothesized Reasons**:
+**October 4, 2025**: ✅ **"COUP DE CŒUR" DU JURY** 🎉
+- Selected as jury's favorite project
+- Recognized for innovation and technical implementation
+- Expected to be submitted to NASA for global competition
+
+**October 16, 2025**: ❌ **NOT SELECTED FOR NASA SUBMISSION**
+- Final decision: Project will NOT be submitted to NASA
+- Despite initial "coup de cœur", not advanced to global stage
+- No official feedback provided by jury
+
+**Impact**:
+This reversal (jury favorite → not submitted) was unexpected and drove the decision to completely refactor the project independently of hackathon constraints.
+
+**Hypothesized Reasons for Final Rejection**:
 1. Insufficient scientific rigor (regressions vs pure physics)
 2. High error margins not well explained
 3. Missing uncertainty quantification
 4. Limited validation against historical events
 5. Simplified atmospheric entry physics
+6. Possible: Other Montreal projects deemed more competition-ready
 
 ---
 
 ## 🔬 Phase 1: Scientific Refactoring (Oct 11-17, 2025)
 
-### Decision Point (October 11)
-**Choice**: Complete scientific refactoring instead of iterating on hackathon approach.
+### Decision Point (October 11-16)
 
-**New Philosophy**:
-- 🎯 Goal: World-class asteroid impact simulator
+**Emotional Context**:
+The reversal from "coup de cœur" (October 4) to "not selected" (October 16) was a pivotal moment. Rather than accepting this as a defeat, the decision was made to transform the project beyond hackathon constraints.
+
+**Strategic Choice**: Complete scientific refactoring instead of iterating on hackathon approach.
+
+**New Philosophy** (Post-Rejection):
+- 🎯 Goal: World-class asteroid impact simulator (independent of NASA)
 - 📊 Principle: Pure physics, zero regressions
 - 🔢 Approach: Rigorous uncertainty quantification
 - ✅ Focus: Scientific accuracy > competition compliance
+- 💡 Motivation: Prove the jury's initial "coup de cœur" instinct was correct
 
 ### Sprint 1.1: Monte Carlo Foundation (v1.7.0 - Oct 13)
 
@@ -651,6 +674,28 @@ neo-asteroid-impact/
 4. **Incomplete Documentation**:
    - Limitations buried in technical docs
    - Should have been front and center
+
+5. **Hackathon-Driven Development**:
+   - Focused on "NASA compliance" over scientific rigor
+   - Marketing approach ("100% compliance") vs transparent science
+   - Underestimated importance of uncertainty quantification for jury
+
+### The "Coup de Cœur" → Rejection Paradox
+
+**October 4**: Jury selects project as favorite
+- Recognition of innovation, UI/UX, technical implementation
+- Positive feedback on interactivity and NASA data integration
+
+**October 16**: Same jury doesn't select for NASA submission
+- No feedback provided on what changed
+- Possible scenarios:
+  1. Deeper technical review revealed scientific weaknesses
+  2. Comparison with other Montreal projects on global competitiveness
+  3. Missing features discovered (uncertainty, validation depth)
+  4. Jury consensus vs individual preferences
+
+**Lesson Learned**:
+"Coup de cœur" recognized the *potential* and *execution*, but NASA-level submission requires *scientific rigor* that v1.6 lacked. The reversal validated the need for complete refactoring, not iteration.
 
 ### Technical Challenges Overcome
 
