@@ -34,17 +34,17 @@ interface Scenario {
 }
 
 const PREDEFINED_SCENARIOS: Scenario[] = [
-  // === VALIDATED HISTORICAL (nous avons testé) ===
+  // === VALIDATED HISTORICAL (we have tested) ===
   {
     id: 'tunguska',
     name: 'Tunguska Event',
     icon: '🌲',
-    description: 'Airburst dévastateur en Sibérie - 2,000 km² de forêt aplatie',
-    historicalContext: '30 juin 1908, Tunguska (Sibérie). 65m astéroïde explosé à ~8km altitude, équivalent 15 MT TNT. Aucun cratère formé. Témoins ont vu une boule de feu traversant le ciel, suivie d\'une onde de choc. Arbres couchés en motif radial sur 2,000 km². Prouve que airbursts peuvent être dévastateurs sans impact sol.',
+    description: 'Devastating airburst in Siberia - 2,000 km² of forest flattened',
+    historicalContext: 'June 30, 1908, Tunguska (Siberia). 65m asteroid exploded at ~8km altitude, equivalent 15 MT TNT. No crater formed. Witnesses saw fireball crossing sky, followed by shockwave. Trees knocked down in radial pattern over 2,000 km². Proves airbursts can be devastating without ground impact.',
     category: 'validated',
     reliability: {
       score: 92,
-      details: 'Excellent. Notre modèle FCM V2 reproduit altitude burst <1% erreur, blast zones ±8% erreur. Baseline de calibration.',
+      details: 'Excellent. Our FCM V2 model reproduces burst altitude <1% error, blast zones ±8% error. Calibration baseline.',
       ourMAE: 8,
       validated: true
     },
@@ -59,19 +59,19 @@ const PREDEFINED_SCENARIOS: Scenario[] = [
     location: {
       lat: 60.8858,
       lon: 101.8939,
-      name: 'Tunguska, Sibérie',
+      name: 'Tunguska, Siberia',
     },
   },
   {
     id: 'chelyabinsk',
     name: 'Chelyabinsk Meteor',
     icon: '💨',
-    description: 'Airburst haute altitude - 1,500 blessés (verre brisé + radiation thermique)',
-    historicalContext: '15 février 2013, Chelyabinsk (Russie). 20m astéroïde @ 19 km/s, airburst 23.3km altitude, 0.5 MT. 1,500 blessés (principalement radiation thermique + verre brisé 7,200 bâtiments). Dashcam footage spectaculaire. Rappel que petits objets difficiles à détecter (découvert APRÈS impact).',
+    description: 'High-altitude airburst - 1,500 injured (broken glass + thermal radiation)',
+    historicalContext: 'February 15, 2013, Chelyabinsk (Russia). 20m asteroid @ 19 km/s, airburst 23.3km altitude, 0.5 MT. 1,500 injured (mainly thermal radiation + broken glass 7,200 buildings). Spectacular dashcam footage. Reminder that small objects are difficult to detect (discovered AFTER impact).',
     category: 'validated',
     reliability: {
       score: 75,
-      details: 'Bon. Altitude burst <1% erreur (excellent). MAIS blast zones sous-estimés (limitation L3: airbursts >20km). Tests automatisés en place.',
+      details: 'Good. Burst altitude <1% error (excellent). BUT blast zones underestimated (limitation L3: airbursts >20km). Automated tests in place.',
       ourMAE: 1, // altitude only
       validated: true
     },
@@ -86,19 +86,19 @@ const PREDEFINED_SCENARIOS: Scenario[] = [
     location: {
       lat: 55.1644,
       lon: 61.4368,
-      name: 'Chelyabinsk, Russie',
+      name: 'Chelyabinsk, Russia',
     },
   },
   {
     id: 'barringer',
     name: 'Barringer Crater',
     icon: '🕳️',
-    description: 'Cratère célèbre Arizona - 1.2km diamètre, bien préservé',
-    historicalContext: '~50,000 ans, Arizona (USA). 50m fer impacté à ~12.8 km/s, cratère 1.2km × 170m profondeur. Bien préservé (climat aride). Premier cratère impact reconnu scientifiquement (1906). Référence mondiale pour validation crater scaling laws.',
+    description: 'Famous Arizona crater - 1.2km diameter, well preserved',
+    historicalContext: '~50,000 years ago, Arizona (USA). 50m iron impacted at ~12.8 km/s, crater 1.2km × 170m depth. Well preserved (arid climate). First scientifically recognized impact crater (1906). World reference for validating crater scaling laws.',
     category: 'validated',
     reliability: {
       score: 75,
-      details: 'Bon. Calculé 1.5km vs observé 1.2km (erreur 25%). Acceptable pour scaling laws. Érosion minimale donc bonne référence.',
+      details: 'Good. Calculated 1.5km vs observed 1.2km (25% error). Acceptable for scaling laws. Minimal erosion so good reference.',
       ourMAE: 25,
       validated: true
     },
@@ -120,12 +120,12 @@ const PREDEFINED_SCENARIOS: Scenario[] = [
     id: 'chicxulub',
     name: 'Chicxulub Impact',
     icon: '🦖',
-    description: 'Extinction dinosaures - 180 km cratère, 100 millions MT',
-    historicalContext: '66 millions années, Yucatán (Mexique). 10-15km astéroïde, cratère 180km (complètement enfoui sous sédiments). 100 millions MT. Extinction massive 75% espèces incluant dinosaures. Tsunami global, incendies, hiver d\'impact (poussière bloque soleil). Changé histoire de la vie sur Terre.',
+    description: 'Dinosaur extinction - 180 km crater, 100 million MT',
+    historicalContext: '66 million years ago, Yucatán (Mexico). 10-15km asteroid, 180km crater (completely buried under sediments). 100 million MT. Mass extinction 75% species including dinosaurs. Global tsunami, fires, impact winter (dust blocks sun). Changed Earth\'s life history.',
     category: 'validated',
     reliability: {
       score: 76,
-      details: 'Bon. Calculé 136.6km vs observé 180km (erreur 24%). Excellente précision pour impact géant (66 Ma, complètement enfoui). Validation extrême.',
+      details: 'Good. Calculated 136.6km vs observed 180km (24% error). Excellent precision for giant impact (66 Ma, completely buried). Extreme validation.',
       ourMAE: 24,
       validated: true
     },
@@ -140,21 +140,21 @@ const PREDEFINED_SCENARIOS: Scenario[] = [
     location: {
       lat: 21.3,
       lon: -89.5,
-      name: 'Yucatán, Mexique',
+      name: 'Yucatán, Mexico',
     },
   },
 
-  // === ESTIMATED HISTORICAL (pas encore validés) ===
+  // === ESTIMATED HISTORICAL (not yet validated) ===
   {
     id: 'sikhote-alin',
     name: 'Sikhote-Alin',
     icon: '🪨',
-    description: 'Pluie de météorites ferreux - Plus grand cratère 26m',
-    historicalContext: '12 février 1947, Montagnes Sikhote-Alin (Russie). ~100 tonnes fer fragmenté en atmosphère. Pluie de ~70 tonnes fragments (plus grand ~1.7 tonnes). Plus grand cratère 26m diamètre. Témoins ont vu traînée brillante puis explosions. 100+ cratères formés.',
+    description: 'Iron meteorite shower - Largest crater 26m',
+    historicalContext: 'February 12, 1947, Sikhote-Alin Mountains (Russia). ~100 tonnes iron fragmented in atmosphere. Shower of ~70 tonnes fragments (largest ~1.7 tonnes). Largest crater 26m diameter. Witnesses saw bright trail then explosions. 100+ craters formed.',
     category: 'estimated',
     reliability: {
       score: 45,
-      details: '⚠️ Problématique (limitation L2). Notre Monte Carlo prédit 1.8-10.7m vs 26m observé. Cause : σ range trop large OU FCM V2 surestime fragmentation. Calibration σ_typical nécessaire.',
+      details: '⚠️ Problematic (limitation L2). Our Monte Carlo predicts 1.8-10.7m vs 26m observed. Cause: σ range too wide OR FCM V2 overestimates fragmentation. σ_typical calibration needed.',
       validated: false
     },
     year: 1947,
@@ -168,19 +168,19 @@ const PREDEFINED_SCENARIOS: Scenario[] = [
     location: {
       lat: 46.1,
       lon: 134.7,
-      name: 'Sikhote-Alin, Russie',
+      name: 'Sikhote-Alin, Russia',
     },
   },
   {
     id: 'ries',
     name: 'Ries Crater',
     icon: '⭕',
-    description: 'Cratère complexe Allemagne - 24km diamètre',
-    historicalContext: '~15 millions années, Bavière (Allemagne). ~1.5km astéroïde, cratère 24km. Cratère complexe bien étudié avec pic central. Partiellement érodé mais structure visible. Site touristique et scientifique (musée cratère).',
+    description: 'Complex crater Germany - 24km diameter',
+    historicalContext: '~15 million years ago, Bavaria (Germany). ~1.5km asteroid, 24km crater. Complex crater well studied with central peak. Partially eroded but structure visible. Tourist and scientific site (crater museum).',
     category: 'estimated',
     reliability: {
       score: 85,
-      details: 'Bon. Calculé 20.4km vs observé 24km (erreur 14.9%). Bonne précision pour cratère complexe partiellement érodé. Pas encore testé automatiquement.',
+      details: 'Good. Calculated 20.4km vs observed 24km (14.9% error). Good precision for partially eroded complex crater. Not yet tested automatically.',
       validated: false
     },
     year: -15000000,
@@ -194,21 +194,21 @@ const PREDEFINED_SCENARIOS: Scenario[] = [
     location: {
       lat: 48.8833,
       lon: 10.6167,
-      name: 'Nördlingen, Allemagne',
+      name: 'Nördlingen, Germany',
     },
   },
 
-  // === HYPOTHETICAL (scénarios futurs/théoriques) ===
+  // === HYPOTHETICAL (future/theoretical scenarios) ===
   {
     id: 'apophis',
     name: 'Apophis (99942)',
     icon: '⚠️',
-    description: 'NEO proche passage 2029 - Passera plus près que satellites',
-    historicalContext: '13 avril 2029, Apophis (370m) passera à 31,600 km de Terre (plus proche que satellites géostationnaires 35,786 km). Initialement classé risque élevé (2004), puis écarté après observations supplémentaires. Reste surveillé pour passages futurs. Démonstration importance détection précoce.',
+    description: 'NEO close approach 2029 - Will pass closer than satellites',
+    historicalContext: 'April 13, 2029, Apophis (370m) will pass at 31,600 km from Earth (closer than geostationary satellites 35,786 km). Initially classified high risk (2004), then ruled out after additional observations. Remains monitored for future passages. Demonstration of early detection importance.',
     category: 'hypothetical',
     reliability: {
       score: 60,
-      details: 'Hypothétique. Impact non prévu. Paramètres basés mesures radar. Si impact réel, précision attendue ±20-30% (MAE typique).',
+      details: 'Hypothetical. No impact predicted. Parameters based on radar measurements. If real impact, expected precision ±20-30% (typical MAE).',
       validated: false
     },
     params: {
@@ -224,12 +224,12 @@ const PREDEFINED_SCENARIOS: Scenario[] = [
     id: 'bennu',
     name: 'Bennu (101955)',
     icon: '🎯',
-    description: 'Cible OSIRIS-REx - 1/2,700 chance impact 2175-2199',
-    historicalContext: 'Bennu (490m) visité par sonde OSIRIS-REx (2018-2021, échantillons retournés 2023). Rubble pile faible densité. 1/2,700 chance impact entre 2175-2199. Connaissance précise orbite et composition grâce mission. Cas d\'étude défense planétaire.',
+    description: 'OSIRIS-REx target - 1/2,700 chance of impact 2175-2199',
+    historicalContext: 'Bennu (490m) visited by OSIRIS-REx probe (2018-2021, samples returned 2023). Low-density rubble pile. 1/2,700 chance of impact between 2175-2199. Precise orbit and composition knowledge thanks to mission. Planetary defense case study.',
     category: 'hypothetical',
     reliability: {
       score: 65,
-      details: 'Hypothétique. Paramètres précis mesurés par spacecraft. Si impact réel, notre modèle rubble pile faible densité devrait donner ±25-30% précision.',
+      details: 'Hypothetical. Precise parameters measured by spacecraft. If real impact, our low-density rubble pile model should give ±25-30% precision.',
       validated: false
     },
     params: {
@@ -245,12 +245,12 @@ const PREDEFINED_SCENARIOS: Scenario[] = [
     id: 'city_killer',
     name: 'City Killer (140m)',
     icon: '🏙️',
-    description: 'Seuil NASA "Potentially Hazardous" - Attendu tous ~10,000 ans',
-    historicalContext: '140m est seuil NASA pour "Potentially Hazardous Asteroid" (PHA). Impact attendu statistiquement tous ~10,000 ans. Assez grand pour détruire zone métropolitaine complète. NASA surveille activement tous NEOs >140m (95% découverts). Scénario défense planétaire standard.',
+    description: 'NASA "Potentially Hazardous" threshold - Expected every ~10,000 years',
+    historicalContext: '140m is NASA threshold for "Potentially Hazardous Asteroid" (PHA). Impact statistically expected every ~10,000 years. Large enough to destroy entire metropolitan area. NASA actively monitors all NEOs >140m (95% discovered). Standard planetary defense scenario.',
     category: 'hypothetical',
     reliability: {
       score: 70,
-      details: 'Hypothétique. Taille dans range bien calibré (100-500m). Précision attendue ±20% basé sur dataset actuel. MAE global 32%.',
+      details: 'Hypothetical. Size in well-calibrated range (100-500m). Expected precision ±20% based on current dataset. Global MAE 32%.',
       validated: false
     },
     params: {
@@ -266,12 +266,12 @@ const PREDEFINED_SCENARIOS: Scenario[] = [
     id: 'regional_devastation',
     name: 'Regional Devastation (1km)',
     icon: '💥',
-    description: 'Effets régionaux massifs - Attendu tous ~500,000 ans',
-    historicalContext: '1km astéroïde : seuil effets globaux (poussière atmosphère, refroidissement climat). Impact attendu tous ~500,000 ans. Cratère ~20km, tsunami si océan, incendies massifs. NASA tracking 95% de NEOs >1km (aucun menace 100 ans). Extinction régionale possible.',
+    description: 'Massive regional effects - Expected every ~500,000 years',
+    historicalContext: '1km asteroid: global effects threshold (atmospheric dust, climate cooling). Impact expected every ~500,000 years. Crater ~20km, tsunami if ocean, massive fires. NASA tracking 95% of NEOs >1km (none threaten next 100 years). Possible regional extinction.',
     category: 'hypothetical',
     reliability: {
       score: 65,
-      details: 'Hypothétique. Taille validée sur Ries (24km observé, 14.9% erreur). Précision attendue ±20-25% pour cratère complexe.',
+      details: 'Hypothetical. Size validated on Ries (24km observed, 14.9% error). Expected precision ±20-25% for complex crater.',
       validated: false
     },
     params: {
@@ -349,17 +349,17 @@ export default function ScenarioSelector() {
 
   const getReliabilityLabel = (score: number) => {
     if (score >= 85) return 'Excellent';
-    if (score >= 75) return 'Bon';
-    if (score >= 60) return 'Moyen';
-    if (score >= 40) return 'Faible';
-    return 'Problématique';
+    if (score >= 75) return 'Good';
+    if (score >= 60) return 'Fair';
+    if (score >= 40) return 'Low';
+    return 'Problematic';
   };
 
   const categories = [
-    { id: 'all', label: 'Tous', icon: '🌐' },
-    { id: 'validated', label: 'Validés', icon: '✅', count: PREDEFINED_SCENARIOS.filter(s => s.category === 'validated').length },
-    { id: 'estimated', label: 'Estimés', icon: '📊', count: PREDEFINED_SCENARIOS.filter(s => s.category === 'estimated').length },
-    { id: 'hypothetical', label: 'Hypothétiques', icon: '🔮', count: PREDEFINED_SCENARIOS.filter(s => s.category === 'hypothetical').length },
+    { id: 'all', label: 'All', icon: '🌐' },
+    { id: 'validated', label: 'Validated', icon: '✅', count: PREDEFINED_SCENARIOS.filter(s => s.category === 'validated').length },
+    { id: 'estimated', label: 'Estimated', icon: '📊', count: PREDEFINED_SCENARIOS.filter(s => s.category === 'estimated').length },
+    { id: 'hypothetical', label: 'Hypothetical', icon: '🔮', count: PREDEFINED_SCENARIOS.filter(s => s.category === 'hypothetical').length },
   ];
 
   const filteredScenarios = selectedCategory === 'all'
@@ -372,7 +372,7 @@ export default function ScenarioSelector() {
       <div className="glass-card">
         <h2 className="text-3xl font-bold mb-2 text-white">📋 Impact Scenarios</h2>
         <p className="text-white/70 mb-4">
-          Scénarios historiques validés et hypothétiques avec indicateurs de fiabilité de notre modèle
+          Validated historical and hypothetical scenarios with reliability indicators from our model
         </p>
 
         {/* Category filters */}
@@ -443,24 +443,24 @@ export default function ScenarioSelector() {
                   <div className="px-4 pb-4 space-y-3 border-t border-white/10 pt-3 mt-2">
                     {/* Historical context */}
                     <div>
-                      <h5 className="text-xs font-semibold text-blue-300 mb-1">📖 Contexte Historique</h5>
+                      <h5 className="text-xs font-semibold text-blue-300 mb-1">📖 Historical Context</h5>
                       <p className="text-xs text-white/80 leading-relaxed">{scenario.historicalContext}</p>
                     </div>
 
                     {/* Reliability details */}
                     <div>
-                      <h5 className="text-xs font-semibold text-purple-300 mb-1">🎯 Fiabilité Notre Modèle</h5>
+                      <h5 className="text-xs font-semibold text-purple-300 mb-1">🎯 Our Model Reliability</h5>
                       <p className="text-xs text-white/80 leading-relaxed">{scenario.reliability.details}</p>
                       {scenario.reliability.ourMAE !== undefined && (
                         <p className="text-xs text-green-400 mt-1">
-                          Notre MAE mesuré : ±{scenario.reliability.ourMAE}%
+                          Our measured MAE: ±{scenario.reliability.ourMAE}%
                         </p>
                       )}
                     </div>
 
                     {/* Parameters */}
                     <div>
-                      <h5 className="text-xs font-semibold text-cyan-300 mb-2">⚙️ Paramètres</h5>
+                      <h5 className="text-xs font-semibold text-cyan-300 mb-2">⚙️ Parameters</h5>
                       <div className="flex flex-wrap gap-1.5">
                         <span className="px-2 py-1 bg-blue-500/20 text-blue-200 rounded text-xs">
                           Ø {scenario.params.diameter}m
@@ -490,7 +490,7 @@ export default function ScenarioSelector() {
                     {/* Requires selection warning */}
                     {scenario.requiresLocationSelection && (
                       <div className="p-2 bg-yellow-500/10 border border-yellow-500/30 rounded text-xs text-yellow-300">
-                        ⚠️ <strong>Action requise:</strong> Après chargement, cliquez sur la carte (à droite) pour sélectionner un point d'impact, puis lancez la simulation.
+                        ⚠️ <strong>Action required:</strong> After loading, click on the map (right) to select an impact point, then run the simulation.
                       </div>
                     )}
                   </div>
@@ -511,26 +511,26 @@ export default function ScenarioSelector() {
             selectedScenario.location ? (
               <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
                 <p className="text-sm text-blue-300 font-medium">
-                  ✓ Location pré-définie : {selectedScenario.location.name}
+                  ✓ Pre-defined location: {selectedScenario.location.name}
                 </p>
                 <p className="text-xs text-white/60 mt-1">
-                  Simulation lancée automatiquement
+                  Simulation launched automatically
                 </p>
               </div>
             ) : (
               <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
                 <p className="text-sm text-yellow-300 font-medium">
-                  👆 Cliquez sur la carte pour choisir le point d'impact
+                  👆 Click on map to choose impact point
                 </p>
                 <p className="text-xs text-white/60 mt-1">
-                  Scénario hypothétique : <strong>{selectedScenario.name}</strong>
+                  Hypothetical scenario: <strong>{selectedScenario.name}</strong>
                 </p>
               </div>
             )
           ) : (
             <div className="mb-4 p-3 bg-white/5 border border-white/10 rounded-lg">
               <p className="text-sm text-white/70">
-                Sélectionnez un scénario à gauche
+                Select a scenario from the left
               </p>
             </div>
           )}
@@ -541,14 +541,14 @@ export default function ScenarioSelector() {
           {/* Current parameters */}
           {selectedScenario && (
             <div className="mt-4 p-4 bg-white/5 rounded-lg border border-white/10">
-              <h4 className="text-sm font-semibold text-white mb-2">Paramètres Chargés</h4>
+              <h4 className="text-sm font-semibold text-white mb-2">Loaded Parameters</h4>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div>
-                  <span className="text-white/60">Diamètre:</span>
+                  <span className="text-white/60">Diameter:</span>
                   <span className="ml-2 text-blue-400 font-medium">{asteroidParams.diameter}m</span>
                 </div>
                 <div>
-                  <span className="text-white/60">Vélocité:</span>
+                  <span className="text-white/60">Velocity:</span>
                   <span className="ml-2 text-cyan-400 font-medium">{asteroidParams.velocity} km/s</span>
                 </div>
                 <div>
@@ -556,7 +556,7 @@ export default function ScenarioSelector() {
                   <span className="ml-2 text-purple-400 font-medium">{asteroidParams.angle}°</span>
                 </div>
                 <div>
-                  <span className="text-white/60">Densité:</span>
+                  <span className="text-white/60">Density:</span>
                   <span className="ml-2 text-green-400 font-medium">{asteroidParams.density} kg/m³</span>
                 </div>
               </div>
