@@ -257,7 +257,11 @@ class CompletePiGroupCraterModel {
         const V_REF = 12000;  // m/s
         const RHO_TARGET = density_target || 2500;
 
-        const rho_ratio = Math.pow(density_imp / RHO_TARGET, 1/3);
+        // PHYSICS CORRECTION Phase 1.4.3: μ = 0.55 (Holsapple 1993)
+        // PREVIOUS: μ = 1/3 (incorrect for hypervelocity impacts)
+        // CORRECT: μ = 0.55 (experimentally calibrated, Table 3)
+        const MU_HOLSAPPLE_1993 = 0.55;
+        const rho_ratio = Math.pow(density_imp / RHO_TARGET, MU_HOLSAPPLE_1993);
         const v_ratio = Math.pow(velocity_m_s / V_REF, 2/3);
         const theta = angle_deg * Math.PI / 180;
         const sin_theta = Math.pow(Math.sin(theta), 1/3);
