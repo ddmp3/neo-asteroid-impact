@@ -385,6 +385,8 @@ class PhysicsEngine {
 
         if (D_transient < 3200) {
             // SIMPLE crater (< 3.2 km): bowl-shaped
+            // Transient→final expansion: 1.25× (empirically validated)
+            // NOTE: Croft (1985) applies to complex craters (see line 404), not simple
             diameter = 1.25 * D_transient;
             depth = diameter / 5;
             craterType = 'simple';
