@@ -1,7 +1,7 @@
 {
   "name": "asteroid-impact-simulator-web",
-  "version": "2.1.0",
-  "description": "Asteroid Impact Simulator v2.1.0 - Enhanced Educational Content & Model Accuracy Indicators",
+  "version": "2.0.2",
+  "description": "Asteroid Impact Simulator v2.0.2 - Enhanced Educational Content & Model Accuracy Indicators",
   "license": "MIT",
   "type": "module",
   "scripts": {

@@ -168,6 +168,66 @@ class SmallIronCraterPhysics {
         console.log(`  - Bulk density: ${density} kg/m³`);
         console.log(`  - Porosity: ${(comp_props.porosity.total*100).toFixed(0)}%`);
 
+        // PHASE 1.4.2: IRON NO-FCM HYPOTHESIS TEST
+        // Hypothesis: Small iron meteorites (<100m) DON'T fragment in atmosphere
+        // Physical basis: σ_iron = 100-300 MPa >> σ_stone = 1-10 MPa (Pohl et al. 2020)
+        // Evidence: Barringer (50m), Wolfe Creek (15m) show NO airburst
+        // Result: Bypass FCM, assume intact ground impact
+
+        const IRON_NO_FCM_THRESHOLD = 100;  // meters
+        const bypass_fcm = (params.composition === 'iron' || params.composition === 'metallic')
+                          && params.diameter < IRON_NO_FCM_THRESHOLD;
+
+        if (bypass_fcm) {
+            console.log(`\n[SmallIronCrater] ⚠️  IRON NO-FCM MODE (Phase 1.4.2 test)`);
+            console.log(`  Hypothesis: Iron <${IRON_NO_FCM_THRESHOLD}m reaches ground INTACT (no atmospheric fragmentation)`);
+            console.log(`  Physical basis: σ_iron = ${(strength/1e6).toFixed(0)} MPa >> stone (bypass FCM)`);
+            console.log(`  References: Pohl et al. (2020), Shoemaker (1963) - Barringer intact impact`);
+
+            // BYPASS FCM - Assume intact impact at ground level
+            const m_initial = (4/3) * Math.PI * Math.pow(params.diameter/2, 3) * density;
+            const v_impact = params.velocity;  // No deceleration (conservative)
+
+            console.log(`\n[SmallIronCrater] Intact impact parameters:`);
+            console.log(`  - Mass: ${m_initial.toFixed(0)} kg (100% survives)`);
+            console.log(`  - Velocity: ${v_impact.toFixed(0)} m/s (no deceleration)`);
+            console.log(`  - Fragmentation: NONE (too strong)`);
+
+            // Calculate crater directly from full mass
+            const main_crater_diameter = this.calculateCraterFromMass(
+                m_initial,  // Full initial mass
+                v_impact,
+                params.angle,
+                density,
+                params.targetDensity || this.RHO_TARGET_DEFAULT,
+                params.C_override
+            );
+
+            const main_crater_depth = main_crater_diameter / 5;
+            const main_crater_volume = (Math.PI / 4) * Math.pow(main_crater_diameter, 2) * main_crater_depth;
+
+            console.log(`\n[SmallIronCrater] NO-FCM crater results:`);
+            console.log(`  - Diameter: ${main_crater_diameter.toFixed(1)} m`);
+            console.log(`  - Depth: ${main_crater_depth.toFixed(1)} m`);
+
+            return {
+                crater_diameter: main_crater_diameter,
+                crater_depth: main_crater_depth,
+                crater_volume: main_crater_volume,
+                crater_type: 'simple',
+                regime: 'iron_intact_no_fcm',
+                fragment_count: 1,
+                largest_fragment_mass_kg: m_initial,
+                largest_fragment_fraction: 1.0,
+                fragmentation_altitude_km: 0,
+                survival_fraction: 1.0,
+                energy_deposited_atmospheric_MT: 0,
+                impact_energy_MT: (0.5 * m_initial * v_impact * v_impact) / 4.184e15,
+                warning: 'NO-FCM MODE (Phase 1.4.2): Iron assumed intact impact (no atmospheric fragmentation)'
+            };
+        }
+
+        // STANDARD PATH: Run FCM for stone or large iron
         // ÉTAPE 2: Simuler fragmentation atmosphérique avec FCM V2
         console.log(`\n[SmallIronCrater] Running FCM V2 atmospheric fragmentation...`);
 
