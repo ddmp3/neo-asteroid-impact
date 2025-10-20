@@ -1,7 +1,7 @@
 {
   "name": "neo-asteroid-impact-api",
-  "version": "2.0.0",
-  "description": "Backend API for NEO Asteroid Impact Simulator v2.0 - Physics-Based Impact Simulation with Scientific Rigor",
+  "version": "2.0.1",
+  "description": "Backend API for NEO Asteroid Impact Simulator v2.0.1 - Phase 1.4 Energy Coupling Efficiency",
   "license": "MIT",
   "main": "src/index.js",
   "scripts": {

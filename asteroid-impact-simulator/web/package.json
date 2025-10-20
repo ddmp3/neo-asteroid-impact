@@ -1,7 +1,7 @@
 {
   "name": "asteroid-impact-simulator-web",
-  "version": "2.0.0",
-  "description": "Asteroid Impact Simulator v2.0 - Post-Hackathon Refactoring - Scientific Rigor & Transparency",
+  "version": "2.0.1",
+  "description": "Asteroid Impact Simulator v2.0.1 - Phase 1.4 Energy Coupling Efficiency",
   "license": "MIT",
   "type": "module",
   "scripts": {
