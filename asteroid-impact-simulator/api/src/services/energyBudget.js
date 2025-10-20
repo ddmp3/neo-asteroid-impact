@@ -189,7 +189,8 @@ function calculateCompleteEnergyBudget(
     angle,
     composition = 'rocky',
     rotationPeriod = 6.0,
-    couplingEfficiency = null
+    couplingEfficiency = null,
+    thermalAblationEnergy = 0  // v2.0.1 Phase 1.4 Task 1.3: From RK4 atmospheric integration
 ) {
     // Component 1: Translational kinetic energy
     const E_kinetic_trans = 0.5 * mass * velocity * velocity;
@@ -206,9 +207,19 @@ function calculateCompleteEnergyBudget(
     const deformation = calculateDeformationEnergy(E_kinetic_total, velocity, composition);
     const E_deformation = deformation.total_deformation;
 
-    // Component 4: Thermal energy [PLACEHOLDER for Task 1.3]
+    // Component 4: Thermal energy (v2.0.1 Task 1.3)
     // Energy lost to ablation, vaporization during atmospheric entry
-    const E_thermal_ablation = 0;  // TODO: Task 1.3
+    // Calculated by RK4 atmospheric trajectory integration (atmosphericTrajectory.js)
+    //
+    // PHYSICS:
+    //   - Stagnation heating: Q = 0.5 × ρ × v³ × A × C_H
+    //   - Ablation: dm/dt = Q / L_ablation
+    //   - Energy lost: E_thermal = ∫ Q dt = ∫ (-dm) × L_ablation
+    //
+    // TYPICAL VALUES:
+    //   - Small asteroids (<100m): 10-50% of kinetic energy
+    //   - Large asteroids (>1km): <5% (less atmospheric interaction)
+    const E_thermal_ablation = thermalAblationEnergy;
 
     // Energy AVAILABLE for crater formation and ejecta (after deformation/thermal losses)
     const E_available = E_kinetic_trans - E_deformation - E_thermal_ablation;

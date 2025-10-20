@@ -162,7 +162,8 @@ class MonteCarloSimulation {
                         params.angle
                     );
                     // v2.0.1 Phase 1.4: Pass angle, composition, diameter for complete energy budget
-                    const energy = this.physicsEngine.calculateImpactEnergy(mass, finalVelocity, params.angle, params.composition, params.diameter);
+                    // Monte Carlo uses simplified physics (no RK4), so thermal ablation = 0
+                    const energy = this.physicsEngine.calculateImpactEnergy(mass, finalVelocity, params.angle, params.composition, params.diameter, 0);
                     const crater = this.physicsEngine.calculateCraterSize(
                         energy.effective_joules,  // v2.1.0: Use effective crater energy
                         params.angle,

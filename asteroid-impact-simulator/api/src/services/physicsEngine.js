@@ -132,9 +132,10 @@ class PhysicsEngine {
      * @param {number} angle - Impact angle in degrees (default: 45°)
      * @param {string} composition - Impactor composition (default: 'rocky')
      * @param {number} diameter - Asteroid diameter in meters (default: null, calculated from mass)
+     * @param {number} thermalAblationEnergy - Energy lost to atmospheric ablation in J (default: 0)
      * @returns {Object} Energy in Joules and TNT equivalent in megatons
      */
-    calculateImpactEnergy(mass, velocity, angle = 45, composition = 'rocky', diameter = null) {
+    calculateImpactEnergy(mass, velocity, angle = 45, composition = 'rocky', diameter = null, thermalAblationEnergy = 0) {
         // Calculate diameter from mass if not provided
         if (!diameter) {
             const density = composition === 'iron' ? 7800 : (composition === 'icy' ? 1000 : 3000);
@@ -145,7 +146,7 @@ class PhysicsEngine {
         // v2.0.1 Phase 1.4 Task 1.1: Angle-dependent energy coupling
         const energyResult = calculateEffectiveEnergy(mass, velocity, angle, composition);
 
-        // v2.0.1 Phase 1.4 Task 1.2: Complete energy budget
+        // v2.0.1 Phase 1.4 Task 1.2+1.3: Complete energy budget (includes thermal ablation)
         const budget = calculateCompleteEnergyBudget(
             mass,
             diameter,
@@ -153,7 +154,8 @@ class PhysicsEngine {
             angle,
             composition,
             6.0,  // Default rotation period: 6 hours
-            energyResult.coupling_efficiency
+            energyResult.coupling_efficiency,
+            thermalAblationEnergy  // Task 1.3: From RK4 atmospheric integration
         );
 
         // Convert to TNT equivalent (1 ton TNT = 4.184e9 J)
@@ -1044,11 +1046,24 @@ class PhysicsEngine {
                 energyForEffects = rk4Result.summary.energy_final_J;
             }
 
-            energy = {
-                joules: energyForEffects,
-                tntTons: energyForEffects / 4.184e9,
-                megatons: energyForEffects / 4.184e15
-            };
+            // v2.0.1 Phase 1.4 Task 1.3: Extract thermal ablation energy from RK4
+            const thermalAblation_J = rk4Result.summary.energy_ablation_J || 0;
+
+            // Calculate complete energy budget with RK4-derived thermal ablation
+            energy = this.calculateImpactEnergy(
+                mass,
+                velocity,  // Use initial velocity (not finalVelocity which is simplified)
+                angle,
+                composition,
+                diameter,
+                thermalAblation_J  // Task 1.3: Thermal energy from RK4 atmospheric integration
+            );
+
+            // Override joules/megatons with RK4 energy for effects
+            // (energy budget is based on initial energy, but effects use final/fragmentation energy)
+            energy.joules = energyForEffects;
+            energy.tntTons = energyForEffects / 4.184e9;
+            energy.megatons = energyForEffects / 4.184e15;
 
             fragmentation = {
                 willFragment: rk4Result.summary.fragmented,
@@ -1076,7 +1091,8 @@ class PhysicsEngine {
             console.log('[PhysicsEngine] Using legacy atmospheric fragmentation model');
 
             // v2.0.1 Phase 1.4: Calculate energy with angle-dependent coupling and complete budget
-            energy = this.calculateImpactEnergy(mass, finalVelocity, angle, composition, diameter);
+            // Note: Legacy mode doesn't use RK4, so thermal ablation = 0
+            energy = this.calculateImpactEnergy(mass, finalVelocity, angle, composition, diameter, 0);
 
             // NEW: Analyze atmospheric fragmentation (Hills-Goda 1993)
             // Critical for asteroids <100m - determines airburst vs ground impact
