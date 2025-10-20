@@ -116,13 +116,15 @@ class SmallIronCraterPhysics {
         console.log(`[SmallIronCrater] Running deterministic calculation...`);
 
         // ÉTAPE 1: Récupérer propriétés physiques composition
-        const comp_props = getCompositionParams(params.composition, null);
+        // Phase 1.4.2: Pass diameter for size-dependent iron fracture state
+        const comp_props = getCompositionParams(params.composition, null, params.diameter);
 
         const density = params.density || comp_props.density.bulk_typical;  // kg/m³
 
-        // WEIBULL STRENGTH SCALING with MONTE CARLO OVERRIDE
-        // Si params.strength_override existe (Monte Carlo), l'utiliser
-        // Sinon, calculer depuis Weibull + composition limits
+        // WEIBULL STRENGTH SCALING with COMPOSITION-DEPENDENT MODULUS (Phase 1.4.2)
+        // KEY PHYSICS: Ductile (iron) vs Brittle (stone) materials have different Weibull m
+        // - Stone (brittle): m=3 → strength decreases rapidly with size
+        // - Iron (ductile): m=12 → strength decreases slowly with size
 
         let strength;
 
@@ -131,22 +133,36 @@ class SmallIronCraterPhysics {
             strength = params.strength_override;
             console.log(`[SmallIronCrater] Using strength override: ${(strength/1e6).toFixed(1)} MPa (Monte Carlo)`);
         } else {
-            // Standard: Calculate from Weibull scaling + composition limits
-            const D_ref = 1.0;  // 1 mètre référence
-            const sigma_ref = 350e6;  // 350 MPa monolithique
-            const m_weibull = 3;  // Weibull modulus réduit
+            // PHASE 1.4.2: COMPOSITION-DEPENDENT WEIBULL
+            // Get Weibull parameters from composition properties
+            const weibull = comp_props.weibull || {
+                m: 3,                    // Default: brittle (stone)
+                sigma_ref: 350e6,        // Pa (350 MPa)
+                D_ref: 1.0               // m
+            };
 
-            // Weibull scaling: σ(D) = σ₀ × (D₀/D)^(1/m)
-            const sigma_weibull = sigma_ref * Math.pow(D_ref / params.diameter, 1/m_weibull);
+            // Weibull scaling: σ(D) = σ_ref × (D_ref / D)^(1/m)
+            const sigma_weibull = weibull.sigma_ref * Math.pow(
+                weibull.D_ref / params.diameter,
+                1 / weibull.m
+            );
 
-            // Composition-specific limits (from CraterRouting)
-            const strength_range = this.routing.getStrengthRange(params.composition);
-            strength = Math.min(sigma_weibull, strength_range.typical);
+            // Clamp to composition-specific strength range
+            const strength_range = comp_props.strength;
+            strength = Math.max(
+                strength_range.tensile_range[0],
+                Math.min(sigma_weibull, strength_range.tensile_range[1])
+            );
+
+            const failure_mode = comp_props.failure_mode || 'brittle';
 
             console.log(`[SmallIronCrater] Material properties (${params.composition}):`);
-            console.log(`  - Reference strength: ${(sigma_ref/1e6).toFixed(0)} MPa (monolithic)`);
-            console.log(`  - Weibull scaled: ${(sigma_weibull/1e6).toFixed(1)} MPa`);
-            console.log(`  - Effective strength: ${(strength/1e6).toFixed(1)} MPa (${params.composition} typical)`);
+            console.log(`  - Failure mode: ${failure_mode} (${failure_mode === 'ductile' ? 'plastic deformation' : 'brittle fracture'})`);
+            console.log(`  - Weibull modulus: m=${weibull.m} (${weibull.m >= 10 ? 'ductile' : 'brittle'} material)`);
+            console.log(`  - Reference strength: ${(weibull.sigma_ref/1e6).toFixed(0)} MPa @ ${weibull.D_ref}m`);
+            console.log(`  - Scaled σ(D=${params.diameter}m) = ${(sigma_weibull/1e6).toFixed(1)} MPa`);
+            console.log(`  - Clamped to range: [${(strength_range.tensile_range[0]/1e6).toFixed(0)}, ${(strength_range.tensile_range[1]/1e6).toFixed(0)}] MPa`);
+            console.log(`  - Effective strength: ${(strength/1e6).toFixed(1)} MPa`);
         }
 
         console.log(`  - Bulk density: ${density} kg/m³`);

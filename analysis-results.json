@@ -1,0 +1,743 @@
+{
+  "timestamp": "2025-10-20T11:17:10.736Z",
+  "summary": {
+    "totalTested": 19,
+    "successful": 18,
+    "failed": 1
+  },
+  "byRegime": {
+    "small": {
+      "regime": "Small (10-50m)",
+      "n": 2,
+      "nHigh": 1,
+      "mae": 44.7730550735135,
+      "median": 77.73599235466236,
+      "min": 11.81011779236463,
+      "max": 77.73599235466236,
+      "highMAE": 11.81011779236463,
+      "craters": [
+        {
+          "name": "Sikhote-Alin (largest)",
+          "composition": "iron",
+          "confidence": "HIGH",
+          "impactorDiameter": 10,
+          "craterDiameter": 26,
+          "predicted": 22.929369373985196,
+          "error": 3.070630626014804,
+          "errorPct": 11.81011779236463,
+          "regime": {
+            "regime": "small",
+            "min": 10,
+            "max": 50,
+            "name": "Small (10-50m)",
+            "notes": "Airburst likely, small crater if reaches ground"
+          },
+          "success": true
+        },
+        {
+          "name": "Whitecourt",
+          "composition": "iron",
+          "confidence": "MEDIUM",
+          "impactorDiameter": 3,
+          "craterDiameter": 36,
+          "predicted": 8.015042752321548,
+          "error": 27.98495724767845,
+          "errorPct": 77.73599235466236,
+          "regime": {
+            "regime": "small",
+            "min": 10,
+            "max": 50,
+            "name": "Small (10-50m)",
+            "notes": "Airburst likely, small crater if reaches ground"
+          },
+          "success": true
+        }
+      ]
+    },
+    "medium": {
+      "regime": "Medium (50-500m)",
+      "n": 3,
+      "nHigh": 1,
+      "mae": 80.8253235792216,
+      "median": 85.6761897053265,
+      "min": 69.53831957344121,
+      "max": 87.26146145889712,
+      "highMAE": 85.6761897053265,
+      "craters": [
+        {
+          "name": "Wabar",
+          "composition": "iron",
+          "confidence": "HIGH",
+          "impactorDiameter": 8,
+          "craterDiameter": 116,
+          "predicted": 16.615619941821265,
+          "error": 99.38438005817873,
+          "errorPct": 85.6761897053265,
+          "regime": {
+            "regime": "medium",
+            "min": 50,
+            "max": 500,
+            "name": "Medium (50-500m)",
+            "notes": "Transition regime, fragmentation critical"
+          },
+          "success": true
+        },
+        {
+          "name": "Odessa",
+          "composition": "iron",
+          "confidence": "MEDIUM",
+          "impactorDiameter": 15,
+          "craterDiameter": 168,
+          "predicted": 51.17562311661876,
+          "error": 116.82437688338123,
+          "errorPct": 69.53831957344121,
+          "regime": {
+            "regime": "medium",
+            "min": 50,
+            "max": 500,
+            "name": "Medium (50-500m)",
+            "notes": "Transition regime, fragmentation critical"
+          },
+          "success": true
+        },
+        {
+          "name": "Henbury",
+          "composition": "iron",
+          "confidence": "MEDIUM",
+          "impactorDiameter": 10,
+          "craterDiameter": 180,
+          "predicted": 22.929369373985196,
+          "error": 157.0706306260148,
+          "errorPct": 87.26146145889712,
+          "regime": {
+            "regime": "medium",
+            "min": 50,
+            "max": 500,
+            "name": "Medium (50-500m)",
+            "notes": "Transition regime, fragmentation critical"
+          },
+          "success": true
+        }
+      ]
+    },
+    "large": {
+      "regime": "Large (0.5-2km)",
+      "n": 4,
+      "nHigh": 2,
+      "mae": 76.61624649680748,
+      "median": 95.60910614632695,
+      "min": 20.73659242848648,
+      "max": 96.34632934833587,
+      "highMAE": 57.25477524628354,
+      "craters": [
+        {
+          "name": "Barringer (Meteor Crater)",
+          "composition": "iron",
+          "confidence": "HIGH",
+          "impactorDiameter": 50,
+          "craterDiameter": 1200,
+          "predicted": 951.1608908581622,
+          "error": 248.83910914183775,
+          "errorPct": 20.73659242848648,
+          "regime": {
+            "regime": "large",
+            "min": 500,
+            "max": 2000,
+            "name": "Large (0.5-2km)",
+            "notes": "Simple craters, less fragmentation"
+          },
+          "success": true
+        },
+        {
+          "name": "Wolfe Creek",
+          "composition": "iron",
+          "confidence": "HIGH",
+          "impactorDiameter": 15,
+          "craterDiameter": 892,
+          "predicted": 55.545214068401165,
+          "error": 836.4547859315988,
+          "errorPct": 93.7729580640806,
+          "regime": {
+            "regime": "large",
+            "min": 500,
+            "max": 2000,
+            "name": "Large (0.5-2km)",
+            "notes": "Simple craters, less fragmentation"
+          },
+          "success": true
+        },
+        {
+          "name": "Tenoumer",
+          "composition": "iron",
+          "confidence": "MEDIUM",
+          "impactorDiameter": 35,
+          "craterDiameter": 1900,
+          "predicted": 69.41974238161845,
+          "error": 1830.5802576183814,
+          "errorPct": 96.34632934833587,
+          "regime": {
+            "regime": "large",
+            "min": 500,
+            "max": 2000,
+            "name": "Large (0.5-2km)",
+            "notes": "Simple craters, less fragmentation"
+          },
+          "success": true
+        },
+        {
+          "name": "Darwin",
+          "composition": "iron",
+          "confidence": "MEDIUM",
+          "impactorDiameter": 28,
+          "craterDiameter": 1200,
+          "predicted": 52.69072624407656,
+          "error": 1147.3092737559234,
+          "errorPct": 95.60910614632695,
+          "regime": {
+            "regime": "large",
+            "min": 500,
+            "max": 2000,
+            "name": "Large (0.5-2km)",
+            "notes": "Simple craters, less fragmentation"
+          },
+          "success": true
+        }
+      ]
+    },
+    "giant": {
+      "regime": "Giant (2-20km)",
+      "n": 3,
+      "nHigh": 1,
+      "mae": 57.98727895646911,
+      "median": 64.39512369776051,
+      "min": 12.926530537184208,
+      "max": 96.64018263446262,
+      "highMAE": 12.926530537184208,
+      "craters": [
+        {
+          "name": "Bosumtwi",
+          "composition": "rocky",
+          "confidence": "HIGH",
+          "impactorDiameter": 500,
+          "craterDiameter": 10500,
+          "predicted": 9142.714293595658,
+          "error": 1357.285706404342,
+          "errorPct": 12.926530537184208,
+          "regime": {
+            "regime": "giant",
+            "min": 2000,
+            "max": 20000,
+            "name": "Giant (2-20km)",
+            "notes": "Simple to complex transition"
+          },
+          "success": true
+        },
+        {
+          "name": "Roter Kamm",
+          "composition": "iron",
+          "confidence": "MEDIUM",
+          "impactorDiameter": 40,
+          "craterDiameter": 2500,
+          "predicted": 83.99543413843456,
+          "error": 2416.0045658615654,
+          "errorPct": 96.64018263446262,
+          "regime": {
+            "regime": "giant",
+            "min": 2000,
+            "max": 20000,
+            "name": "Giant (2-20km)",
+            "notes": "Simple to complex transition"
+          },
+          "success": true
+        },
+        {
+          "name": "Flynn Creek",
+          "composition": "iron",
+          "confidence": "MEDIUM",
+          "impactorDiameter": 95,
+          "craterDiameter": 3800,
+          "predicted": 1352.9852994851005,
+          "error": 2447.0147005148992,
+          "errorPct": 64.39512369776051,
+          "regime": {
+            "regime": "giant",
+            "min": 2000,
+            "max": 20000,
+            "name": "Giant (2-20km)",
+            "notes": "Simple to complex transition"
+          },
+          "success": true
+        }
+      ]
+    },
+    "mega": {
+      "regime": "Mega (>20km)",
+      "n": 6,
+      "nHigh": 4,
+      "mae": 13.330361159441201,
+      "median": 14.461426371427963,
+      "min": 4.870822019921821,
+      "max": 23.16192476208666,
+      "highMAE": 10.386752088186089,
+      "craters": [
+        {
+          "name": "Chicxulub",
+          "composition": "rocky",
+          "confidence": "HIGH",
+          "impactorDiameter": 10000,
+          "craterDiameter": 180000,
+          "predicted": 163478.40435748477,
+          "error": 16521.595642515225,
+          "errorPct": 9.17866424584179,
+          "regime": {
+            "regime": "mega",
+            "min": 20000,
+            "max": 1000000,
+            "name": "Mega (>20km)",
+            "notes": "Complex craters, peak rings"
+          },
+          "success": true
+        },
+        {
+          "name": "Manicouagan",
+          "composition": "rocky",
+          "confidence": "HIGH",
+          "impactorDiameter": 7500,
+          "craterDiameter": 85000,
+          "predicted": 96080.68135821987,
+          "error": 11080.681358219867,
+          "errorPct": 13.036095715552785,
+          "regime": {
+            "regime": "mega",
+            "min": 20000,
+            "max": 1000000,
+            "name": "Mega (>20km)",
+            "notes": "Complex craters, peak rings"
+          },
+          "success": true
+        },
+        {
+          "name": "Ries",
+          "composition": "rocky",
+          "confidence": "HIGH",
+          "impactorDiameter": 1500,
+          "craterDiameter": 24000,
+          "predicted": 20529.25767085729,
+          "error": 3470.7423291427112,
+          "errorPct": 14.461426371427963,
+          "regime": {
+            "regime": "mega",
+            "min": 20000,
+            "max": 1000000,
+            "name": "Mega (>20km)",
+            "notes": "Complex craters, peak rings"
+          },
+          "success": true
+        },
+        {
+          "name": "Haughton",
+          "composition": "rocky",
+          "confidence": "HIGH",
+          "impactorDiameter": 1400,
+          "craterDiameter": 23000,
+          "predicted": 21879.71093541798,
+          "error": 1120.289064582019,
+          "errorPct": 4.870822019921821,
+          "regime": {
+            "regime": "mega",
+            "min": 20000,
+            "max": 1000000,
+            "name": "Mega (>20km)",
+            "notes": "Complex craters, peak rings"
+          },
+          "success": true
+        },
+        {
+          "name": "Vredefort",
+          "composition": "rocky",
+          "confidence": "MEDIUM",
+          "impactorDiameter": 15000,
+          "craterDiameter": 300000,
+          "predicted": 230514.22571374002,
+          "error": 69485.77428625998,
+          "errorPct": 23.16192476208666,
+          "regime": {
+            "regime": "mega",
+            "min": 20000,
+            "max": 1000000,
+            "name": "Mega (>20km)",
+            "notes": "Complex craters, peak rings"
+          },
+          "success": true
+        },
+        {
+          "name": "Sudbury",
+          "composition": "rocky",
+          "confidence": "MEDIUM",
+          "impactorDiameter": 10000,
+          "craterDiameter": 130000,
+          "predicted": 149855.20399436104,
+          "error": 19855.203994361043,
+          "errorPct": 15.273233841816186,
+          "regime": {
+            "regime": "mega",
+            "min": 20000,
+            "max": 1000000,
+            "name": "Mega (>20km)",
+            "notes": "Complex craters, peak rings"
+          },
+          "success": true
+        }
+      ]
+    }
+  },
+  "byConfidence": {
+    "HIGH": {
+      "n": 9,
+      "mae": 29.607710764465196
+    },
+    "MEDIUM": {
+      "n": 9,
+      "mae": 69.55129709086549
+    },
+    "LOW": null
+  },
+  "recommendations": {
+    "excludeSizes": [
+      "Small (10-50m)",
+      "Medium (50-500m)",
+      "Large (0.5-2km)",
+      "Giant (2-20km)"
+    ],
+    "excludeConfidence": [],
+    "reliableSizes": [
+      "Mega (>20km)"
+    ]
+  },
+  "results": [
+    {
+      "name": "Barringer (Meteor Crater)",
+      "composition": "iron",
+      "confidence": "HIGH",
+      "impactorDiameter": 50,
+      "craterDiameter": 1200,
+      "predicted": 951.1608908581622,
+      "error": 248.83910914183775,
+      "errorPct": 20.73659242848648,
+      "regime": {
+        "regime": "large",
+        "min": 500,
+        "max": 2000,
+        "name": "Large (0.5-2km)",
+        "notes": "Simple craters, less fragmentation"
+      },
+      "success": true
+    },
+    {
+      "name": "Wolfe Creek",
+      "composition": "iron",
+      "confidence": "HIGH",
+      "impactorDiameter": 15,
+      "craterDiameter": 892,
+      "predicted": 55.545214068401165,
+      "error": 836.4547859315988,
+      "errorPct": 93.7729580640806,
+      "regime": {
+        "regime": "large",
+        "min": 500,
+        "max": 2000,
+        "name": "Large (0.5-2km)",
+        "notes": "Simple craters, less fragmentation"
+      },
+      "success": true
+    },
+    {
+      "name": "Wabar",
+      "composition": "iron",
+      "confidence": "HIGH",
+      "impactorDiameter": 8,
+      "craterDiameter": 116,
+      "predicted": 16.615619941821265,
+      "error": 99.38438005817873,
+      "errorPct": 85.6761897053265,
+      "regime": {
+        "regime": "medium",
+        "min": 50,
+        "max": 500,
+        "name": "Medium (50-500m)",
+        "notes": "Transition regime, fragmentation critical"
+      },
+      "success": true
+    },
+    {
+      "name": "Sikhote-Alin (largest)",
+      "composition": "iron",
+      "confidence": "HIGH",
+      "impactorDiameter": 10,
+      "craterDiameter": 26,
+      "predicted": 22.929369373985196,
+      "error": 3.070630626014804,
+      "errorPct": 11.81011779236463,
+      "regime": {
+        "regime": "small",
+        "min": 10,
+        "max": 50,
+        "name": "Small (10-50m)",
+        "notes": "Airburst likely, small crater if reaches ground"
+      },
+      "success": true
+    },
+    {
+      "name": "Chicxulub",
+      "composition": "rocky",
+      "confidence": "HIGH",
+      "impactorDiameter": 10000,
+      "craterDiameter": 180000,
+      "predicted": 163478.40435748477,
+      "error": 16521.595642515225,
+      "errorPct": 9.17866424584179,
+      "regime": {
+        "regime": "mega",
+        "min": 20000,
+        "max": 1000000,
+        "name": "Mega (>20km)",
+        "notes": "Complex craters, peak rings"
+      },
+      "success": true
+    },
+    {
+      "name": "Manicouagan",
+      "composition": "rocky",
+      "confidence": "HIGH",
+      "impactorDiameter": 7500,
+      "craterDiameter": 85000,
+      "predicted": 96080.68135821987,
+      "error": 11080.681358219867,
+      "errorPct": 13.036095715552785,
+      "regime": {
+        "regime": "mega",
+        "min": 20000,
+        "max": 1000000,
+        "name": "Mega (>20km)",
+        "notes": "Complex craters, peak rings"
+      },
+      "success": true
+    },
+    {
+      "name": "Ries",
+      "composition": "rocky",
+      "confidence": "HIGH",
+      "impactorDiameter": 1500,
+      "craterDiameter": 24000,
+      "predicted": 20529.25767085729,
+      "error": 3470.7423291427112,
+      "errorPct": 14.461426371427963,
+      "regime": {
+        "regime": "mega",
+        "min": 20000,
+        "max": 1000000,
+        "name": "Mega (>20km)",
+        "notes": "Complex craters, peak rings"
+      },
+      "success": true
+    },
+    {
+      "name": "Bosumtwi",
+      "composition": "rocky",
+      "confidence": "HIGH",
+      "impactorDiameter": 500,
+      "craterDiameter": 10500,
+      "predicted": 9142.714293595658,
+      "error": 1357.285706404342,
+      "errorPct": 12.926530537184208,
+      "regime": {
+        "regime": "giant",
+        "min": 2000,
+        "max": 20000,
+        "name": "Giant (2-20km)",
+        "notes": "Simple to complex transition"
+      },
+      "success": true
+    },
+    {
+      "name": "Haughton",
+      "composition": "rocky",
+      "confidence": "HIGH",
+      "impactorDiameter": 1400,
+      "craterDiameter": 23000,
+      "predicted": 21879.71093541798,
+      "error": 1120.289064582019,
+      "errorPct": 4.870822019921821,
+      "regime": {
+        "regime": "mega",
+        "min": 20000,
+        "max": 1000000,
+        "name": "Mega (>20km)",
+        "notes": "Complex craters, peak rings"
+      },
+      "success": true
+    },
+    {
+      "name": "Tenoumer",
+      "composition": "iron",
+      "confidence": "MEDIUM",
+      "impactorDiameter": 35,
+      "craterDiameter": 1900,
+      "predicted": 69.41974238161845,
+      "error": 1830.5802576183814,
+      "errorPct": 96.34632934833587,
+      "regime": {
+        "regime": "large",
+        "min": 500,
+        "max": 2000,
+        "name": "Large (0.5-2km)",
+        "notes": "Simple craters, less fragmentation"
+      },
+      "success": true
+    },
+    {
+      "name": "Darwin",
+      "composition": "iron",
+      "confidence": "MEDIUM",
+      "impactorDiameter": 28,
+      "craterDiameter": 1200,
+      "predicted": 52.69072624407656,
+      "error": 1147.3092737559234,
+      "errorPct": 95.60910614632695,
+      "regime": {
+        "regime": "large",
+        "min": 500,
+        "max": 2000,
+        "name": "Large (0.5-2km)",
+        "notes": "Simple craters, less fragmentation"
+      },
+      "success": true
+    },
+    {
+      "name": "Roter Kamm",
+      "composition": "iron",
+      "confidence": "MEDIUM",
+      "impactorDiameter": 40,
+      "craterDiameter": 2500,
+      "predicted": 83.99543413843456,
+      "error": 2416.0045658615654,
+      "errorPct": 96.64018263446262,
+      "regime": {
+        "regime": "giant",
+        "min": 2000,
+        "max": 20000,
+        "name": "Giant (2-20km)",
+        "notes": "Simple to complex transition"
+      },
+      "success": true
+    },
+    {
+      "name": "Flynn Creek",
+      "composition": "iron",
+      "confidence": "MEDIUM",
+      "impactorDiameter": 95,
+      "craterDiameter": 3800,
+      "predicted": 1352.9852994851005,
+      "error": 2447.0147005148992,
+      "errorPct": 64.39512369776051,
+      "regime": {
+        "regime": "giant",
+        "min": 2000,
+        "max": 20000,
+        "name": "Giant (2-20km)",
+        "notes": "Simple to complex transition"
+      },
+      "success": true
+    },
+    {
+      "name": "Odessa",
+      "composition": "iron",
+      "confidence": "MEDIUM",
+      "impactorDiameter": 15,
+      "craterDiameter": 168,
+      "predicted": 51.17562311661876,
+      "error": 116.82437688338123,
+      "errorPct": 69.53831957344121,
+      "regime": {
+        "regime": "medium",
+        "min": 50,
+        "max": 500,
+        "name": "Medium (50-500m)",
+        "notes": "Transition regime, fragmentation critical"
+      },
+      "success": true
+    },
+    {
+      "name": "Henbury",
+      "composition": "iron",
+      "confidence": "MEDIUM",
+      "impactorDiameter": 10,
+      "craterDiameter": 180,
+      "predicted": 22.929369373985196,
+      "error": 157.0706306260148,
+      "errorPct": 87.26146145889712,
+      "regime": {
+        "regime": "medium",
+        "min": 50,
+        "max": 500,
+        "name": "Medium (50-500m)",
+        "notes": "Transition regime, fragmentation critical"
+      },
+      "success": true
+    },
+    {
+      "name": "Whitecourt",
+      "composition": "iron",
+      "confidence": "MEDIUM",
+      "impactorDiameter": 3,
+      "craterDiameter": 36,
+      "predicted": 8.015042752321548,
+      "error": 27.98495724767845,
+      "errorPct": 77.73599235466236,
+      "regime": {
+        "regime": "small",
+        "min": 10,
+        "max": 50,
+        "name": "Small (10-50m)",
+        "notes": "Airburst likely, small crater if reaches ground"
+      },
+      "success": true
+    },
+    {
+      "name": "Vredefort",
+      "composition": "rocky",
+      "confidence": "MEDIUM",
+      "impactorDiameter": 15000,
+      "craterDiameter": 300000,
+      "predicted": 230514.22571374002,
+      "error": 69485.77428625998,
+      "errorPct": 23.16192476208666,
+      "regime": {
+        "regime": "mega",
+        "min": 20000,
+        "max": 1000000,
+        "name": "Mega (>20km)",
+        "notes": "Complex craters, peak rings"
+      },
+      "success": true
+    },
+    {
+      "name": "Sudbury",
+      "composition": "rocky",
+      "confidence": "MEDIUM",
+      "impactorDiameter": 10000,
+      "craterDiameter": 130000,
+      "predicted": 149855.20399436104,
+      "error": 19855.203994361043,
+      "errorPct": 15.273233841816186,
+      "regime": {
+        "regime": "mega",
+        "min": 20000,
+        "max": 1000000,
+        "name": "Mega (>20km)",
+        "notes": "Complex craters, peak rings"
+      },
+      "success": true
+    }
+  ]
+}
