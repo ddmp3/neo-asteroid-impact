@@ -13,6 +13,7 @@ const AtmosphericFragmentation = require('./atmosphericFragmentation');
 const TerrainAwareBlastService = require('./terrainAwareBlast');
 const AtmosphericTrajectory = require('./atmosphericTrajectory'); // v1.7.1: RK4 integration for rigorous energy calculations
 const SmallIronCraterPhysics = require('./smallIronCraterPhysics'); // v1.7.8: Physics-based approach for small iron craters
+const { calculateEffectiveEnergy, calculateCouplingEfficiency } = require('./energyCoupling'); // v2.1.0 Phase 1.4: Angle-dependent energy coupling
 // const PhysicsEngineIronV2 = require('./physicsEngineIronV2'); // TODO: Implement v2.0 physics model
 
 class PhysicsEngine {
@@ -122,21 +123,45 @@ class PhysicsEngine {
 
     /**
      * Calculate kinetic energy of impact
+     *
+     * UPDATED v2.1.0 Phase 1.4: Now accounts for energy coupling efficiency
+     *
      * @param {number} mass - Asteroid mass in kg
      * @param {number} velocity - Impact velocity in m/s
+     * @param {number} angle - Impact angle in degrees (default: 45°)
+     * @param {string} composition - Impactor composition (default: 'rocky')
      * @returns {Object} Energy in Joules and TNT equivalent in megatons
      */
-    calculateImpactEnergy(mass, velocity) {
-        const energyJoules = 0.5 * mass * velocity * velocity;
+    calculateImpactEnergy(mass, velocity, angle = 45, composition = 'rocky') {
+        // v2.1.0 Phase 1.4: Use angle-dependent energy coupling
+        // Replaces simple E = 0.5 * m * v² with effective crater energy
+        const energyResult = calculateEffectiveEnergy(mass, velocity, angle, composition);
 
         // Convert to TNT equivalent (1 ton TNT = 4.184e9 J)
-        const tntTons = energyJoules / 4.184e9;
-        const tntMegatons = tntTons / 1e6;
+        const tntTons_total = energyResult.kinetic_total / 4.184e9;
+        const tntMegatons_total = tntTons_total / 1e6;
+
+        const tntTons_crater = energyResult.effective_crater / 4.184e9;
+        const tntMegatons_crater = tntTons_crater / 1e6;
 
         return {
-            joules: energyJoules,
-            tntTons: tntTons,
-            megatons: tntMegatons
+            // Total kinetic energy (backward compatibility)
+            joules: energyResult.kinetic_total,
+            tntTons: tntTons_total,
+            megatons: tntMegatons_total,
+
+            // v2.1.0: Effective crater energy (NEW)
+            effective_joules: energyResult.effective_crater,
+            effective_tntTons: tntTons_crater,
+            effective_megatons: tntMegatons_crater,
+
+            // v2.1.0: Coupling efficiency and energy budget (NEW)
+            coupling_efficiency: energyResult.coupling_efficiency,
+            energy_lost_to_ejecta: energyResult.lost_to_ejecta,
+
+            // Metadata
+            impact_angle: angle,
+            composition: composition
         };
     }
 
@@ -144,11 +169,16 @@ class PhysicsEngine {
      * Calculate crater dimensions using composition-dependent scaling laws
      * HIGH-PRECISION v1.7.0: Supports iron/rocky/icy impactors
      *
+     * UPDATED v2.1.0 Phase 1.4:
+     *   - Now expects EFFECTIVE CRATER ENERGY (energy coupled to excavation)
+     *   - Pass result from calculateImpactEnergy().effective_joules
+     *   - Angle-dependent coupling already applied upstream
+     *
      * Based on Collins et al. (2005), Holsapple & Schmidt (1982)
      * Calibrated on Barringer (iron, 0.60% error) and Chicxulub (rocky, 0.02% error)
      *
-     * @param {number} energy - Impact energy in Joules
-     * @param {number} angle - Impact angle in degrees
+     * @param {number} energy - EFFECTIVE crater energy in Joules (NOT total kinetic energy)
+     * @param {number} angle - Impact angle in degrees (used for oblique crater shape)
      * @param {string} impactorComp - Impactor composition ('iron', 'rocky', 'icy')
      * @param {number} impactorDensity - Impactor density in kg/m³
      * @param {number} targetDensity - Target rock density in kg/m³ (default: 2500)
@@ -298,24 +328,31 @@ class PhysicsEngine {
 
         // ÉTAPE 3: Energy-scaling avec exposant 0.25 (Holsapple)
         // D_transient = K × (E / 1e15)^0.25
+        //
+        // v2.1.0 Phase 1.4: TWO-COMPONENT ANGLE MODEL
+        //   Component 1 (upstream): Energy coupling efficiency η(θ)
+        //     - Handled in calculateImpactEnergy()
+        //     - Input 'energy' is EFFECTIVE CRATER ENERGY
+        //
+        //   Component 2 (here): Geometric/momentum transfer factor
+        //     - Independent of energy coupling
+        //     - Accounts for vertical vs downrange momentum transfer
+        //     - Pierazzo & Melosh (2000): Additional sin(θ)^(1/3) factor
+        //
+        // PHYSICS:
+        //   Total effect = Energy coupling × Geometric factor
+        //   η_total(θ) = η_energy(θ) × sin(θ)^(1/3)
+        //
+        // Example (45° impact):
+        //   Energy coupling: η = 0.644 (36% loss to ejecta)
+        //   Geometric factor: sin(45°)^(1/3) = 0.885
+        //   Combined effect: Crater 43% smaller than vertical impact
         const D_transient_base = K_adjusted * Math.pow(energy / 1e15, 0.25);
 
-        // STEP 2: Angle correction (Pierazzo & Melosh 2000)
-        // Different scaling for oblique vs vertical impacts
-        let angleFactor;
-        if (angle < 30) {
-            // Very oblique (<30°): dramatic reduction, elliptical craters
-            angleFactor = Math.pow(Math.sin(angleRad), 0.5);
-        } else if (angle < 60) {
-            // Moderately oblique (30-60°): standard pi-group scaling
-            angleFactor = Math.pow(Math.sin(angleRad), 1/3);
-        } else {
-            // Nearly vertical (>60°): minimal angle effect
-            // sin(90°)=1.0, sin(80°)=0.985, sin(70°)=0.940
-            angleFactor = 0.95 + 0.05 * Math.sin(angleRad);
-        }
-
-        const D_transient = D_transient_base * angleFactor;
+        // Geometric angle correction (INDEPENDENT of energy coupling)
+        // Using standard pi-group exponent 1/3 (Holsapple 1993)
+        const geometric_factor = Math.pow(Math.sin(angleRad), 1/3);
+        const D_transient = D_transient_base * geometric_factor;
 
         // STEP 3: SIMPLE vs COMPLEX crater (Collins et al. 2005)
         // Transition at D_transient ≈ 3.2 km on Earth (gravity-dependent)
@@ -1015,7 +1052,8 @@ class PhysicsEngine {
             // LEGACY METHOD: Simple energy calculation with atmospheric retention factor
             console.log('[PhysicsEngine] Using legacy atmospheric fragmentation model');
 
-            energy = this.calculateImpactEnergy(mass, finalVelocity);
+            // v2.1.0 Phase 1.4: Calculate energy with angle-dependent coupling
+            energy = this.calculateImpactEnergy(mass, finalVelocity, angle, composition);
 
             // NEW: Analyze atmospheric fragmentation (Hills-Goda 1993)
             // Critical for asteroids <100m - determines airburst vs ground impact
@@ -1034,9 +1072,13 @@ class PhysicsEngine {
                 density
             );
 
+            // Apply retention to both total and effective energy
             energy.joules *= retentionFactor;
             energy.tntTons *= retentionFactor;
             energy.megatons *= retentionFactor;
+            energy.effective_joules *= retentionFactor;
+            energy.effective_tntTons *= retentionFactor;
+            energy.effective_megatons *= retentionFactor;
         }
 
         // Calculate blast zone adjustments for airbursts
@@ -1044,16 +1086,17 @@ class PhysicsEngine {
         if (!fragmentation.craterFormed) {
             blastAdjustment = this.atmosphericFragmentation.calculateAirburstBlastAdjustment(
                 fragmentation.altitude,
-                energy.joules
+                energy.joules  // Use total kinetic energy for blast (not effective crater energy)
             );
         }
 
         // Calculate crater ONLY if object reaches ground
         let baseCrater, crater;
         if (fragmentation.craterFormed) {
+            // v2.1.0 Phase 1.4: Use EFFECTIVE CRATER ENERGY (angle-dependent coupling applied)
             // v1.7.8: Pass ALL parameters for Pi-groupe complete physics (async for small iron FCM)
             baseCrater = await this.calculateCraterSize(
-                energy.joules,
+                energy.effective_joules,  // v2.1.0: Use effective energy, not total kinetic energy
                 angle,
                 composition,
                 density,
