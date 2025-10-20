@@ -42,3 +42,4 @@ terraform/tfplan
 
 # Claude Code context (private)
 .claude/
+.claude/temp/
