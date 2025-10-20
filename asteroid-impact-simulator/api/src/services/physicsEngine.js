@@ -13,7 +13,8 @@ const AtmosphericFragmentation = require('./atmosphericFragmentation');
 const TerrainAwareBlastService = require('./terrainAwareBlast');
 const AtmosphericTrajectory = require('./atmosphericTrajectory'); // v1.7.1: RK4 integration for rigorous energy calculations
 const SmallIronCraterPhysics = require('./smallIronCraterPhysics'); // v1.7.8: Physics-based approach for small iron craters
-const { calculateEffectiveEnergy, calculateCouplingEfficiency } = require('./energyCoupling'); // v2.1.0 Phase 1.4: Angle-dependent energy coupling
+const { calculateEffectiveEnergy, calculateCouplingEfficiency } = require('./energyCoupling'); // v2.0.1 Phase 1.4 Task 1.1: Angle-dependent energy coupling
+const { calculateCompleteEnergyBudget } = require('./energyBudget'); // v2.0.1 Phase 1.4 Task 1.2: Complete energy budget
 // const PhysicsEngineIronV2 = require('./physicsEngineIronV2'); // TODO: Implement v2.0 physics model
 
 class PhysicsEngine {
@@ -124,18 +125,36 @@ class PhysicsEngine {
     /**
      * Calculate kinetic energy of impact
      *
-     * UPDATED v2.1.0 Phase 1.4: Now accounts for energy coupling efficiency
+     * UPDATED v2.0.1 Phase 1.4: Now includes complete energy budget
      *
      * @param {number} mass - Asteroid mass in kg
      * @param {number} velocity - Impact velocity in m/s
      * @param {number} angle - Impact angle in degrees (default: 45°)
      * @param {string} composition - Impactor composition (default: 'rocky')
+     * @param {number} diameter - Asteroid diameter in meters (default: null, calculated from mass)
      * @returns {Object} Energy in Joules and TNT equivalent in megatons
      */
-    calculateImpactEnergy(mass, velocity, angle = 45, composition = 'rocky') {
-        // v2.1.0 Phase 1.4: Use angle-dependent energy coupling
-        // Replaces simple E = 0.5 * m * v² with effective crater energy
+    calculateImpactEnergy(mass, velocity, angle = 45, composition = 'rocky', diameter = null) {
+        // Calculate diameter from mass if not provided
+        if (!diameter) {
+            const density = composition === 'iron' ? 7800 : (composition === 'icy' ? 1000 : 3000);
+            const volume = mass / density;
+            diameter = Math.pow((6 * volume) / Math.PI, 1/3);
+        }
+
+        // v2.0.1 Phase 1.4 Task 1.1: Angle-dependent energy coupling
         const energyResult = calculateEffectiveEnergy(mass, velocity, angle, composition);
+
+        // v2.0.1 Phase 1.4 Task 1.2: Complete energy budget
+        const budget = calculateCompleteEnergyBudget(
+            mass,
+            diameter,
+            velocity,
+            angle,
+            composition,
+            6.0,  // Default rotation period: 6 hours
+            energyResult.coupling_efficiency
+        );
 
         // Convert to TNT equivalent (1 ton TNT = 4.184e9 J)
         const tntTons_total = energyResult.kinetic_total / 4.184e9;
@@ -150,18 +169,22 @@ class PhysicsEngine {
             tntTons: tntTons_total,
             megatons: tntMegatons_total,
 
-            // v2.1.0: Effective crater energy (NEW)
+            // v2.0.1: Effective crater energy (Task 1.1)
             effective_joules: energyResult.effective_crater,
             effective_tntTons: tntTons_crater,
             effective_megatons: tntMegatons_crater,
 
-            // v2.1.0: Coupling efficiency and energy budget (NEW)
+            // v2.0.1: Coupling efficiency (Task 1.1)
             coupling_efficiency: energyResult.coupling_efficiency,
             energy_lost_to_ejecta: energyResult.lost_to_ejecta,
 
+            // v2.0.1: Complete energy budget (Task 1.2)
+            energy_budget: budget,
+
             // Metadata
             impact_angle: angle,
-            composition: composition
+            composition: composition,
+            diameter_used: diameter
         };
     }
 
@@ -1052,8 +1075,8 @@ class PhysicsEngine {
             // LEGACY METHOD: Simple energy calculation with atmospheric retention factor
             console.log('[PhysicsEngine] Using legacy atmospheric fragmentation model');
 
-            // v2.1.0 Phase 1.4: Calculate energy with angle-dependent coupling
-            energy = this.calculateImpactEnergy(mass, finalVelocity, angle, composition);
+            // v2.0.1 Phase 1.4: Calculate energy with angle-dependent coupling and complete budget
+            energy = this.calculateImpactEnergy(mass, finalVelocity, angle, composition, diameter);
 
             // NEW: Analyze atmospheric fragmentation (Hills-Goda 1993)
             // Critical for asteroids <100m - determines airburst vs ground impact

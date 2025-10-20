@@ -161,8 +161,8 @@ class MonteCarloSimulation {
                         params.velocity * 1000, // Convert km/s to m/s
                         params.angle
                     );
-                    // v2.1.0 Phase 1.4: Pass angle and composition for energy coupling
-                    const energy = this.physicsEngine.calculateImpactEnergy(mass, finalVelocity, params.angle, params.composition);
+                    // v2.0.1 Phase 1.4: Pass angle, composition, diameter for complete energy budget
+                    const energy = this.physicsEngine.calculateImpactEnergy(mass, finalVelocity, params.angle, params.composition, params.diameter);
                     const crater = this.physicsEngine.calculateCraterSize(
                         energy.effective_joules,  // v2.1.0: Use effective crater energy
                         params.angle,
