@@ -31,7 +31,7 @@ export default function Header({ apiHealth }: HeaderProps) {
               <h1 className="text-base md:text-xl font-bold text-white">
                 Asteroid Impact Simulator
               </h1>
-              <p className="text-xs text-white/60 hidden sm:block">NEO Impact Physics Simulator v2.0</p>
+              <p className="text-xs text-white/60 hidden sm:block">NEO Impact Physics Simulator v2.1</p>
             </div>
           </div>
 
