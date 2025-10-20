@@ -242,13 +242,14 @@ app.get('/', (req, res) => {
             <h2>🔗 Additional Resources</h2>
             <div class="links">
                 <a href="https://neo.lueger.fr" class="btn btn-secondary" target="_blank">🌍 Frontend App</a>
-                <a href="https://github.com/ddmp3/meteormadness" class="btn btn-secondary" target="_blank">💻 GitHub</a>
+                <a href="https://github.com/ddmp3/neo-asteroid-impact" class="btn btn-secondary" target="_blank">💻 GitHub</a>
             </div>
         </div>
 
         <div style="text-align: center; margin-top: 2rem; opacity: 0.8; font-size: 0.9rem;">
-            <p>Version 1.1-dev | Development Environment</p>
+            <p>Version 2.0.2 | Production Environment</p>
             <p style="margin-top: 0.5rem;">Data: NASA/JPL-Caltech, USGS | Rate Limit: 100 req/15min</p>
+            <p style="margin-top: 0.5rem;">Crater Precision: Rocky 13.3% MAE | Iron 20.7% MAE | Combined ~18% MAE</p>
         </div>
     </div>
 </body>
