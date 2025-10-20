@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-2.0.2-blue?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-2.0.3-blue?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-Apache%202.0-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/status-Production-success?style=for-the-badge)
 ![Scientific](https://img.shields.io/badge/Approach-Pure%20Physics-blueviolet?style=for-the-badge)
@@ -10,6 +10,7 @@
 **🌍 Live Demo**: [neo.lueger.fr](https://neo.lueger.fr)
 **🚀 API**: [api.neo.lueger.fr](https://api.neo.lueger.fr)
 **📊 Accuracy**: Rocky 13.3% MAE | Iron 20.7% MAE
+**🌍 Language**: Full English Documentation | **💥 New**: Airburst vs Crater Explained
 
 </div>
 
