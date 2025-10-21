@@ -148,20 +148,22 @@ class CompletePiGroupCraterModel {
     determineRegime(pi_groups) {
         const { pi_2, pi_V } = pi_groups;
 
-        // Strength-dominated: High velocity, target strength matters
-        // π_V >> 1 → strength regime
-        const strength_regime = pi_V > 1e3;
+        // Holsapple (1993) regime determination
+        // Gravity-dominated: Large impactor, gravity matters MORE than strength
+        // π₂ >> 1 → gravity regime (check THIS first for large impactors)
+        // Threshold adjusted: π₂ > 1e5 (not 1e6) for typical asteroid impacts
+        const gravity_regime = pi_2 > 1e5;
 
-        // Gravity-dominated: Large impactor, gravity matters
-        // π₂ >> 1 → gravity regime
-        const gravity_regime = pi_2 > 1e6;
+        // Strength-dominated: High velocity, small impactor, strength matters MORE
+        // π_V >> 1 AND π₂ < threshold → strength regime
+        const strength_regime = pi_V > 1e3 && !gravity_regime;
 
-        // Transition regime
+        // Transition regime (both matter)
         const transition_regime = !strength_regime && !gravity_regime;
 
         return {
-            regime: strength_regime ? 'strength' :
-                    gravity_regime ? 'gravity' :
+            regime: gravity_regime ? 'gravity' :
+                    strength_regime ? 'strength' :
                     'transition',
             pi_2,
             pi_V,

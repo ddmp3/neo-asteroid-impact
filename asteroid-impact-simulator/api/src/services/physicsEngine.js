@@ -15,6 +15,7 @@ const AtmosphericTrajectory = require('./atmosphericTrajectory'); // v1.7.1: RK4
 const SmallIronCraterPhysics = require('./smallIronCraterPhysics'); // v1.7.8: Physics-based approach for small iron craters
 const { calculateEffectiveEnergy, calculateCouplingEfficiency } = require('./energyCoupling'); // v2.0.1 Phase 1.4 Task 1.1: Angle-dependent energy coupling
 const { calculateCompleteEnergyBudget } = require('./energyBudget'); // v2.0.1 Phase 1.4 Task 1.2: Complete energy budget
+const CompletePiGroupCraterModel = require('./craterPiGroupsComplete'); // v2.1.0 Phase 1: Holsapple (1993) complete π-groups
 // const PhysicsEngineIronV2 = require('./physicsEngineIronV2'); // TODO: Implement v2.0 physics model
 
 class PhysicsEngine {
@@ -42,6 +43,9 @@ class PhysicsEngine {
 
         // Initialize physics-based small iron crater model (v1.7.8)
         this.smallIronCraterPhysics = new SmallIronCraterPhysics();
+
+        // Initialize Holsapple (1993) complete π-groups model (v2.1.0 Phase 1)
+        this.piGroupModel = new CompletePiGroupCraterModel();
 
         // Initialize physics-based iron crater model v2.0 (optional, for advanced calculations)
         // this.ironPhysicsV2 = new PhysicsEngineIronV2(); // TODO: Implement v2.0 physics model
@@ -268,116 +272,77 @@ class PhysicsEngine {
 
         const comp = impactorComp.toLowerCase();
 
-        // ÉTAPE 1: Déterminer K selon composition et taille (domaines de définition physiques)
-        let K_base, regime;
+        // ===========================================================================================
+        // v2.1.0 PHASE 1: HOLSAPPLE (1993) COMPLETE π-GROUPS INTEGRATION
+        // ===========================================================================================
+        //
+        // CHANGEMENT MAJEUR: Remplacer formule hybride par π-groups complets
+        //
+        // AVANT v2.0.6 (formule hybride):
+        //   - K constants empiriques (380/520/650) SANS justification scientifique
+        //   - Exposant E^0.25 approximatif
+        //   - π₁ (densité) incorporé partiellement via K différents
+        //   - MAE résultant: 51%
+        //
+        // APRÈS v2.1.0 (Holsapple 1993 complet):
+        //   - K = 1.03 (Holsapple 1993 Table 3)
+        //   - μ = 0.55 (densité coupling)
+        //   - ν = 0.217 (gravity scaling)
+        //   - ε = 0.33 (angle coupling)
+        //   - MAE attendu: <15% (prouvé à 10.4% dans commit f9fd370)
+        //
+        // RÉFÉRENCES SCIENTIFIQUES:
+        //   - Holsapple, K.A. (1993) "The Scaling of Impact Processes in Planetary Sciences"
+        //     Annual Review of Earth and Planetary Sciences, 21, 333-373, Table 3
+        //   - Collins & Melosh (2005) "Earth Impact Effects Program"
+        //   - Pierazzo & Melosh (2000) AREPS 28:141-167 (angle coupling validation)
+        //
+        // ===========================================================================================
 
-        if (comp === 'iron' || comp === 'metal') {
-            // IRON: v1.7.8 - PHYSICS-BASED APPROACH
-            //
-            // PROBLÈME RÉSOLU (NASA/ESA/JAXA Panel 2025-10-17):
-            //   - v1.6.33: MAE test = 71.71% ❌ avec K(D) linéaire
-            //   - Critique panel: "K(D) linéaire VIOLE invariance d'échelle pi-groups"
-            //   - Dr. Michel (ESA): "Régression déguisée en physique"
-            //
-            // SOLUTION v1.7.8:
-            //   - Petits cratères (<50m): Utiliser FCM V2 (Wheeler 2017) + pi-groups
-            //   - Grands cratères (≥50m): Continuer avec K=380 (validé 20% error)
-            //
-            // PHYSIQUE ÉLÉMENTAIRE:
-            //   1. FCM calcule fragmentation atmosphérique (Hills-Goda)
-            //   2. Récupère masse survivante + vitesse impact
-            //   3. Applique pi-groups UNIQUEMENT sur masse au sol
-            //   4. Si fragmentation complète → champ de cratères multiples
-            //
-            // RÉFÉRENCES:
-            //   - Wheeler et al. (2017) - Fragment-Cloud Model
-            //   - Holsapple (1993) - Pi-group crater scaling
-            //   - Hills & Goda (1993) - Fragmentation criterion
+        // EXCEPTION: Small iron craters (<50m) use FCM V2 (Wheeler 2017)
+        // Rationale: Atmospheric fragmentation dominates physics for small iron impactors
+        if ((comp === 'iron' || comp === 'metal') && impactorDiameter < 50) {
+            console.log(`\n[PhysicsEngine] Small iron crater detected (D=${impactorDiameter}m) - Using FCM V2 physics`);
 
-            if (impactorDiameter >= 50) {
-                // LARGE IRON (≥50m): High momentum, minimal fragmentation
-                // K = 380 (v1.6.33 stable value)
-                // Error margin: ±20% on test craters (Barringer, Wolfe Creek, Roter Kamm)
-                K_base = 380;
-                regime = 'iron_large';
-            } else {
-                // SMALL IRON (<50m): USE PHYSICS-BASED FCM APPROACH (v1.7.8)
-                // ⚠️ CRITICAL: No more K(D) linear regression
-                console.log(`\n[PhysicsEngine] Small iron crater detected (D=${impactorDiameter}m) - Using FCM V2 physics`);
+            const fcm_result = await this.smallIronCraterPhysics.calculateSmallIronCrater({
+                diameter: impactorDiameter,
+                velocity: velocity,
+                angle: angle,
+                density: impactorDensity,
+                composition: comp,
+                targetDensity: targetDensity
+            });
 
-                const fcm_result = await this.smallIronCraterPhysics.calculateSmallIronCrater({
-                    diameter: impactorDiameter,
-                    velocity: velocity,
-                    angle: angle,
-                    density: impactorDensity,
-                    composition: comp,
-                    targetDensity: targetDensity
-                });
-
-                // Return FCM-based crater result directly (bypass K-scaling below)
-                return {
-                    diameter: fcm_result.crater_diameter,
-                    depth: fcm_result.crater_depth,
-                    volume: fcm_result.crater_volume,
-                    transientDiameter: fcm_result.crater_diameter / 1.25,  // Approx transient
-                    craterType: fcm_result.crater_type,
-                    regime: fcm_result.regime,
-                    physics_model: 'FCM_V2_Wheeler_2017',
-                    fragmentation_altitude_km: fcm_result.fragmentation_altitude_km,
-                    survival_fraction: fcm_result.survival_fraction,
-                    energy_deposited_atmospheric_MT: fcm_result.energy_deposited_atmospheric_MT,
-                    fcm_diagnostics: fcm_result.fcm_diagnostics,
-                    warning: fcm_result.warning
-                };
-            }
-        } else if (comp === 'rocky' || comp === 'stony' || comp === 'rock') {
-            // ROCKY: Moderate density (3000 kg/m³)
-            // π₁ = 3000/2500 = 1.2 → coupling modéré
-            K_base = 520;
-            regime = 'rocky';
-        } else if (comp === 'icy' || comp === 'ice' || comp === 'comet') {
-            // ICY: Low density (1000 kg/m³), high fragmentation
-            // π₁ = 1000/2500 = 0.4 → coupling faible
-            // Mais large spreading → crater diameter larger
-            K_base = 650;
-            regime = 'icy';
-        } else {
-            K_base = 520;
-            regime = 'unknown';
+            // Return FCM-based crater result directly
+            return {
+                diameter: fcm_result.crater_diameter,
+                depth: fcm_result.crater_depth,
+                volume: fcm_result.crater_volume,
+                transientDiameter: fcm_result.crater_diameter / 1.25,
+                craterType: fcm_result.crater_type,
+                regime: fcm_result.regime,
+                physics_model: 'FCM_V2_Wheeler_2017',
+                fragmentation_altitude_km: fcm_result.fragmentation_altitude_km,
+                survival_fraction: fcm_result.survival_fraction,
+                energy_deposited_atmospheric_MT: fcm_result.energy_deposited_atmospheric_MT,
+                fcm_diagnostics: fcm_result.fcm_diagnostics,
+                warning: fcm_result.warning
+            };
         }
 
-        // ÉTAPE 2: Ajuster K pour target density (pi-groupe π₁ partiel)
-        // K ∝ (ρ_target)^(-0.18) from Holsapple & Schmidt (1982)
-        const rho_ratio = targetDensity / 2500;
-        const K_adjusted = K_base * Math.pow(rho_ratio, -0.18);
+        // MAIN PATH: Use Holsapple (1993) complete π-groups for all other cases
+        const piGroupResult = this.piGroupModel.calculateCraterDiameter({
+            diameter_m: impactorDiameter,
+            velocity_m_s: velocity,
+            angle_deg: angle,
+            density_imp: impactorDensity,
+            density_target: targetDensity,
+            strength_target: 1e6,  // 1 MPa competent rock (default)
+            gravity: 9.81          // Earth gravity
+        });
 
-        // ÉTAPE 3: Energy-scaling avec exposant 0.25 (Holsapple)
-        // D_transient = K × (E / 1e15)^0.25
-        //
-        // v2.1.0 Phase 1.4: TWO-COMPONENT ANGLE MODEL
-        //   Component 1 (upstream): Energy coupling efficiency η(θ)
-        //     - Handled in calculateImpactEnergy()
-        //     - Input 'energy' is EFFECTIVE CRATER ENERGY
-        //
-        //   Component 2 (here): Geometric/momentum transfer factor
-        //     - Independent of energy coupling
-        //     - Accounts for vertical vs downrange momentum transfer
-        //     - Pierazzo & Melosh (2000): Additional sin(θ)^(1/3) factor
-        //
-        // PHYSICS:
-        //   Total effect = Energy coupling × Geometric factor
-        //   η_total(θ) = η_energy(θ) × sin(θ)^(1/3)
-        //
-        // Example (45° impact):
-        //   Energy coupling: η = 0.644 (36% loss to ejecta)
-        //   Geometric factor: sin(45°)^(1/3) = 0.885
-        //   Combined effect: Crater 43% smaller than vertical impact
-        const D_transient_base = K_adjusted * Math.pow(energy / 1e15, 0.25);
-
-        // Geometric angle correction (INDEPENDENT of energy coupling)
-        // Using standard pi-group exponent 1/3 (Holsapple 1993)
-        const geometric_factor = Math.pow(Math.sin(angleRad), 1/3);
-        const D_transient = D_transient_base * geometric_factor;
+        const D_transient = piGroupResult.diameter_m;
+        const regime = piGroupResult.regime.regime;  // 'strength', 'gravity', or 'transition'
 
         // STEP 3: SIMPLE vs COMPLEX crater (Collins et al. 2005)
         // Transition at D_transient ≈ 3.2 km on Earth (gravity-dependent)
@@ -409,9 +374,12 @@ class PhysicsEngine {
             depth: depth,
             volume: Math.PI * Math.pow(diameter/2, 2) * depth / 3,
             craterType: craterType,
-            // v1.7.0: Retourner regime pour validation
             regime: regime,
-            K_used: K_adjusted
+            // v2.1.0: Holsapple π-groups diagnostics
+            physics_model: 'Holsapple_1993_Complete',
+            pi_groups: piGroupResult.pi_groups,
+            pi_terms: piGroupResult.terms,
+            model_params: piGroupResult.model_params
         };
     }
 
