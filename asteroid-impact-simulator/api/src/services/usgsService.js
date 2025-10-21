@@ -17,6 +17,8 @@ class USGSService {
 
     /**
      * Get elevation at specific coordinates
+     * OPTIMIZED: GeoNames FIRST strategy (ocean detection is fast ~0.6s)
+     * Only call USGS if needed (land + need precise elevation)
      * @param {number} latitude
      * @param {number} longitude
      * @returns {Promise<Object>} Elevation data
@@ -26,12 +28,37 @@ class USGSService {
         const cached = this.cache.get(cacheKey);
         if (cached) return cached;
 
-        // Strategy: Try GeoNames FIRST (most reliable), then USGS for elevation details
-        let elevation = null;
+        // STEP 1: Call GeoNames FIRST (fast, reliable ocean detection)
+        // This is the PRIMARY source for ocean/land classification
+        const oceanDetection = await this.detectOceanGeoNames(latitude, longitude, null);
+
+        // STEP 2: If ocean confirmed, we can skip USGS entirely
+        // Ocean impacts don't need precise seafloor elevation
+        if (oceanDetection.isOcean) {
+            const result = {
+                latitude,
+                longitude,
+                elevation: -1000, // Default ocean depth (sufficient for physics)
+                isOcean: true,
+                waterDepth: oceanDetection.waterDepth || 1000,
+                oceanName: oceanDetection.oceanName,
+                detectionSource: oceanDetection.source,
+                terrainType: this.classifyTerrain(-1000, true),
+                usgsAvailable: false, // Skipped USGS (optimization)
+                optimized: true // Flag: GeoNames-only path (fast)
+            };
+
+            // Cache ocean results for 24 hours (very stable)
+            this.cache.set(cacheKey, result, 86400);
+            return result;
+        }
+
+        // STEP 3: Land confirmed - NOW call USGS for precise elevation
+        // Only land impacts benefit from accurate terrain elevation
+        let elevation = 100; // Default land elevation (fallback)
         let usgsAvailable = false;
 
         try {
-            // Increase timeout to 3000ms to reduce fallbacks
             const response = await axios.get(`${this.elevationAPI}/json`, {
                 params: {
                     x: longitude,
@@ -39,38 +66,30 @@ class USGSService {
                     units: 'Meters',
                     output: 'json'
                 },
-                timeout: 3000 // 3 second timeout (was 800ms - too aggressive)
+                timeout: 3000 // 3 second timeout (reasonable for USGS)
             });
 
             elevation = response.data.value;
             usgsAvailable = true;
         } catch (error) {
             if (error.code === 'ECONNABORTED') {
-                console.warn(`USGS API timeout for ${latitude}, ${longitude} - using GeoNames only`);
+                console.warn(`USGS API timeout for ${latitude}, ${longitude} - using default land elevation`);
             } else {
                 console.warn(`USGS API error for ${latitude}, ${longitude}: ${error.message}`);
             }
-            // elevation stays null - will be handled by detectOceanGeoNames
-        }
-
-        // Use GeoNames for accurate ocean detection (ALWAYS, even if USGS failed)
-        const oceanDetection = await this.detectOceanGeoNames(latitude, longitude, elevation);
-
-        // If USGS failed but we have ocean detection, estimate elevation
-        if (elevation === null || elevation === undefined) {
-            elevation = oceanDetection.isOcean ? -1000 : 100;
+            // Keep default elevation (100m)
         }
 
         const result = {
             latitude,
             longitude,
             elevation,
-            isOcean: oceanDetection.isOcean,
-            waterDepth: oceanDetection.waterDepth,
-            oceanName: oceanDetection.oceanName,
+            isOcean: false, // Confirmed by GeoNames
+            waterDepth: 0,
+            oceanName: null,
             detectionSource: oceanDetection.source,
-            terrainType: this.classifyTerrain(elevation, oceanDetection.isOcean),
-            usgsAvailable // Flag to indicate if USGS provided real elevation
+            terrainType: this.classifyTerrain(elevation, false),
+            usgsAvailable
         };
 
         // Cache with appropriate TTL based on data quality
