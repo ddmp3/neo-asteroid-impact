@@ -391,11 +391,8 @@ class PhysicsEngine {
             volume: Math.PI * Math.pow(diameter/2, 2) * depth / 3,
             craterType: craterType,
             regime: regime,
-            // v2.1.0: Holsapple π-groups diagnostics
-            physics_model: 'Holsapple_1993_Complete',
-            pi_groups: piGroupResult.pi_groups,
-            pi_terms: piGroupResult.terms,
-            model_params: piGroupResult.model_params
+            // v2.1.0-phase1b: Collins et al. (2005) unified formula
+            physics_model: 'Collins_2005_Hydrocode'
         };
     }
 
