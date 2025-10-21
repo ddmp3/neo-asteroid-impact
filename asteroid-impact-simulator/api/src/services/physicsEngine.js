@@ -12,7 +12,7 @@ const USGSService = require('./usgsService');
 const AtmosphericFragmentation = require('./atmosphericFragmentation');
 const TerrainAwareBlastService = require('./terrainAwareBlast');
 const AtmosphericTrajectory = require('./atmosphericTrajectory'); // v1.7.1: RK4 integration for rigorous energy calculations
-const SmallIronCraterPhysics = require('./smallIronCraterPhysics'); // v1.7.8: Physics-based approach for small iron craters
+// REMOVED: smallIronCraterPhysics (empirical calibration C=14.10 violates scientific principles)
 const { calculateEffectiveEnergy, calculateCouplingEfficiency } = require('./energyCoupling'); // v2.0.1 Phase 1.4 Task 1.1: Angle-dependent energy coupling
 const { calculateCompleteEnergyBudget } = require('./energyBudget'); // v2.0.1 Phase 1.4 Task 1.2: Complete energy budget
 // const PhysicsEngineIronV2 = require('./physicsEngineIronV2'); // TODO: Implement v2.0 physics model
@@ -40,9 +40,7 @@ class PhysicsEngine {
         // Initialize RK4 atmospheric trajectory integration (v1.7.1)
         this.atmosphericTrajectory = new AtmosphericTrajectory();
 
-        // Initialize physics-based small iron crater model (v1.7.8)
-        this.smallIronCraterPhysics = new SmallIronCraterPhysics();
-
+        // REMOVED: smallIronCraterPhysics (empirical calibration violates principles)
         // v2.1.0-phase1b: Collins et al. (2005) formula now used directly (no separate model class needed)
 
         // Initialize physics-based iron crater model v2.0 (optional, for advanced calculations)
@@ -373,12 +371,11 @@ class PhysicsEngine {
             craterType = 'simple';
         } else {
             // COMPLEX crater (≥ 3.2 km): central peak, terraces, massive collapse
-            // EMPIRICALLY CALIBRATED v1.6.34 on 3 rocky craters (Chicxulub, Ries, Bosumtwi)
-            // Formula: D_final = C × D_transient^μ
-            // C = 1.201 (empirical fit, K=520), μ = 1.13 (Collins et al. 2005)
-            // Range: C ∈ [0.998, 1.499], Mean = 1.201
+            // Collins et al. (2005) Equation 7: D_final = 1.17 × D_transient^1.13
+            // This is the PEER-REVIEWED formula from hydrocode simulations
+            // NO empirical calibration - direct from Collins et al. (2005) Table 2
             const D_tc_km = D_transient / 1000;
-            const D_final_km = 1.201 * Math.pow(D_tc_km, 1.13);
+            const D_final_km = 1.17 * Math.pow(D_tc_km, 1.13);
             diameter = D_final_km * 1000;
             depth = 0.1 * diameter; // Much shallower due to gravitational collapse
             craterType = 'complex';
@@ -800,10 +797,15 @@ class PhysicsEngine {
      * @returns {Object} Land impact characteristics with crater formation
      */
     calculateLandImpact(energy, angle = 45, targetDensity = 2500) {
+        // ⚠️  DEPRECATED METHOD - Uses empirical K=472 coefficient
+        // This method violates scientific rigor principles (empirical calibration)
+        // Use calculateCrater() instead which uses pure Collins formula
+        console.warn('[PhysicsEngine] calculateLandImpact is DEPRECATED - uses empirical K=472');
+
         const angleRad = angle * Math.PI / 180;
 
-        // Collins et al. (2005) crater scaling for land impacts
-        const K_transient = 472; // Empirical coefficient for rock targets
+        // ❌ EMPIRICAL CALIBRATION - VIOLATES PRINCIPLES
+        const K_transient = 472; // Empirical coefficient for rock targets (NOT peer-reviewed)
         const D_transient_meters = K_transient * Math.pow(energy / 1e15, 0.25);
 
         // Angle correction
