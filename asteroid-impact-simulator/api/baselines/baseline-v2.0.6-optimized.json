@@ -1,0 +1,87 @@
+{
+  "version": "v2.0.6-optimized",
+  "git_tag": "v2.0.6-optimized-baseline",
+  "timestamp": "2025-10-21T03:30:00.000Z",
+  "phase": "Phase 0 - Baseline before Holsapple π-groups integration",
+  "api_url": "https://api.neo.lueger.fr",
+  "infrastructure": {
+    "cpu": "1.0 vCPU",
+    "ram": "2.0 GB",
+    "strategy": "GeoNames-FIRST",
+    "dockerfile": "multi-stage optimized"
+  },
+  "performance": {
+    "avg_time_per_crater": "1.15s",
+    "speedup_vs_v2.0.2": "208x",
+    "total_validation_time": "32s",
+    "craters_tested": 20
+  },
+  "summary": {
+    "mae_global": 51.06,
+    "mae_iron": 82.35,
+    "mae_rocky": 39.48,
+    "systematic_bias": -48.76,
+    "total_craters": 20,
+    "successful_predictions": 18,
+    "failed_predictions": 2,
+    "success_rate_percent": 90.0
+  },
+  "breakdown_by_split": {
+    "training": {
+      "count": 8,
+      "mae": 49.60
+    },
+    "validation": {
+      "count": 6,
+      "mae": 41.55
+    },
+    "test": {
+      "count": 6,
+      "mae": 64.52
+    }
+  },
+  "identified_problems": [
+    {
+      "problem": "K constants arbitrary (380, 520, 650)",
+      "impact": "20-30 MAE points",
+      "fix": "Replace with Holsapple π-groups (K=1.03)",
+      "phase": "Phase 1"
+    },
+    {
+      "problem": "Coupling efficiency linear instead of sin(θ)^(2/3)",
+      "impact": "10-15 MAE points",
+      "fix": "Implement Collins (2005) formula",
+      "phase": "Phase 2"
+    },
+    {
+      "problem": "Energy exponent E^0.25 vs E^0.217/E^0.294",
+      "impact": "5-10 MAE points",
+      "fix": "Verify Collins (2005) and adjust if needed",
+      "phase": "Phase 3 (optional)"
+    }
+  ],
+  "target_after_holsapple": {
+    "mae_global": "<25%",
+    "mae_iron": "<40%",
+    "mae_rocky": "<20%",
+    "systematic_bias": "<10%"
+  },
+  "final_target_v2_1_0": {
+    "mae_global": "<15%",
+    "mae_iron": "<25%",
+    "mae_rocky": "<12%"
+  },
+  "notes": [
+    "2 craters failed (Lonar, Tenoumer) - returned null responses",
+    "Iron impacts have unacceptably high MAE (82.35%)",
+    "Systematic under-estimation bias of -48.76%",
+    "craterPiGroupsComplete.js exists but not used in production",
+    "Performance optimization (208x) now enables Monte Carlo validation"
+  ],
+  "references": {
+    "audit": "SCIENTIFIC_AUDIT_2025-10-21.md",
+    "analysis": "MAE_SCIENTIFIC_ANALYSIS_v2.0.6.md",
+    "detailed_results": "baseline-mae-v2.0.6-detailed.txt",
+    "implementation_plan": "IMPLEMENTATION_PLAN_v2.1.0-science.md"
+  }
+}

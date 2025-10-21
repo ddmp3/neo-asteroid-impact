@@ -36,9 +36,15 @@ async function simulateCraterViaAPI(crater) {
 
         const result = response.data;
 
-        // Extract crater diameter
+        // Extract crater diameter (API structure changed in v2.0+)
         let predicted_diameter = null;
-        if (result.crater && result.crater.diameter) {
+
+        // Try new API structure (v2.0+)
+        if (result.simulation && result.simulation.crater && result.simulation.crater.originalDiameter) {
+            predicted_diameter = result.simulation.crater.originalDiameter;
+        }
+        // Try legacy structure
+        else if (result.crater && result.crater.diameter) {
             predicted_diameter = result.crater.diameter;
         } else if (result.craterDiameter) {
             predicted_diameter = result.craterDiameter;
@@ -46,6 +52,7 @@ async function simulateCraterViaAPI(crater) {
 
         if (!predicted_diameter) {
             console.warn(`⚠️  ${crater.name}: No crater diameter in response`);
+            console.warn(`   Response keys: ${Object.keys(result).join(', ')}`);
             return null;
         }
 
