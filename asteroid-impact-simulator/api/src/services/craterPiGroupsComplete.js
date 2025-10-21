@@ -151,12 +151,17 @@ class CompletePiGroupCraterModel {
         // Holsapple (1993) regime determination
         // Gravity-dominated: Large impactor, gravity matters MORE than strength
         // π₂ >> 1 → gravity regime (check THIS first for large impactors)
-        // Threshold adjusted: π₂ > 1e5 (not 1e6) for typical asteroid impacts
-        const gravity_regime = pi_2 > 1e5;
+        // CRITICAL FIX v2.1.0-phase1b: Lowered from 1e5 to 1e3
+        // Reason: Chicxulub π₂ = 4077 needs to be gravity regime (not transition)
+        // Transition regime uses π_V^(-β) which catastrophically reduces diameter for large π_V
+        const gravity_regime = pi_2 > 1e3;
 
         // Strength-dominated: High velocity, small impactor, strength matters MORE
-        // π_V >> 1 AND π₂ < threshold → strength regime
-        const strength_regime = pi_V > 1e3 && !gravity_regime;
+        // π_V >> 1e8 AND π₂ < threshold → strength regime
+        // Raised threshold from 1e3 to 1e8
+        // Reason: All impacts have π_V > 1e3, even gravity-dominated giants like Chicxulub (π_V = 1e6)
+        // Only true strength regime (small, fast impactors) have π_V > 1e8
+        const strength_regime = pi_V > 1e8 && !gravity_regime;
 
         // Transition regime (both matter)
         const transition_regime = !strength_regime && !gravity_regime;

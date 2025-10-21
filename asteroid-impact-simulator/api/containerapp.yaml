@@ -1,0 +1,23 @@
+properties:
+  configuration:
+    ingress:
+      external: true
+      targetPort: 7071
+      transport: auto
+  template:
+    containers:
+    - name: api
+      image: acrasteroidimpactckq6mn38.azurecr.io/astroimpactapi:v2.0.4
+      env:
+      - name: NODE_ENV
+        value: production
+      - name: PORT
+        value: "7071"
+      - name: GEONAMES_USERNAME
+        value: meteormadness
+      resources:
+        cpu: 0.25
+        memory: 0.5Gi
+    scale:
+      minReplicas: 0
+      maxReplicas: 1
