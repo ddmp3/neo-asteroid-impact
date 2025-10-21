@@ -9,7 +9,10 @@ class USGSService {
     constructor() {
         this.elevationAPI = process.env.USGS_ELEVATION_API || 'https://epqs.nationalmap.gov/v1';
         this.earthquakeAPI = process.env.USGS_EARTHQUAKE_API || 'https://earthquake.usgs.gov/fdsnws/event/1';
+        this.geonamesAPI = 'http://api.geonames.org';
+        this.geonamesUsername = process.env.GEONAMES_USERNAME || 'demo'; // Free account: register at geonames.org
         this.cache = new NodeCache({ stdTTL: 7200 }); // 2 hour cache
+        this.oceanCache = new NodeCache({ stdTTL: 86400 }); // 24 hour cache for ocean detection (more stable)
     }
 
     /**
@@ -23,8 +26,12 @@ class USGSService {
         const cached = this.cache.get(cacheKey);
         if (cached) return cached;
 
+        // Strategy: Try GeoNames FIRST (most reliable), then USGS for elevation details
+        let elevation = null;
+        let usgsAvailable = false;
+
         try {
-            // Add timeout of 800ms to prevent slow USGS API from blocking
+            // Increase timeout to 3000ms to reduce fallbacks
             const response = await axios.get(`${this.elevationAPI}/json`, {
                 params: {
                     x: longitude,
@@ -32,65 +39,160 @@ class USGSService {
                     units: 'Meters',
                     output: 'json'
                 },
-                timeout: 800 // 800ms timeout
+                timeout: 3000 // 3 second timeout (was 800ms - too aggressive)
             });
 
-            const elevation = response.data.value;
-            const isOcean = elevation <= 0;
-            const waterDepth = isOcean ? Math.abs(elevation) : 0;
-
-            const result = {
-                latitude,
-                longitude,
-                elevation,
-                isOcean,
-                waterDepth,
-                terrainType: this.classifyTerrain(elevation, isOcean)
-            };
-
-            this.cache.set(cacheKey, result);
-            return result;
+            elevation = response.data.value;
+            usgsAvailable = true;
         } catch (error) {
             if (error.code === 'ECONNABORTED') {
-                console.warn(`USGS API timeout for ${latitude}, ${longitude} - using fallback`);
+                console.warn(`USGS API timeout for ${latitude}, ${longitude} - using GeoNames only`);
             } else {
-                console.error(`Error fetching elevation for ${latitude}, ${longitude}:`, error.message);
+                console.warn(`USGS API error for ${latitude}, ${longitude}: ${error.message}`);
             }
-
-            // Fast fallback: estimate ocean/land from coordinates
-            const estimatedIsOcean = this.estimateIfOcean(latitude, longitude);
-            const estimatedElevation = estimatedIsOcean ? -1000 : 100;
-
-            const result = {
-                latitude,
-                longitude,
-                elevation: estimatedElevation,
-                isOcean: estimatedIsOcean,
-                waterDepth: estimatedIsOcean ? 1000 : 0,
-                terrainType: estimatedIsOcean ? 'Ocean' : 'Lowland/Plains',
-                estimated: true, // Flag pour indiquer estimation
-                error: error.code === 'ECONNABORTED' ? 'Timeout' : 'API unavailable'
-            };
-
-            // Cache même les estimations (TTL plus court)
-            this.cache.set(cacheKey, result, 600); // 10 min cache pour estimations
-            return result;
+            // elevation stays null - will be handled by detectOceanGeoNames
         }
+
+        // Use GeoNames for accurate ocean detection (ALWAYS, even if USGS failed)
+        const oceanDetection = await this.detectOceanGeoNames(latitude, longitude, elevation);
+
+        // If USGS failed but we have ocean detection, estimate elevation
+        if (elevation === null || elevation === undefined) {
+            elevation = oceanDetection.isOcean ? -1000 : 100;
+        }
+
+        const result = {
+            latitude,
+            longitude,
+            elevation,
+            isOcean: oceanDetection.isOcean,
+            waterDepth: oceanDetection.waterDepth,
+            oceanName: oceanDetection.oceanName,
+            detectionSource: oceanDetection.source,
+            terrainType: this.classifyTerrain(elevation, oceanDetection.isOcean),
+            usgsAvailable // Flag to indicate if USGS provided real elevation
+        };
+
+        // Cache with appropriate TTL based on data quality
+        const cacheTTL = usgsAvailable ? 7200 : 600; // 2h if full data, 10min if estimated
+        this.cache.set(cacheKey, result, cacheTTL);
+
+        return result;
     }
 
     /**
-     * Estimate if coordinates are likely ocean based on geography
-     * Simple heuristic for fallback when USGS API is slow
-     * @private
+     * Detect ocean using GeoNames Ocean API (accurate land/ocean detection)
+     * Fixes false positives like: Ganges Delta (India), Dead Sea, Caspian Sea
+     * @param {number} latitude
+     * @param {number} longitude
+     * @param {number} elevation - USGS elevation (for hybrid approach)
+     * @returns {Promise<Object>} {isOcean, oceanName, waterDepth, source}
      */
-    estimateIfOcean(lat, lon) {
-        // Very rough ocean estimation
-        // Major ocean areas (approximate)
-        const pacificOcean = (lon >= 120 || lon <= -70) && Math.abs(lat) < 60;
-        const atlanticOcean = (lon >= -70 && lon <= -10) && Math.abs(lat) < 60;
-        const indianOcean = (lon >= 40 && lon <= 120) && (lat >= -60 && lat <= 30);
+    async detectOceanGeoNames(latitude, longitude, elevation) {
+        // Round coordinates to 0.01° (~1.1km) for better cache hit rate
+        const lat = Math.round(latitude * 100) / 100;
+        const lon = Math.round(longitude * 100) / 100;
+        const cacheKey = `ocean_${lat}_${lon}`;
 
-        return pacificOcean || atlanticOcean || indianOcean;
+        // 1. Check cache first
+        const cached = this.oceanCache.get(cacheKey);
+        if (cached) {
+            return cached;
+        }
+
+        // 2. If elevation is very negative (and available), it's definitely ocean (optimization)
+        if (elevation !== null && elevation !== undefined && elevation < -10) {
+            const result = {
+                isOcean: true,
+                oceanName: 'Unknown Ocean',
+                waterDepth: Math.abs(elevation),
+                source: 'USGS elevation (confirmed < -10m)'
+            };
+            this.oceanCache.set(cacheKey, result);
+            return result;
+        }
+
+        // 3. Call GeoNames Ocean API (PRIMARY SOURCE - most reliable)
+        try {
+            const response = await axios.get(`${this.geonamesAPI}/oceanJSON`, {
+                params: {
+                    lat: latitude,
+                    lng: longitude,
+                    username: this.geonamesUsername
+                },
+                timeout: 3000 // 3 second timeout
+            });
+
+            // GeoNames returns:
+            // - Ocean: {"ocean": {"name": "...", ...}}
+            // - Land: {"status": {"message": "we are afraid...", "value": 15}}
+            const isOcean = !!response.data.ocean;
+
+            // Calculate water depth intelligently
+            let waterDepth = 0;
+            if (isOcean) {
+                if (elevation !== null && elevation !== undefined && elevation < 0) {
+                    waterDepth = Math.abs(elevation);
+                } else {
+                    // Ocean confirmed but no elevation data - use default
+                    waterDepth = 1000; // Default ocean depth
+                }
+            }
+
+            const result = {
+                isOcean,
+                oceanName: isOcean ? response.data.ocean.name : null,
+                waterDepth,
+                source: 'GeoNames Ocean API'
+            };
+
+            // Cache result for 24 hours
+            this.oceanCache.set(cacheKey, result);
+            return result;
+
+        } catch (error) {
+            // 4. Fallback: Use ONLY elevation if available (no geographic estimation)
+            console.warn(`GeoNames API error for ${latitude}, ${longitude}:`, error.message);
+
+            let isOcean;
+            let fallbackSource;
+
+            if (elevation !== null && elevation !== undefined) {
+                // Use CONSERVATIVE elevation-based detection
+                if (elevation < -50) {
+                    // Very likely ocean (deeper than -50m)
+                    isOcean = true;
+                    fallbackSource = 'USGS elevation (< -50m, likely ocean)';
+                } else if (elevation > 0) {
+                    // Definitely land (above sea level)
+                    isOcean = false;
+                    fallbackSource = 'USGS elevation (> 0m, confirmed land)';
+                } else {
+                    // Edge case: -50m to 0m (coastal, below sea level land, or shallow ocean)
+                    // Be conservative: assume LAND unless very negative
+                    isOcean = false;
+                    fallbackSource = 'USGS elevation (0 to -50m, assumed land - coastal/below sea level)';
+                }
+            } else {
+                // No elevation data AND GeoNames failed - last resort
+                // Default to LAND to avoid false ocean positives
+                isOcean = false;
+                fallbackSource = 'Conservative fallback (no data, assumed land)';
+                console.error(`No elevation data AND GeoNames failed for ${latitude}, ${longitude} - defaulting to LAND`);
+            }
+
+            const result = {
+                isOcean,
+                oceanName: isOcean ? 'Unknown Ocean' : null,
+                waterDepth: isOcean ? (elevation ? Math.abs(elevation) : 1000) : 0,
+                source: fallbackSource,
+                estimated: true
+            };
+
+            // Cache fallback result but with shorter TTL (10 minutes)
+            this.oceanCache.set(cacheKey, result, 600);
+            return result;
+        }
     }
 
     /**
