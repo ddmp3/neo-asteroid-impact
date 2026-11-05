@@ -1,9 +1,23 @@
 node_modules
 npm-debug.log
 .env
+.env.*
 .git
 .gitignore
-README.md
 .DS_Store
-coverage
 .vscode
+coverage
+
+# Not needed at runtime (the API reads src/data/cities.json)
+cities15000.txt
+cities15000.zip
+baselines
+docs
+*.md
+api-docs.html
+containerapp.yaml
+Dockerfile
+.dockerignore
+
+# Tests and calibration scripts
+src/tests
