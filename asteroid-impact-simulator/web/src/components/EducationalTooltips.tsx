@@ -33,7 +33,7 @@ const EDUCATIONAL_CONTENT: ContentItem[] = [
   {
     id: 'workflow-step2',
     title: 'Step 2: Atmospheric Entry and Fragmentation',
-    content: 'When the asteroid enters the atmosphere at hypersonic speed (12-25 km/s), it experiences enormous dynamic pressure. If this pressure exceeds the material strength, the asteroid fragments. We use the Hills-Goda criterion (1993) coupled with Wheeler\'s FCM V2 model (2017) to calculate fragmentation altitude, surviving mass, and energy deposited in the atmosphere.',
+    content: 'When the asteroid enters the atmosphere at hypersonic speed (12-25 km/s), it experiences enormous dynamic pressure. If this pressure exceeds the material strength, the asteroid fragments. We use the Collins et al. (2005) entry model, the one behind the Impact Earth! calculator: breakup altitude, spreading of the fragment cloud, burst altitude, and the speed left at the ground. The strength of stony bodies is calibrated on 125 fireballs recorded by US government sensors (JPL/CNEOS) and checked on 235 others. Iron bodies are treated as unbreakable (NASA PAIR rule).',
     formula: 'P_ram = ½ × ρ_air × v² ≥ σ (strength)',
     whyThisOrder: 'This step comes BEFORE energy calculation because atmospheric fragmentation modifies the mass and velocity that will reach the ground. A 20m asteroid can lose 70% of its mass by fragmenting (e.g., Chelyabinsk 2013).',
     category: 'workflow'
@@ -65,7 +65,7 @@ const EDUCATIONAL_CONTENT: ContentItem[] = [
   {
     id: 'workflow-step6',
     title: 'Step 6: Blast Zones and Human Casualties',
-    content: 'Finally, we calculate the radii of different blast zones (fireball, thermal radiation, air blast, nuclear radiation) using models calibrated on Tunguska (1908) and Chelyabinsk (2013). Human casualties are estimated by crossing these zones with our database of 32,686 cities.',
+    content: 'Finally, we calculate the ground radii of the damage zones: overpressure (Kinney & Graham blast curve, checked against Halifax 1917, Beirut 2020 and Tunguska) and 3rd-degree burns (Collins et al. 2005). Casualties follow the NASA PAIR rule: people inside the larger of the 4 psi blast zone and the burn zone are counted as killed. There is no ionizing radiation from an asteroid impact.',
     formula: 'R_blast ∝ (E_yield)^(1/3) (similarity law)',
     whyThisOrder: 'This is the last step because blast zones depend on final explosive energy. For airbursts (high-altitude explosions), we must first know if a crater formed or if all energy was released at altitude.',
     category: 'workflow'

@@ -3,9 +3,10 @@
  * Implements Keplerian orbital mechanics and impact physics calculations
  */
 
-// Using optimized city-based service with GeoNames database (32,686 cities >15k pop)
-// Fast, accurate casualty calculations without grid sampling (<5 seconds)
+// GeoNames cities (>15k pop) are used only to NAME affected cities;
+// casualty totals come from the WorldPop grid below.
 const populationService = require('./populationCityService');
+const worldPopGrid = require('./worldPopGrid'); // v2.1.1: gridded population (WorldPop 2020)
 const casualtyModel = require('./casualtyModel');
 const TerrainAnalysis = require('./terrainAnalysis');
 const USGSService = require('./usgsService');
@@ -1133,6 +1134,9 @@ class PhysicsEngine {
                 angle
             },
             energy,
+            // v2.1.1: pass the entry-model fields through (breakup/burst
+            // altitude, ground velocity, model name); before, the model was
+            // hard-coded as 'Hills-Goda (1993)' and the new fields were dropped.
             fragmentation: {
                 willFragment: fragmentation.willFragment,
                 impactType: fragmentation.impactType,
@@ -1140,11 +1144,15 @@ class PhysicsEngine {
                 energyDepositionAltitude: fragmentation.energyDepositionAltitude,
                 craterFormed: fragmentation.craterFormed,
                 reachesGround: fragmentation.reachesGround,
+                breakupAltitude: fragmentation.breakupAltitude ?? null,
+                burstAltitude: fragmentation.burstAltitude ?? null,
+                groundVelocity: fragmentation.groundVelocity ?? null,
+                velocityAtBurst: fragmentation.velocityAtBurst ?? null,
                 note: fragmentation.note,
                 strength: fragmentation.strength,
                 ramPressure: fragmentation.ramPressure,
                 details: fragmentation.details,
-                model: 'Hills-Goda (1993)'
+                model: fragmentation.model || 'Collins et al. (2005) atmospheric entry'
             },
             crater,
             seismic,
@@ -1177,9 +1185,9 @@ class PhysicsEngine {
      * radius (moderate structural damage) are counted as exposed/injured.
      * Replaces fixed mortality steps (100/90/70/30 %) that had no source.
      *
-     * Known limit: population comes from GeoNames cities > 15,000 inhabitants,
-     * treated as points (rural population absent, a city is in or out). Treat
-     * the result as an order of magnitude.
+     * Population: WorldPop 2020 grid (v2.1.1), 2.5' cells (~4.6 km) below
+     * 300 km, 30' cells above; median error 1.3 % vs the 1 km grid. City names
+     * still come from GeoNames (cities > 15,000 inhabitants).
      */
     async calculateCasualties(blast, impactLocation, crater) {
         const bp = blast.blast_physics || {};
@@ -1188,11 +1196,16 @@ class PhysicsEngine {
         const lethalKm = Math.max(lethalBlastKm, thermalKm);
         const exposedKm = Math.max(lethalKm, (bp.moderate_structural || 0) / 1000);
 
+        // v2.1.1: totals from the WorldPop 2020 grid (rural population included,
+        // partial cells counted by area); GeoNames cities only to NAME the
+        // places affected.
+        const gridLethal = worldPopGrid.populationInRadius(impactLocation.lat, impactLocation.lon, lethalKm);
+        const gridExposed = worldPopGrid.populationInRadius(impactLocation.lat, impactLocation.lon, exposedKm);
         const inLethal = await populationService.getPopulationInRadius(impactLocation.lat, impactLocation.lon, lethalKm);
         const inExposed = await populationService.getPopulationInRadius(impactLocation.lat, impactLocation.lon, exposedKm);
 
-        const deaths = inLethal.totalPopulation || 0;
-        const exposed = Math.max(0, (inExposed.totalPopulation || 0) - deaths);
+        const deaths = gridLethal.totalPopulation;
+        const exposed = Math.max(0, gridExposed.totalPopulation - deaths);
         const dominant = thermalKm > lethalBlastKm ? 'thermal radiation (3rd-degree burns)' : 'blast (>= 4 psi / 27.6 kPa)';
 
         const zones = {
@@ -1209,7 +1222,7 @@ class PhysicsEngine {
             moderate: {
                 radius: exposedKm,
                 area: Math.PI * exposedKm * exposedKm,
-                populationAffected: inExposed.totalPopulation || 0,
+                populationAffected: gridExposed.totalPopulation,
                 ringPopulation: exposed,
                 casualties: 0,
                 injured: exposed,
@@ -1219,7 +1232,19 @@ class PhysicsEngine {
             }
         };
 
-        const largestZoneCities = inExposed.affectedCities || [];
+        // v2.1.1: per-city figures follow the same PAIR rule as the totals
+        // (whole population inside the lethal radius, none outside). The city
+        // service's own distance-decay rates (95/70/40/10 %) had no source.
+        const largestZoneCities = (inExposed.affectedCities || []).map((city) => {
+            const lethal = Number(city.distance) <= lethalKm;
+            const pop = city.population ?? city.pop ?? 0;
+            return {
+                ...city,
+                casualties: lethal ? pop : 0,
+                casualtyRate: lethal ? 100 : 0,
+                zone: lethal ? 'lethal' : 'moderate damage'
+            };
+        });
         return {
             estimatedCasualties: deaths,
             estimatedInjured: exposed,
@@ -1227,10 +1252,11 @@ class PhysicsEngine {
             zones,
             affectedCities: largestZoneCities,
             severity: this.getCasualtySeverity(deaths),
-            model: 'NASA PAIR rule (Mathias et al. 2017): max(4 psi, 3rd-degree burn) area; GeoNames cities > 15k as points',
+            model: 'NASA PAIR rule (Mathias et al. 2017): max(4 psi, 3rd-degree burn) area',
+            populationSource: `${worldPopGrid.source}, ${gridExposed.grid || gridLethal.grid}`,
             note: impactLocation.isOcean ?
                 'Ocean impact - tsunami and coastal effects primary concern' :
-                `${largestZoneCities.length} cities > 15,000 inhabitants in the damage area (rural population not counted)`
+                `${largestZoneCities.length} cities > 15,000 inhabitants in the damage area; totals include rural population (WorldPop 2020)`
         };
     }
 

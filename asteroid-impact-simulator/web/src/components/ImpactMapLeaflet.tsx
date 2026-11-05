@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { damageZones } from '../utils/blastZones';
 import { MapContainer, TileLayer, Marker, Circle, Polygon, useMap, useMapEvents, Popup } from 'react-leaflet';
 import { useSimulationStore } from '../store/useSimulationStore';
 import L from 'leaflet';
@@ -47,12 +48,7 @@ function MapViewController() {
 
       if (simulationResult && simulationResult.blast) {
         // Get the largest blast radius to determine zoom
-        const maxRadius = Math.max(
-          simulationResult.blast.fireball || 0,
-          simulationResult.blast.thermalRadius || 0,
-          simulationResult.blast.airblastRadius || 0,
-          simulationResult.blast.radiationRadius || 0
-        );
+        const maxRadius = Math.max(0, ...damageZones(simulationResult.blast).map(z => z.radius));
 
         // Adjust zoom based on blast radius (in meters)
         if (maxRadius > 500000) zoom = 5;       // > 500 km
@@ -229,89 +225,32 @@ export default function ImpactMapLeaflet() {
             {/* Blast zones if simulation result exists */}
             {simulationResult && (
               <>
-                {/* Fireball */}
-                <Circle
-                  center={[impactLocation.lat, impactLocation.lon]}
-                  radius={simulationResult.blast.fireball}
-                  pathOptions={{
-                    color: '#ff0000',
-                    fillColor: '#ff0000',
-                    fillOpacity: 0.5,
-                  }}
-                >
-                  <Popup>
-                    <div role="region" aria-label="Fireball zone details">
-                      <strong>🔴 Fireball Zone</strong>
-                      <br />
-                      Radius: {(simulationResult.blast.fireball / 1000).toFixed(1)} km
-                      <br />
-                      Complete vaporization
-                    </div>
-                  </Popup>
-                </Circle>
-
-                {/* Thermal radiation */}
-                <Circle
-                  center={[impactLocation.lat, impactLocation.lon]}
-                  radius={simulationResult.blast.thermalRadius}
-                  pathOptions={{
-                    color: '#ff6600',
-                    fillColor: '#ff6600',
-                    fillOpacity: 0.3,
-                  }}
-                >
-                  <Popup>
-                    <div role="region" aria-label="Thermal radiation zone details">
-                      <strong>🟠 Thermal Radiation Zone</strong>
-                      <br />
-                      Radius: {(simulationResult.blast.thermalRadius / 1000).toFixed(1)} km
-                      <br />
-                      3rd degree burns
-                    </div>
-                  </Popup>
-                </Circle>
-
-                {/* Air blast */}
-                <Circle
-                  center={[impactLocation.lat, impactLocation.lon]}
-                  radius={simulationResult.blast.airblastRadius}
-                  pathOptions={{
-                    color: '#ffcc00',
-                    fillColor: '#ffcc00',
-                    fillOpacity: 0.2,
-                  }}
-                >
-                  <Popup>
-                    <div role="region" aria-label="Air blast zone details">
-                      <strong>🟡 Air Blast Zone</strong>
-                      <br />
-                      Radius: {(simulationResult.blast.airblastRadius / 1000).toFixed(1)} km
-                      <br />
-                      20 psi overpressure
-                    </div>
-                  </Popup>
-                </Circle>
-
-                {/* Radiation zone */}
-                <Circle
-                  center={[impactLocation.lat, impactLocation.lon]}
-                  radius={simulationResult.blast.radiationRadius}
-                  pathOptions={{
-                    color: '#00ff00',
-                    fillColor: '#00ff00',
-                    fillOpacity: 0.15,
-                  }}
-                >
-                  <Popup>
-                    <div role="region" aria-label="Radiation zone details">
-                      <strong>🟢 Radiation Zone</strong>
-                      <br />
-                      Radius: {(simulationResult.blast.radiationRadius / 1000).toFixed(1)} km
-                      <br />
-                      500 rem radiation dose
-                    </div>
-                  </Popup>
-                </Circle>
+                {/* v2.1.0 damage zones, largest first so smaller ones stay clickable */}
+                {damageZones(simulationResult.blast)
+                  .filter(z => z.radius > 0)
+                  .sort((a, b) => b.radius - a.radius)
+                  .map(z => (
+                    <Circle
+                      key={z.key}
+                      center={[impactLocation.lat, impactLocation.lon]}
+                      radius={z.radius}
+                      pathOptions={{
+                        color: z.color,
+                        fillColor: z.color,
+                        fillOpacity: z.key === 'total' ? 0.45 : z.key === 'moderate' ? 0.12 : 0.25,
+                      }}
+                    >
+                      <Popup>
+                        <div role="region" aria-label={`${z.label} details`}>
+                          <strong>{z.emoji} {z.label}</strong>
+                          <br />
+                          Radius: {(z.radius / 1000).toFixed(1)} km
+                          <br />
+                          {z.detail}
+                        </div>
+                      </Popup>
+                    </Circle>
+                  ))}
 
                 {/* Terrain-Aware Blast Zones (v1.6.21) - Polygons respecting terrain */}
                 {simulationResult.blastTerrainAware && simulationResult.blastTerrainAware.zones && (
@@ -464,24 +403,14 @@ export default function ImpactMapLeaflet() {
 
           {simulationResult && (
             <div className="mt-3 pt-3 border-t border-white/10" role="region" aria-label="Blast zones summary">
-              <div className="text-xs text-white/70 mb-2">Blast Zones:</div>
+              <div className="text-xs text-white/70 mb-2">Damage Zones:</div>
               <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                  <span>Fireball: {(simulationResult.blast.fireball / 1000).toFixed(1)} km</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-                  <span>Thermal: {(simulationResult.blast.thermalRadius / 1000).toFixed(1)} km</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                  <span>Air Blast: {(simulationResult.blast.airblastRadius / 1000).toFixed(1)} km</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                  <span>Radiation: {(simulationResult.blast.radiationRadius / 1000).toFixed(1)} km</span>
-                </div>
+                {damageZones(simulationResult.blast).map(z => (
+                  <div key={z.key} className="flex items-center gap-2" title={z.detail}>
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: z.color }}></div>
+                    <span>{z.label}: {(z.radius / 1000).toFixed(1)} km</span>
+                  </div>
+                ))}
               </div>
             </div>
           )}

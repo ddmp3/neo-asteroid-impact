@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-2.1.0-blue?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-2.1.1-blue?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT%20(Educational)-green?style=for-the-badge)
 ![Validation](https://img.shields.io/badge/Validation-CNEOS%20hold--out-blueviolet?style=for-the-badge)
 
@@ -151,6 +151,12 @@ dev-meteormadness/
 
 ---
 
+## 👥 Population data
+
+Casualties are integrated over the **WorldPop 2020** global population grid (www.worldpop.org, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)), aggregated from the 1 km mosaic to 2.5 arc-minutes by `api/scripts/build-population-grid.py` (counts preserved, 7.97 bn people). GeoNames cities are used only to name the affected cities.
+
+---
+
 ## ⚠️ Known Limitations
 
 - **High-altitude, shallow airbursts** (Chelyabinsk): the blast is a point source at sea-level ambient; ground overpressure is over-predicted 2-3.5x and the window-damage area ~16x. A line-source model (Collins et al. 2017) is needed.
@@ -159,7 +165,7 @@ dev-meteormadness/
 - **Entry angle and density** of CNEOS fireballs are unknown; calibration assumes 45° and 3,000 kg/m³. The calibrated strength is an *effective* parameter, not a material strength.
 - **Blast**: for surface bursts the Kinney & Graham curve gives radii ~1.33x Collins Eq. 54; the Monte Carlo samples a blast fraction between both.
 - **Thermal from airbursts** uses the Brown et al. (2002) bolide relation, calibrated below ~0.5 Mt and extrapolated above.
-- **Population**: GeoNames cities > 15,000 inhabitants as points (rural population absent). Casualties are an order of magnitude.
+- **Population**: WorldPop 2020 grid at 2.5′ (~4.6 km cells; 30′ beyond 300 km radius). Median error 1.3% vs the 1 km grid, but up to ~40% for radii of 2 km. Population is the 2020 night-time residential count (no daytime commuting, no growth since 2020). Deaths = everyone inside the lethal radius (NASA PAIR rule): no shelter, warning or evacuation, so the toll is an upper-bound order of magnitude.
 - **Tsunami**: order of magnitude in the open ocean, no coastal run-up model.
 - **Orbits**: two-body Keplerian visualisation, no perturbations, no impact probability.
 - **Nuclear deflection**: no validated public model; the game uses an explicit game rule.
@@ -287,7 +293,7 @@ For educational collaboration or API limits, open a GitHub issue.
 
 [![License](https://img.shields.io/badge/License-MIT%20(Educational)-green)](LICENSE)
 [![Live](https://img.shields.io/badge/Demo-Live-success)](https://neo.lueger.fr)
-[![Version](https://img.shields.io/badge/Version-2.1.0-blue)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-2.1.1-blue)](CHANGELOG.md)
 [![Validation](https://img.shields.io/badge/Validation-docs%2FVALIDATION.md-orange)](docs/VALIDATION.md)
 
 **Built for Planetary Defense Education**
