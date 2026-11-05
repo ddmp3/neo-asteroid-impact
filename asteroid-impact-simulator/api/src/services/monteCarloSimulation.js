@@ -9,6 +9,7 @@
 
 const UncertaintyQuantification = require('./uncertaintyQuantification');
 const PhysicsEngine = require('./physicsEngine');
+const collinsEntry = require('./collinsEntry');
 const StatisticalAnalysis = require('./statisticalAnalysis');
 
 class MonteCarloSimulation {
@@ -166,17 +167,31 @@ class MonteCarloSimulation {
                     const energy = this.physicsEngine.calculateImpactEnergy(mass, finalVelocity, params.angle, params.composition, params.diameter, 0);
                     // v2.0.4: calculateCraterSize is async - without await, `crater`
                     // was a Promise and 100% of samples failed.
-                    const crater = await this.physicsEngine.calculateCraterSize(
-                        energy.effective_joules,  // v2.1.0: Use effective crater energy
-                        params.angle,
-                        params.composition,
-                        params.density,
-                        2500, // targetDensity
-                        params.diameter,
-                        params.velocity * 1000
-                    );
+                    // v2.0.6: same atmospheric entry model as the main simulation
+                    // (Collins 2005), so uncertainty bands describe the same physics:
+                    // airburst -> no crater; ground impact -> surface velocity.
+                    const entry = collinsEntry.computeEntry({
+                        diameter: params.diameter,
+                        velocity: finalVelocity,
+                        angle: params.angle,
+                        density: params.density
+                    });
+                    const crater = entry.airburst
+                        ? { diameter: 0, depth: 0, craterType: 'none' }
+                        : await this.physicsEngine.calculateCraterSize(
+                            energy.effective_joules,  // v2.1.0: Use effective crater energy
+                            params.angle,
+                            params.composition,
+                            params.density,
+                            2500, // targetDensity
+                            params.diameter,
+                            entry.groundVelocity
+                        );
                     const seismic = this.physicsEngine.calculateSeismicEffects(energy.joules);
-                    const blast = this.physicsEngine.calculateBlastRadius(energy.joules);
+                    const blast = this.physicsEngine.calculateBlastRadius(
+                        energy.joules,
+                        entry.airburst ? entry.burstAltitude : 0
+                    );
 
                     // Store results
                     const simResult = {
@@ -313,8 +328,11 @@ class MonteCarloSimulation {
             samplesGenerated: results.metadata.n_samples === 100,
             successRate: results.metadata.successRate > 0.95, // >95% success
             performanceOk: duration_ms < 10000, // <10 seconds for 100 samples
+            // v2.0.6: 0 is valid (shallow-angle samples can airburst, Collins 2005);
+            // most samples of this Barringer-like case must still crater.
             craterDiameterReasonable: results.craterDiameters.length > 0 &&
-                                      results.craterDiameters.every(d => d > 0 && d < 100000),
+                                      results.craterDiameters.every(d => d >= 0 && d < 100000) &&
+                                      results.craterDiameters.filter(d => d > 0).length / results.craterDiameters.length > 0.8,
             duration_ms: duration_ms,
             successRate: results.metadata.successRate
         };

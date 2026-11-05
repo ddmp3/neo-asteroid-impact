@@ -310,8 +310,13 @@ describe('MonteCarloSimulation', () => {
 
             const results = await mc.simulate(nominalParams, 100);
 
-            results.craterDiameters.forEach(d => expect(d).toBeGreaterThan(0));
-            results.craterDepths.forEach(d => expect(d).toBeGreaterThan(0));
+            // v2.0.6: with the Collins (2005) entry model, shallow-angle samples
+            // (~15-25°) of a 50 m iron can disperse and explode in the air, so
+            // their crater is legitimately 0. Most samples must still crater.
+            results.craterDiameters.forEach(d => expect(d).toBeGreaterThanOrEqual(0));
+            results.craterDepths.forEach(d => expect(d).toBeGreaterThanOrEqual(0));
+            const cratered = results.craterDiameters.filter(d => d > 0).length;
+            expect(cratered / results.craterDiameters.length).toBeGreaterThan(0.8);
             results.impactEnergies.forEach(e => expect(e).toBeGreaterThan(0));
             results.blastRadii.forEach(r => expect(r).toBeGreaterThan(0));
         }, 30000);
