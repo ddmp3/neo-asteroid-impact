@@ -14,6 +14,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.1.1] - 2026-11-05 (Gridded population, honest UI)
+
+### Population
+- **Casualties now integrate the WorldPop 2020 population grid** (CC BY 4.0)
+  instead of GeoNames city points. Points left out the rural population and
+  counted a whole city in or out of a zone (Ganges plain test: 24k -> 800k
+  deaths; Tokyo: 51M -> 40M because municipal totals were counted as points).
+- Grid aggregated from the 1 km mosaic to 2.5' (~4.6 km, 9.7 MB) and 30' for
+  radii >= 300 km; banded zlib format, haversine integration with sub-cell
+  sampling. Median error 1.3% vs the 1 km grid. Build script:
+  `api/scripts/build-population-grid.py`.
+- Per-city figures follow the same PAIR rule (100% inside the lethal radius,
+  0% outside); the unsourced 95/70/40/10% decay curve is no longer used.
+- Removed the unused "LandScan-inspired" `populationGridService.js`.
+- New `population.test.js` (8 tests): world total, Paris/Tokyo vs 1 km grid,
+  rural site, open ocean, antimeridian.
+
+### Interface shows what the model computes
+- Map circles, legend and dashboard use the model's zones: moderate (7 kPa),
+  lethal (max of 4 psi blast and 3rd-degree burns, NASA PAIR), collapse
+  (20 kPa), total destruction (70 kPa).
+- Fragmentation panel shows the Collins (2005) entry model, breakup and burst
+  altitudes and ground velocity (the API previously reported "Hills-Goda").
+- Energy card shows the energy left at the surface that drives ground effects.
+- Scenario reliability scores and texts match docs/VALIDATION.md; Tunguska
+  preset corrected (50 m, 15 km/s, 3-5 Mt).
+- Removed the unused InfoPanel that claimed "0.00% error".
+
+---
+
 ## [2.1.0] - 2026-11-05 (Scientific review: validation and physics)
 
 Follows the critical review of November 2026. Every formula now cites a source;

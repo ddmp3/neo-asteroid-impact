@@ -1,4 +1,5 @@
 import { useSimulationStore } from '../store/useSimulationStore';
+import { damageZones } from '../utils/blastZones';
 
 export default function ResultsDashboard() {
   const { simulationResult, zoneAnalysis } = useSimulationStore();
@@ -60,7 +61,9 @@ export default function ResultsDashboard() {
           <StatCard
             label="Impact Energy"
             value={`${energy.megatons.toFixed(2)} MT`}
-            subtitle={`${energy.tntTons.toExponential(2)} tons TNT`}
+            subtitle={energy.effects_megatons != null && Math.abs(energy.effects_megatons - energy.megatons) > 0.005 * energy.megatons
+              ? `${energy.effects_megatons.toFixed(2)} MT left at the surface (drives ground effects)`
+              : `${energy.tntTons.toExponential(2)} tons TNT`}
             color="text-red-400"
           />
           <StatCard
@@ -83,7 +86,7 @@ export default function ResultsDashboard() {
         <div className="card" role="region" aria-labelledby="fragmentation-heading">
           <h2 id="fragmentation-heading" className="text-2xl font-bold mb-6 flex items-center gap-2">
             <span aria-hidden="true">🌠</span> Atmospheric Fragmentation Analysis
-            <span className="text-xs font-normal text-white/50 ml-2">(Hills-Goda 1993)</span>
+            <span className="text-xs font-normal text-white/50 ml-2">({fragmentation.model ?? 'Collins et al. 2005'})</span>
           </h2>
 
           {/* Impact Type Badge */}
@@ -106,9 +109,9 @@ export default function ResultsDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             {fragmentation.willFragment && (
               <StatCard
-                label="Fragmentation Altitude"
-                value={`${(fragmentation.altitude / 1000).toFixed(1)} km`}
-                subtitle={`${fragmentation.altitude.toFixed(0)}m above ground`}
+                label={fragmentation.reachesGround ? 'Breakup Altitude' : 'Burst Altitude'}
+                value={`${(((fragmentation.reachesGround ? fragmentation.breakupAltitude : fragmentation.altitude) ?? 0) / 1000).toFixed(1)} km`}
+                subtitle={fragmentation.reachesGround ? 'Fragment cloud then reaches the ground' : 'Energy released in the air'}
                 color="text-cyan-400"
               />
             )}
@@ -176,16 +179,14 @@ export default function ResultsDashboard() {
             {Object.entries(casualties.zones).map(([zoneName, zone]: [string, any]) => (
               <div key={zoneName} className="p-3 bg-white/5 rounded border border-white/10">
                 <div className="font-semibold text-white capitalize mb-1">
-                  {zoneName === 'fireball' && '🔴'}
-                  {zoneName === 'thermal' && '🟠'}
-                  {zoneName === 'airblast' && '🟡'}
-                  {zoneName === 'radiation' && '🟢'}
+                  {zoneName === 'lethal' && '🟠'}
+                  {zoneName === 'moderate' && '🟡'}
                   {' '}
-                  {zoneName.charAt(0).toUpperCase() + zoneName.slice(1)} Zone
+                  {zoneName === 'lethal' ? 'Lethal zone' : zoneName === 'moderate' ? 'Moderate damage zone' : zoneName.charAt(0).toUpperCase() + zoneName.slice(1) + ' zone'} ({zone.radius.toFixed(1)} km)
                 </div>
                 <div className="text-xs text-white/70 space-y-1">
                   <div>Population: {zone.populationAffected.toLocaleString()}</div>
-                  <div className="text-red-300">Deaths: {zone.casualties.toLocaleString()} ({(zone.mortalityRate * 100).toFixed(0)}%)</div>
+                  <div className="text-red-300">Deaths: {zone.casualties.toLocaleString()}</div>
                   <div className="text-orange-300">Injured: {zone.injured.toLocaleString()}</div>
                   <div className="text-white/50 italic">{zone.description}</div>
                 </div>
@@ -272,35 +273,22 @@ export default function ResultsDashboard() {
         <h3 id="blast-heading" className="text-xl font-semibold mb-4 flex items-center gap-2">
           <span aria-hidden="true">💨</span> Blast & Thermal Effects
         </h3>
+        {blast.blast_physics?.overpressure_model && (
+          <p className="text-xs text-white/50 mb-3">
+            Blast: {String(blast.blast_physics.overpressure_model)}. Thermal: {String(blast.blast_physics.thermal_model ?? '')}.
+          </p>
+        )}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard
-            label="Fireball"
-            value={`${(blast.fireball / 1000).toFixed(1)} km`}
-            subtitle="Vaporization"
-            color="text-red-400"
-            size="sm"
-          />
-          <StatCard
-            label="Thermal"
-            value={`${(blast.thermalRadius / 1000).toFixed(1)} km`}
-            subtitle="3rd degree burns"
-            color="text-orange-400"
-            size="sm"
-          />
-          <StatCard
-            label="Airblast"
-            value={`${(blast.airblastRadius / 1000).toFixed(1)} km`}
-            subtitle="20 psi overpressure"
-            color="text-purple-400"
-            size="sm"
-          />
-          <StatCard
-            label="Radiation"
-            value={`${(blast.radiationRadius / 1000).toFixed(1)} km`}
-            subtitle="500 rem"
-            color="text-green-400"
-            size="sm"
-          />
+          {damageZones(blast).map(z => (
+            <StatCard
+              key={z.key}
+              label={z.label}
+              value={`${(z.radius / 1000).toFixed(1)} km`}
+              subtitle={z.detail}
+              color="text-orange-300"
+              size="sm"
+            />
+          ))}
         </div>
       </div>
 

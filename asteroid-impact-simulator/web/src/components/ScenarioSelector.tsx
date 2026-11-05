@@ -40,21 +40,21 @@ const PREDEFINED_SCENARIOS: Scenario[] = [
     name: 'Tunguska Event',
     icon: '🌲',
     description: 'Devastating airburst in Siberia - 2,000 km² of forest flattened',
-    historicalContext: 'June 30, 1908, Tunguska (Siberia). 65m asteroid exploded at ~8km altitude, equivalent 15 MT TNT. No crater formed. Witnesses saw fireball crossing sky, followed by shockwave. Trees knocked down in radial pattern over 2,000 km². Proves airbursts can be devastating without ground impact.',
+    historicalContext: 'June 30, 1908, Tunguska (Siberia). A ~50-60 m stony asteroid exploded at ~5-10 km altitude. Older estimates gave 10-15 Mt; simulations by Boslough & Crawford give 3-5 Mt. No crater formed. Witnesses saw fireball crossing sky, followed by shockwave. Trees knocked down in radial pattern over 2,000 km². Proves airbursts can be devastating without ground impact.',
     category: 'validated',
     reliability: {
-      score: 92,
-      details: 'Excellent. Our FCM V2 model reproduces burst altitude <1% error, blast zones ±8% error. Calibration baseline.',
-      ourMAE: 8,
+      score: 85,
+      details: 'Good. With a 50 m stony body at 15 km/s (energy ~5 Mt, Boslough & Crawford), the model bursts at ~5.5 km and the 7 kPa radius is ~28 km vs ~30 km of radial forest fall (factor x0.93). Tested automatically (docs/VALIDATION.md).',
+      ourMAE: 7,
       validated: true
     },
     year: 1908,
     params: {
-      diameter: 65,
-      velocity: 27,
-      angle: 30,
-      density: 1800,
-      composition: 'icy',
+      diameter: 50,
+      velocity: 15,
+      angle: 45,
+      density: 3000,
+      composition: 'rocky',
     },
     location: {
       lat: 60.8858,
@@ -70,9 +70,8 @@ const PREDEFINED_SCENARIOS: Scenario[] = [
     historicalContext: 'February 15, 2013, Chelyabinsk (Russia). 20m asteroid @ 19 km/s, airburst 23.3km altitude, 0.5 MT. 1,500 injured (mainly thermal radiation + broken glass 7,200 buildings). Spectacular dashcam footage. Reminder that small objects are difficult to detect (discovered AFTER impact).',
     category: 'validated',
     reliability: {
-      score: 75,
-      details: 'Good. Burst altitude <1% error (excellent). BUT blast zones underestimated (limitation L3: airbursts >20km). Automated tests in place.',
-      ourMAE: 1, // altitude only
+      score: 60,
+      details: 'Mixed. Energy (~0.5 Mt), burst altitude (~26 km vs ~23-30 km) and deaths (0) match. Ground damage is OVER-estimated: overpressure 2-3.5x and window-damage area ~16x (point source vs ~20 km line source). Known gap, tested automatically.',
       validated: true
     },
     year: 2013,
@@ -97,9 +96,9 @@ const PREDEFINED_SCENARIOS: Scenario[] = [
     historicalContext: '~50,000 years ago, Arizona (USA). 50m iron impacted at ~12.8 km/s, crater 1.2km × 170m depth. Well preserved (arid climate). First scientifically recognized impact crater (1906). World reference for validating crater scaling laws.',
     category: 'validated',
     reliability: {
-      score: 75,
-      details: 'Good. Calculated 1.5km vs observed 1.2km (25% error). Acceptable for scaling laws. Minimal erosion so good reference.',
-      ourMAE: 25,
+      score: 55,
+      details: 'Fair. Calculated ~1.5 km vs observed 1.2 km (+27%). Irons are treated as unbreakable (NASA PAIR rule); Melosh & Collins (2005) explain the smaller crater with breakup and mass loss, which the model does not include.',
+      ourMAE: 27,
       validated: true
     },
     year: -50000,
@@ -124,9 +123,9 @@ const PREDEFINED_SCENARIOS: Scenario[] = [
     historicalContext: '66 million years ago, Yucatán (Mexico). 10-15km asteroid, 180km crater (completely buried under sediments). 100 million MT. Mass extinction 75% species including dinosaurs. Global tsunami, fires, impact winter (dust blocks sun). Changed Earth\'s life history.',
     category: 'validated',
     reliability: {
-      score: 76,
-      details: 'Good. Calculated 136.6km vs observed 180km (24% error). Excellent precision for giant impact (66 Ma, completely buried). Extreme validation.',
-      ourMAE: 24,
+      score: 70,
+      details: 'Fair. Calculated ~122-129 km vs ~150-180 km observed (-15 to -32% depending on impactor density). The impactor size itself is estimated, so this is a consistency check, not a validation.',
+      ourMAE: 30,
       validated: true
     },
     year: -66000000,
@@ -153,8 +152,8 @@ const PREDEFINED_SCENARIOS: Scenario[] = [
     historicalContext: 'February 12, 1947, Sikhote-Alin Mountains (Russia). ~100 tonnes iron fragmented in atmosphere. Shower of ~70 tonnes fragments (largest ~1.7 tonnes). Largest crater 26m diameter. Witnesses saw bright trail then explosions. 100+ craters formed.',
     category: 'estimated',
     reliability: {
-      score: 45,
-      details: '⚠️ Problematic (limitation L2). Our Monte Carlo predicts 1.8-10.7m vs 26m observed. Cause: σ range too wide OR FCM V2 overestimates fragmentation. σ_typical calibration needed.',
+      score: 20,
+      details: '⚠️ Outside the model. Sikhote-Alin is a field of 122 craters from a body that broke up; the simulator models a single body (~360 m crater vs 26 m for the largest real crater). Excluded from validation.',
       validated: false
     },
     year: 1947,
@@ -180,8 +179,9 @@ const PREDEFINED_SCENARIOS: Scenario[] = [
     category: 'estimated',
     reliability: {
       score: 85,
-      details: 'Good. Calculated 20.4km vs observed 24km (14.9% error). Good precision for partially eroded complex crater. Not yet tested automatically.',
-      validated: false
+      details: 'Good. Calculated 22.4 km vs observed 24 km (-7%). Inside the model band over the published impactor range. Tested automatically (consistency check).',
+      ourMAE: 7,
+      validated: true
     },
     year: -15000000,
     params: {
@@ -208,7 +208,7 @@ const PREDEFINED_SCENARIOS: Scenario[] = [
     category: 'hypothetical',
     reliability: {
       score: 60,
-      details: 'Hypothetical. No impact predicted. Parameters based on radar measurements. If real impact, expected precision ±20-30% (typical MAE).',
+      details: 'Hypothetical. No impact predicted. Parameters based on radar measurements. Use the Uncertainty tab: the Monte Carlo varies both the inputs and the model parameters.',
       validated: false
     },
     params: {
@@ -229,7 +229,7 @@ const PREDEFINED_SCENARIOS: Scenario[] = [
     category: 'hypothetical',
     reliability: {
       score: 65,
-      details: 'Hypothetical. Precise parameters measured by spacecraft. If real impact, our low-density rubble pile model should give ±25-30% precision.',
+      details: 'Hypothetical. Parameters measured by OSIRIS-REx. Low-density rubble piles are the least tested case: use the Uncertainty tab.',
       validated: false
     },
     params: {
@@ -250,7 +250,7 @@ const PREDEFINED_SCENARIOS: Scenario[] = [
     category: 'hypothetical',
     reliability: {
       score: 70,
-      details: 'Hypothetical. Size in well-calibrated range (100-500m). Expected precision ±20% based on current dataset. Global MAE 32%.',
+      details: 'Hypothetical. In this size range the blast footprint drives casualties; ground blast radii match Halifax, Beirut and Tunguska within x0.92-x1.46 (docs/VALIDATION.md).',
       validated: false
     },
     params: {
@@ -271,7 +271,7 @@ const PREDEFINED_SCENARIOS: Scenario[] = [
     category: 'hypothetical',
     reliability: {
       score: 65,
-      details: 'Hypothetical. Size validated on Ries (24km observed, 14.9% error). Expected precision ±20-25% for complex crater.',
+      details: 'Hypothetical. Comparable to Ries (22.4 km calculated vs 24 km observed, -7%). Use the Uncertainty tab for the spread.',
       validated: false
     },
     params: {

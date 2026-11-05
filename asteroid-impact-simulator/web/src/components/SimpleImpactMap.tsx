@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
+import { damageZones } from '../utils/blastZones';
 import { useSimulationStore } from '../store/useSimulationStore';
 
 export default function SimpleImpactMap() {
@@ -161,12 +162,12 @@ export default function SimpleImpactMap() {
 
     // Draw blast zones if simulation exists
     if (simulationResult) {
-      const zones = [
-        { radius: simulationResult.blast.radiationRadius, color: 'rgba(0, 255, 0, 0.15)' },
-        { radius: simulationResult.blast.airblastRadius, color: 'rgba(255, 204, 0, 0.2)' },
-        { radius: simulationResult.blast.thermalRadius, color: 'rgba(255, 102, 0, 0.3)' },
-        { radius: simulationResult.blast.fireball, color: 'rgba(255, 0, 0, 0.5)' },
-      ];
+      const zones = damageZones(simulationResult.blast)
+        .sort((a, b) => b.radius - a.radius)
+        .map(z => ({
+        radius: z.radius,
+        color: z.color + (z.key === 'total' ? '80' : z.key === 'moderate' ? '26' : '4d'),
+      }));
 
       // Convert meters to pixels (approximate)
       const metersPerPixel = (40075000 / canvas.width); // Earth circumference / canvas width
@@ -258,24 +259,14 @@ export default function SimpleImpactMap() {
 
           {simulationResult && (
             <div className="mt-3 pt-3 border-t border-white/10">
-              <div className="text-xs text-white/70 mb-2">Blast Zones:</div>
+              <div className="text-xs text-white/70 mb-2">Damage Zones:</div>
               <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                  <span>Fireball: {(simulationResult.blast.fireball / 1000).toFixed(1)} km</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-                  <span>Thermal: {(simulationResult.blast.thermalRadius / 1000).toFixed(1)} km</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                  <span>Air Blast: {(simulationResult.blast.airblastRadius / 1000).toFixed(1)} km</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                  <span>Radiation: {(simulationResult.blast.radiationRadius / 1000).toFixed(1)} km</span>
-                </div>
+                {damageZones(simulationResult.blast).map(z => (
+                  <div key={z.key} className="flex items-center gap-2" title={z.detail}>
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: z.color }}></div>
+                    <span>{z.label}: {(z.radius / 1000).toFixed(1)} km</span>
+                  </div>
+                ))}
               </div>
             </div>
           )}

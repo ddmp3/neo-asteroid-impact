@@ -27,11 +27,17 @@ export interface SimulationResult {
     joules: number;
     tntTons: number;
     megatons: number;
+    effects_joules?: number;     // v2.1.0: energy driving ground effects
+    effects_megatons?: number;
+    effects_basis?: string;
   };
   fragmentation?: {
     willFragment: boolean;
-    impactType: 'ground' | 'low_airburst_with_impact' | 'airburst' | 'high_altitude_airburst';
+    impactType: 'ground' | 'low_airburst_with_impact' | 'airburst' | 'low_altitude_airburst' | 'high_altitude_airburst';
     altitude: number;
+    breakupAltitude?: number | null;
+    burstAltitude?: number | null;
+    groundVelocity?: number | null;
     energyDepositionAltitude: number;
     craterFormed: boolean;
     reachesGround: boolean;
@@ -42,10 +48,10 @@ export interface SimulationResult {
       fragmentationCriterion: string;
       strengthMPa: number;
       ramPressureMPa: number;
-      fragmentationRatio: number;
-      model: string;
+      fragmentationRatio?: number;
+      model?: string;
     };
-    model: string;
+    model?: string;
   };
   crater: {
     diameter: number;
@@ -60,10 +66,18 @@ export interface SimulationResult {
     radiusKm: number;
   };
   blast: {
-    fireball: number;
-    radiationRadius: number;
-    airblastRadius: number;
-    thermalRadius: number;
+    fireball: number;          // 70 kPa ground radius (total destruction), name kept for API compatibility
+    radiationRadius: number;   // always 0 since v2.1.0 (no ionizing radiation from asteroid impacts)
+    airblastRadius: number;    // 20 kPa (building collapse)
+    thermalRadius: number;     // 3rd-degree burns
+    lethalBlastRadius?: number; // 27.6 kPa = 4 psi (NASA PAIR)
+    blast_physics?: {
+      moderate_structural?: number; // 7 kPa
+      window_shattering?: number;   // 0.7 kPa
+      overpressure_model?: string;
+      thermal_model?: string;
+      [key: string]: unknown;
+    };
   };
   blastTerrainAware?: {
     zones: {

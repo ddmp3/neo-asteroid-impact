@@ -68,6 +68,6 @@ Known gaps: **chelyabinsk-ground-zero**: High-altitude, shallow (18 deg) airburs
 - Irons follow the NASA PAIR rule (no breakup, no ablation). The two single iron craters are both outside the model band, in opposite directions (Meteor Crater over-predicted, Wolfe Creek under-predicted): iron fragmentation and ablation are not modelled. Melosh & Collins (2005) explain Meteor Crater with breakup and mass loss.
 - Chicxulub is just outside its band (model up to 176 km vs ~180 km observed).
 - Burst altitudes assume a 45° entry and 3,000 kg/m³; real events scatter around them (see the hold-out band coverage).
-- Casualties use GeoNames cities > 15,000 inhabitants as points: an order of magnitude only.
+- Casualties (v2.1.1) integrate the WorldPop 2020 grid (2.5′ cells, median error 1.3% vs the 1 km grid, `population.test.js`). The casualty rule (everyone inside the PAIR lethal radius dies) is an upper bound: no sheltering or warning.
 - Tsunami amplitudes are order-of-magnitude (Collins cavity + Ward 1/r decay); NASA/NOAA (2017) found older models overestimated the hazard.
 
