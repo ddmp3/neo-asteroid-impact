@@ -14,6 +14,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.7] - 2026-11-05 (CI, Docker, reproducible builds)
+
+### Added
+- **GitHub Actions CI** (`.github/workflows/ci.yml`) on every push to `main` and
+  every pull request: API Jest suite, web typecheck + build, API Docker image
+  build + container health check + one simulation + non-root check.
+
+### Changed
+- **Lockfiles committed** (`api/package-lock.json`, `web/package-lock.json`).
+  They were ignored by both `.gitignore` files, so the API Dockerfile's `npm ci`
+  could not work from a fresh clone and every build resolved new versions.
+- **API image**: Node 22 LTS (Node 18 is end-of-life), `npm ci --omit=dev`,
+  runs as the unprivileged `node` user, starts with `node` directly (signals
+  reach the process), copies only runtime files (~10 MB of GeoNames source
+  files, docs and tests excluded).
+- **Web build fails on TypeScript errors** (`tsc --noEmit || true` -> `tsc --noEmit`).
+  The code currently type-checks cleanly.
+- Web dev Dockerfile: Node 22, `npm ci`.
+
+### Known
+- `npm audit` (production deps): 4 moderate in `applicationinsights` (fix =
+  major upgrade to 3.x), 2 moderate in `react-router-dom` (fix = major upgrade
+  to 7.x). Left for a dedicated upgrade.
+
+---
+
 ## [2.0.6] - 2026-11-05 (Atmospheric entry - Collins et al. 2005)
 
 ### Changed

@@ -1,4 +1,5 @@
-FROM node:18-slim
+# Development server image (production frontend is deployed to Azure Static Web Apps)
+FROM node:22-slim
 
 WORKDIR /app
 
@@ -6,7 +7,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm ci --no-audit --no-fund
 
 # Copy application files
 COPY . .

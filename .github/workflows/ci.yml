@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api-tests:
+    name: API tests (Jest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: asteroid-impact-simulator/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: asteroid-impact-simulator/api/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - name: Jest (incl. historical events regression suite)
+        run: npx jest --ci --silent
+
+  web-build:
+    name: Web typecheck + build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: asteroid-impact-simulator/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: asteroid-impact-simulator/web/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+
+  api-docker:
+    name: API Docker image (build + health check)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t neo-api:ci asteroid-impact-simulator/api
+      - name: Run container and check health + one simulation
+        run: |
+          docker run -d --name api -p 7071:7071 neo-api:ci
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:7071/api/health && break
+            sleep 1
+          done
+          curl -sf http://localhost:7071/api/health
+          curl -sf -X POST http://localhost:7071/api/simulate/impact \
+            -H 'Content-Type: application/json' \
+            -d '{"diameter":50,"velocity":12.8,"angle":45,"density":7800,"composition":"iron","impactLocation":{"lat":35.03,"lon":-111.02}}' \
+            | head -c 300
+          test "$(docker exec api id -u)" != "0" || { echo "Container runs as root"; exit 1; }
+      - name: Container logs on failure
+        if: failure()
+        run: docker logs api || true
