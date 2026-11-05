@@ -14,6 +14,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.5] - 2026-11-05 (Review fixes - blast, airbursts, craters)
+
+### Fixed
+- **`atmosphereModel.js` never loaded.** Three `×` characters in code were a
+  SyntaxError, silently caught: blast always used sea-level air and Mach reflection
+  was never applied, so the deprecated x7 altitude factor was always used.
+- **Airburst energy cut by a "retention factor"** (x0.10 for D < 20 m). Removed:
+  airburst energy is deposited in the air and drives the blast. Chelyabinsk:
+  0.044 -> 0.435 Mt (observed ~0.4-0.5 Mt).
+- **Empirical altitude multiplier on blast radii (up to x7) removed.** Burst
+  altitude is now geometric: slant range from the burst point -> ground range.
+- **Blast curve replaced** by Kinney & Graham (1985): one smooth fit instead of a
+  piecewise fit with jumps up to 15x at its breakpoints. Ground reflection = 2x yield.
+- **Collapse zone used the 7 kPa radius** with 70% mortality; now 20 kPa as documented.
+- **Ionizing radiation zone set to 0** (does not exist for asteroid impacts).
+- **Small iron impactors (< 50 m) crashed** (HTTP 500): code still called the
+  `smallIronCraterPhysics` module removed in v2.1.0-pure. All compositions use Collins.
+- **Collins complex crater formula** was missing the `/ D_c^0.13` term (+16%) and
+  tested the transition on the transient instead of the final diameter.
+
+### Results vs observations
+| Event | Before | After | Observed |
+|---|---|---|---|
+| Chelyabinsk energy | 0.044 Mt | 0.435 Mt | ~0.4-0.5 Mt |
+| Chelyabinsk deaths | 48,927 | 0 | 0 |
+| Chelyabinsk glass breakage | - | 111 km | up to ~100+ km |
+| Tunguska 7 kPa radius | 24 km* | 28 km | tree fall ~26 km |
+| Chicxulub crater | 150 km | 129 km | ~150-180 km |
+
+\* with the x7 factor compensating a 50% energy cut.
+
+### Tests
+- New `src/tests/historicalEvents.test.js` (17 tests): Hiroshima, Chelyabinsk,
+  Tunguska, Chicxulub, Meteor Crater, invariants. 8 of them fail on v2.0.4.
+- Meteor Crater is marked `test.failing`: 1.55 km vs ~1.2 km observed because the
+  default path feeds Collins the entry velocity instead of the ground velocity.
+- `rk4Integration.test.js` (a script with no tests) renamed `rk4Comparison.script.js`.
+- Jest: 182/182, no failing suite.
+
+---
+
 ## [2.0.4] - 2026-11-05 (Review fixes - correctness)
 
 Note: entries for 2.0.0-2.0.3 are missing from this file.

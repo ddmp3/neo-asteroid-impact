@@ -131,44 +131,31 @@ function calculateShockJump(P1, rho1, T1, shockVelocity, gamma = 1.4) {
  * @returns {Object} Blast wave properties at distance
  */
 function calculateBlastOverpressure(energy, distance, P0 = 101325, rho0 = 1.225) {
-    // Scaled distance (dimensionless)
-    // Z = R / (E/P₀)^(1/3)  (Sachs scaling)
-    const E_P0 = energy / P0;
-    const scaledDistance = distance / Math.pow(E_P0, 1/3);
+    // v2.0.5: Kinney & Graham (1985) free-air blast curve.
+    //
+    // The previous piecewise fit had discontinuities of up to 15x at its
+    // breakpoints (Z = 0.2, 1, 10), so damage radii jumped as energy changed.
+    // Kinney & Graham is a single smooth fit to free-air TNT blast data,
+    // widely used for explosion effects:
+    //
+    //   ΔP/P0 = 808 [1 + (Z/4.5)²] / sqrt{[1 + (Z/0.048)²][1 + (Z/0.32)²][1 + (Z/1.35)²]}
+    //
+    //   Z = R / W^(1/3)   (m / kg^(1/3)), W = TNT mass in kg (4.184e6 J/kg)
+    //
+    // Sachs scaling for non-standard ambient pressure: Z × (P0 / 101325)^(1/3).
+    //
+    // Reference: Kinney, G.F. & Graham, K.J. (1985) "Explosive Shocks in Air",
+    //            2nd ed., Springer, Eq. 7-2.
+    const W_kg = energy / 4.184e6;
+    const scaledDistance = (distance / Math.cbrt(W_kg)) * Math.cbrt(P0 / 101325);
 
-    // Overpressure calculation (Kingery-Bulmash fit to numerical blast data)
-    //
-    // CALIBRATION NOTE:
-    //   Original Brode (1955) formulas overestimate blast radii by ~2×
-    //   Kingery-Bulmash (1984) provides best fit to extensive nuclear test data
-    //
-    // REGIMES:
-    //   1. Very close (Z < 0.2): Strong shock, ΔP/P₀ >> 1
-    //   2. Intermediate (0.2 < Z < 5): Moderate shock (most damage)
-    //   3. Far (Z > 5): Weak shock, acoustic wave
-    //
-    // FORMULA (Kingery-Bulmash 1984, validated Trinity to Tsar Bomba):
-    let overpressure_ratio;
-
-    if (scaledDistance < 0.2) {
-        // Very close: Strong shock approximation
-        // ΔP/P₀ ∝ Z^(-3) for spherical blast
-        // Coefficient calibrated to Hiroshima/Nagasaki data
-        overpressure_ratio = 200 * Math.pow(scaledDistance / 0.2, -3);
-    } else if (scaledDistance < 1.0) {
-        // Close to moderate: Intermediate regime (MOST IMPORTANT for casualties)
-        // ΔP/P₀ ≈ 1.8 × Z^(-2.5)  (Kingery-Bulmash fit)
-        // This regime determines building collapse zones
-        overpressure_ratio = 1.8 * Math.pow(scaledDistance, -2.5);
-    } else if (scaledDistance < 10.0) {
-        // Moderate to far: Transition regime
-        // ΔP/P₀ ≈ 0.3 × Z^(-1.3)  (empirical decay, softer than -1.5)
-        overpressure_ratio = 0.3 * Math.pow(scaledDistance, -1.3);
-    } else {
-        // Far field: Weak shock / acoustic wave
-        // ΔP/P₀ ≈ 0.01 × Z^(-1)  (linear acoustic, unchanged)
-        overpressure_ratio = 0.01 * Math.pow(scaledDistance, -1);
-    }
+    const Z = scaledDistance;
+    const overpressure_ratio = 808 * (1 + Math.pow(Z / 4.5, 2)) /
+        Math.sqrt(
+            (1 + Math.pow(Z / 0.048, 2)) *
+            (1 + Math.pow(Z / 0.32, 2)) *
+            (1 + Math.pow(Z / 1.35, 2))
+        );
 
     const overpressure = overpressure_ratio * P0;  // Pascals
     const total_pressure = P0 + overpressure;
@@ -251,100 +238,70 @@ function categorizeBlastDamage(overpressure_kPa) {
  * @returns {Object} Blast zone radii in meters
  */
 function calculateBlastZones(energy, altitude = 0, apply_mach_reflection = true) {
-    // Get atmospheric properties at burst altitude (Task 3.1: USSA 1976)
-    let P0, rho0;
-    try {
-        const atmosphere = require('./atmosphereModel');
-        const atm = atmosphere.getAtmosphericProperties(altitude);
-        P0 = atm.pressure;
-        rho0 = atm.density;
-    } catch (err) {
-        // Fallback to sea level if atmosphereModel not available
-        P0 = 101325;   // 1 atm
-        rho0 = 1.225;  // kg/m³
-    }
+    // v2.0.5: Ground-range blast zones for surface bursts AND airbursts.
+    //
+    // Damage happens at the GROUND, so:
+    //   1. Overpressure is evaluated with ground-level (sea-level) ambient air.
+    //      (Before v2.0.5, atmosphereModel.js failed to load because of a "×"
+    //      character in code, so this silently fell back to sea level anyway,
+    //      and Mach reflection was never applied.)
+    //   2. Ground reflection doubles the effective yield (standard hemispherical
+    //      / reflected-wave approximation, Kinney & Graham 1985). This replaces
+    //      the former radius multiplier for Mach reflection, which would double
+    //      count the same effect.
+    //   3. Each threshold is first found as a SLANT range R from the burst point,
+    //      then converted to a ground range: r = sqrt(R² - h²), or 0 if R < h.
+    //      Before v2.0.5 slant ranges were used directly as ground radii, so a
+    //      burst at 30 km still produced "building collapse" zones on the ground;
+    //      an empirical x7 altitude factor then inflated them further.
+    //
+    // Checks (see tests/historicalEvents.test.js):
+    //   - Hiroshima (15 kt, 580 m): 35 kPa at ~1.3 km ground range
+    //   - Chelyabinsk (~0.5 Mt, ~27 km): no structural zone, glass breakage ~100+ km
+    //   - Tunguska (~5-12 Mt, ~8 km): 7 kPa at ~25-40 km (tree fall ~26 km)
+    const P0 = 101325;
+    const rho0 = 1.225;
+    const h = Math.max(0, altitude || 0);
+    const reflectedEnergy = 2 * energy;
 
-    // Find radius where overpressure reaches threshold
-    // Binary search for each threshold
-    function findRadiusForOverpressure(targetOverpressure_kPa) {
-        let r_min = 10;     // Start at 10m
-        let r_max = 1e6;    // Max 1000 km
-        let tolerance = 1;  // 1 meter tolerance
-
-        for (let iter = 0; iter < 50; iter++) {
-            const r_mid = (r_min + r_max) / 2;
-            const blast = calculateBlastOverpressure(energy, r_mid, P0, rho0);
-
+    function findSlantRange(targetOverpressure_kPa) {
+        // Overpressure decreases monotonically with distance: geometric bisection
+        let r_min = 0.01;
+        let r_max = 1e7;
+        for (let iter = 0; iter < 200; iter++) {
+            const r_mid = Math.sqrt(r_min * r_max);
+            const blast = calculateBlastOverpressure(reflectedEnergy, r_mid, P0, rho0);
             if (blast.overpressure_kPa > targetOverpressure_kPa) {
                 r_min = r_mid;
             } else {
                 r_max = r_mid;
             }
-
-            if (r_max - r_min < tolerance) break;
+            if (r_max / r_min < 1 + 1e-6) break;
         }
-
-        return (r_min + r_max) / 2;
+        return Math.sqrt(r_min * r_max);
     }
 
-    // Calculate radii for damage thresholds (SPHERICAL blast wave at burst altitude)
-    const zones_base = {
-        crater_formation: findRadiusForOverpressure(200),      // 200 kPa
-        total_destruction: findRadiusForOverpressure(70),      // 70 kPa
-        severe_collapse: findRadiusForOverpressure(20),        // 20 kPa
-        moderate_structural: findRadiusForOverpressure(7),     // 7 kPa
-        minor_structural: findRadiusForOverpressure(3.5),      // 3.5 kPa
-        window_shattering: findRadiusForOverpressure(0.7),     // 0.7 kPa
+    function groundRange(targetOverpressure_kPa) {
+        const R = findSlantRange(targetOverpressure_kPa);
+        return R > h ? Math.sqrt(R * R - h * h) : 0;
+    }
+
+    const zones_final = {
+        crater_formation: groundRange(200),      // 200 kPa
+        total_destruction: groundRange(70),      // 70 kPa
+        severe_reinforced: groundRange(35),      // 35 kPa
+        severe_collapse: groundRange(20),        // 20 kPa
+        moderate_structural: groundRange(7),     // 7 kPa
+        minor_structural: groundRange(3.5),      // 3.5 kPa
+        window_shattering: groundRange(0.7),     // 0.7 kPa
     };
 
-    // Task 3.1: Apply Mach reflection enhancement for airbursts
-    // PHYSICS: For airbursts, the blast wave reflects off the ground creating a Mach stem
-    // This INCREASES ground overpressure compared to spherical wave alone
-    const zones_final = {};
-    let mach_reflection_applied = false;
-
-    if (apply_mach_reflection && altitude > 0) {
-        // Load atmosphere module for Mach reflection calculation
-        try {
-            const atmosphere = require('./atmosphereModel');
-
-            // Apply Mach reflection to each zone
-            // Input: spherical blast radius at burst altitude
-            // Output: enhanced ground radius due to Mach stem formation
-            for (const [zone_name, radius_spherical] of Object.entries(zones_base)) {
-                const mach = atmosphere.calculateMachReflection(altitude, radius_spherical);
-                zones_final[zone_name] = mach.enhanced_radius;
-
-                // Store Mach reflection metadata for most important zone (severe_collapse)
-                if (zone_name === 'severe_collapse') {
-                    zones_final.mach_reflection = {
-                        enhancement_factor: mach.enhancement_factor,
-                        height_ratio: mach.height_ratio,
-                        burst_type: mach.type,
-                        optimal_height: mach.optimal_height
-                    };
-                }
-            }
-
-            mach_reflection_applied = true;
-        } catch (err) {
-            // Fallback: no Mach reflection if atmosphere module unavailable
-            Object.assign(zones_final, zones_base);
-        }
-    } else {
-        // Ground burst or Mach reflection disabled: use base radii
-        Object.assign(zones_final, zones_base);
-    }
-
-    // Add metadata
     zones_final.energy = energy;
-    zones_final.altitude = altitude;
+    zones_final.altitude = h;
     zones_final.ambient_pressure = P0;
     zones_final.ambient_density = rho0;
-    zones_final.physics_model = mach_reflection_applied ?
-        'Rankine-Hugoniot + Sedov-Taylor + Mach Reflection (USSA 1976)' :
-        'Rankine-Hugoniot + Sedov-Taylor';
-    zones_final.altitude_adjusted = altitude > 0;
+    zones_final.physics_model = 'Kinney & Graham (1985) blast curve, ground reflection, slant-to-ground range';
+    zones_final.altitude_adjusted = h > 0;
 
     return zones_final;
 }

@@ -296,36 +296,12 @@ class PhysicsEngine {
         //
         // ===========================================================================================
 
-        // EXCEPTION: Small iron craters (<50m) use FCM V2 (Wheeler 2017)
-        // Rationale: Atmospheric fragmentation dominates physics for small iron impactors
-        if ((comp === 'iron' || comp === 'metal') && impactorDiameter < 50) {
-            console.log(`\n[PhysicsEngine] Small iron crater detected (D=${impactorDiameter}m) - Using FCM V2 physics`);
-
-            const fcm_result = await this.smallIronCraterPhysics.calculateSmallIronCrater({
-                diameter: impactorDiameter,
-                velocity: velocity,
-                angle: angle,
-                density: impactorDensity,
-                composition: comp,
-                targetDensity: targetDensity
-            });
-
-            // Return FCM-based crater result directly
-            return {
-                diameter: fcm_result.crater_diameter,
-                depth: fcm_result.crater_depth,
-                volume: fcm_result.crater_volume,
-                transientDiameter: fcm_result.crater_diameter / 1.25,
-                craterType: fcm_result.crater_type,
-                regime: fcm_result.regime,
-                physics_model: 'FCM_V2_Wheeler_2017',
-                fragmentation_altitude_km: fcm_result.fragmentation_altitude_km,
-                survival_fraction: fcm_result.survival_fraction,
-                energy_deposited_atmospheric_MT: fcm_result.energy_deposited_atmospheric_MT,
-                fcm_diagnostics: fcm_result.fcm_diagnostics,
-                warning: fcm_result.warning
-            };
-        }
+        // v2.0.5: The small-iron (<50 m) FCM branch called this.smallIronCraterPhysics,
+        // which was removed in v2.1.0-pure. Every iron impactor under 50 m threw
+        // "Cannot read properties of undefined" (HTTP 500 on /api/simulate/impact,
+        // ~50% failed Monte Carlo samples). All compositions now use Collins (2005);
+        // whether a small iron reaches the ground is decided upstream by the
+        // atmospheric fragmentation model.
 
         // MAIN PATH: Use Collins et al. (2005) validated formula
         // Reference: Collins, Melosh & Marcus (2005) "Earth Impact Effects Program"
@@ -363,22 +339,25 @@ class PhysicsEngine {
         // Transition at D_transient ≈ 3.2 km on Earth (gravity-dependent)
         let diameter, depth, craterType;
 
-        if (D_transient < 3200) {
-            // SIMPLE crater (< 3.2 km): bowl-shaped
-            // Transient→final expansion: 1.25× (empirically validated)
-            // NOTE: Croft (1985) applies to complex craters (see line 404), not simple
-            diameter = 1.25 * D_transient;
+        // v2.0.5: Collins et al. (2005), Eqs. 22 and 27, with D_c = 3.2 km on Earth.
+        //   Simple:  D_fr = 1.25 D_tc
+        //   Complex: D_fr = 1.17 D_tc^1.13 / D_c^0.13   (all lengths in the same unit)
+        // The criterion is on the FINAL diameter (simple if 1.25 D_tc < D_c).
+        // Before v2.0.5 the D_c^0.13 divisor was missing (complex craters +16%)
+        // and the transition was tested on D_tc instead of D_fr.
+        const D_c = 3200; // m, simple-to-complex transition on Earth
+        const D_simple = 1.25 * D_transient;
+
+        if (D_simple < D_c) {
+            // SIMPLE crater: bowl-shaped
+            diameter = D_simple;
             depth = diameter / 5;
             craterType = 'simple';
         } else {
-            // COMPLEX crater (≥ 3.2 km): central peak, terraces, massive collapse
-            // Collins et al. (2005) Equation 7: D_final = 1.17 × D_transient^1.13
-            // This is the PEER-REVIEWED formula from hydrocode simulations
-            // NO empirical calibration - direct from Collins et al. (2005) Table 2
-            const D_tc_km = D_transient / 1000;
-            const D_final_km = 1.17 * Math.pow(D_tc_km, 1.13);
-            diameter = D_final_km * 1000;
-            depth = 0.1 * diameter; // Much shallower due to gravitational collapse
+            // COMPLEX crater: central peak, terraces, collapse
+            diameter = 1.17 * Math.pow(D_transient, 1.13) / Math.pow(D_c, 0.13);
+            // Collins et al. (2005) Eq. 28: d_fr = 0.4 D_fr^0.3 (km)
+            depth = 0.4 * Math.pow(diameter / 1000, 0.3) * 1000;
             craterType = 'complex';
         }
 
@@ -582,16 +561,27 @@ class PhysicsEngine {
         //    - Relevant for nuclear explosions, not asteroids
         //    - Keep minimal estimate
 
-        const fireball = blast_zones.total_destruction;  // 200+ kPa (R-H physics)
+        // v2.0.5: All radii below are GROUND ranges (rankineHugoniot converts
+        // slant range from the burst point to ground range).
 
-        // Thermal radiation - keep empirical (well-validated, different physics)
-        // Stefan-Boltzmann radiation ~ E^0.41 scaling confirmed by observations
-        const thermalRadiation = 5300 * Math.pow(megatons, 0.41); // meters
+        // "fireball" key kept for API/UI compatibility: it is the 70 kPa
+        // total-destruction ground radius, not a vaporization fireball.
+        const fireball = blast_zones.total_destruction;  // 70 kPa
 
-        const airblast = blast_zones.moderate_structural;  // 20 kPa (R-H physics)
+        // Thermal radiation - empirical slant range (5300 m × Mt^0.41),
+        // converted to ground range like the blast zones.
+        const thermalSlant = 5300 * Math.pow(megatons, 0.41); // meters
+        const h = Math.max(0, altitude || 0);
+        const thermalRadiation = thermalSlant > h ? Math.sqrt(thermalSlant * thermalSlant - h * h) : 0;
 
-        // Ionizing radiation - minimal for asteroids (not nuclear)
-        const radiation = 200 * Math.pow(megatons, 0.41); // meters
+        // v2.0.5: building collapse threshold is 20 kPa (severe_collapse), as the
+        // zone description states. Before v2.0.5 the 7 kPa radius was used with
+        // a 70% mortality rate.
+        const airblast = blast_zones.severe_collapse;  // 20 kPa
+
+        // v2.0.5: Ionizing radiation does not exist for asteroid impacts (no
+        // nuclear reaction). Kept as 0 for API compatibility.
+        const radiation = 0;
 
         return {
             fireball: fireball,
@@ -599,15 +589,16 @@ class PhysicsEngine {
             airblastRadius: airblast,
             thermalRadius: thermalRadiation,
 
-            // Phase 1.4: Additional blast zones for detailed analysis
             blast_physics: {
-                severe_collapse: blast_zones.severe_collapse,           // 35 kPa
-                severe_reinforced: blast_zones.severe_reinforced,       // 70 kPa
                 crater_formation: blast_zones.crater_formation,         // 200 kPa
-                window_shattering: blast_zones.window_shattering,       // 3 kPa
-                minor_structural: blast_zones.minor_structural,         // 10 kPa
-                overpressure_model: 'Rankine-Hugoniot (Brode 1955)',
-                validated_against: 'Trinity, Hiroshima, Tunguska'
+                severe_reinforced: blast_zones.severe_reinforced,       // 35 kPa
+                severe_collapse: blast_zones.severe_collapse,           // 20 kPa
+                moderate_structural: blast_zones.moderate_structural,   // 7 kPa
+                minor_structural: blast_zones.minor_structural,         // 3.5 kPa
+                window_shattering: blast_zones.window_shattering,       // 0.7 kPa
+                burst_altitude_m: h,
+                overpressure_model: blast_zones.physics_model,
+                validated_against: 'Hiroshima, Chelyabinsk, Tunguska (tests/historicalEvents.test.js)'
             }
         };
     }
@@ -1139,28 +1130,12 @@ class PhysicsEngine {
                 density
             );
 
-            // Apply atmospheric retention factor to energy (old method)
-            const retentionFactor = this.atmosphericFragmentation.getAtmosphericRetentionFactor(
-                fragmentation,
-                diameter
-            );
-
-            // Apply retention to both total and effective energy
-            energy.joules *= retentionFactor;
-            energy.tntTons *= retentionFactor;
-            energy.megatons *= retentionFactor;
-            energy.effective_joules *= retentionFactor;
-            energy.effective_tntTons *= retentionFactor;
-            energy.effective_megatons *= retentionFactor;
-        }
-
-        // Calculate blast zone adjustments for airbursts
-        let blastAdjustment = null;
-        if (!fragmentation.craterFormed) {
-            blastAdjustment = this.atmosphericFragmentation.calculateAirburstBlastAdjustment(
-                fragmentation.altitude,
-                energy.joules  // Use total kinetic energy for blast (not effective crater energy)
-            );
+            // v2.0.5: No "atmospheric retention factor". In an airburst the
+            // kinetic energy is not lost: it is deposited in the air and drives
+            // the blast wave. The former factor (x0.10 for D < 20 m) cut
+            // Chelyabinsk to 0.04 Mt; an empirical x7 altitude factor on blast
+            // radii then compensated. Both are removed; altitude is now handled
+            // geometrically in the blast model (slant range -> ground range).
         }
 
         // Calculate crater ONLY if object reaches ground
@@ -1219,26 +1194,9 @@ class PhysicsEngine {
         const burstAltitudeForBlast = (fragmentation && fragmentation.altitude) ? fragmentation.altitude : 0;
 
         // Calculate blast zones with Rankine-Hugoniot + USSA 1976 + Mach reflection
-        let blast = this.calculateBlastRadius(energy.joules, burstAltitudeForBlast);
-
-        // DEPRECATED: Old airburst adjustment factor (replaced by Mach reflection in Task 3.1)
-        // Keep this code for backward compatibility with existing adjustment logic
-        if (blastAdjustment && !blast.mach_reflection) {
-            // Only apply old factor if Mach reflection not already applied
-            const factor = blastAdjustment.adjustmentFactor;
-            blast = {
-                fireball: blast.fireball * factor,
-                radiationRadius: blast.radiationRadius * factor,
-                airblastRadius: blast.airblastRadius * factor,
-                thermalRadius: blast.thermalRadius * factor,
-                altitudeAdjustment: {
-                    altitudeKm: blastAdjustment.altitudeKm,
-                    factor: factor,
-                    damageType: blastAdjustment.damageType,
-                    note: blastAdjustment.note + ' (DEPRECATED: Use Mach reflection instead)'
-                }
-            };
-        }
+        // v2.0.5: burst altitude is applied geometrically inside the blast model.
+        // The former empirical altitude multiplier (up to x7) is removed.
+        const blast = this.calculateBlastRadius(energy.joules, fragmentation.craterFormed ? 0 : burstAltitudeForBlast);
 
         // Detect ocean using hybrid approach (USGS + geographic heuristics)
         const oceanData = this.detectOcean(
@@ -1377,8 +1335,8 @@ class PhysicsEngine {
         const zones = {
             fireball: {
                 radius: blast.fireball / 1000, // km
-                mortalityRate: 1.0, // 100% dans la boule de feu
-                description: 'Total vaporization'
+                mortalityRate: 1.0, // 100% (>= 70 kPa overpressure)
+                description: 'Total destruction (>= 70 kPa)'
             },
             thermal: {
                 radius: blast.thermalRadius / 1000, // km
