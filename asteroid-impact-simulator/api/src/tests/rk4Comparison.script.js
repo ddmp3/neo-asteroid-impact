@@ -1,5 +1,5 @@
 /**
- * RK4 Integration Test - Compare Legacy vs RK4 Methods
+ * RK4 vs legacy comparison SCRIPT (not a Jest suite - run with: node src/tests/rk4Comparison.script.js)
  *
  * This test validates:
  * 1. Backward compatibility (legacy method still works)

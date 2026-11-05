@@ -1,6 +1,6 @@
 {
   "name": "neo-asteroid-impact-api",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "Backend API for NEO Asteroid Impact Simulator v2.0.3 - Complete English Translation & Airburst vs Crater Documentation",
   "license": "MIT",
   "main": "src/index.js",

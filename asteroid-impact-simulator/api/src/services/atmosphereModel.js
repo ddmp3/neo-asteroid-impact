@@ -398,16 +398,16 @@ function calculateMachReflection(burst_height, blast_radius) {
         // Very low H/R: High altitude OR very large blast radius
         // Examples: Tsar Bomba (H/R=0.073), Tunguska (H/R=0.27 if R=30km)
         // Strong Mach enhancement - blast wave hits ground at shallow angle
-        M = 1 + 1.2 × Math.exp(-8.0 * H_R);  // Peak 2.2× at H/R→0, decays to 1.5× at H/R=0.1
+        M = 1 + 1.2 * Math.exp(-8.0 * H_R);  // Peak 2.2× at H/R→0, decays to 1.5× at H/R=0.1
     } else if (H_R < 0.5) {
         // Low to moderate H/R: Standard airburst regime
         // Examples: Hiroshima (H/R=0.24), Nagasaki (H/R=0.20)
         // Moderate Mach enhancement
-        M = 1 + 0.5 × Math.exp(-2.0 * (H_R - 0.1));  // Decay from 1.5× to 1.1×
+        M = 1 + 0.5 * Math.exp(-2.0 * (H_R - 0.1));  // Decay from 1.5× to 1.1×
     } else if (H_R < 1.5) {
         // High H/R: Low burst with small radius
         // Weak Mach effect - blast wave too steep
-        M = 1 + 0.2 × Math.exp(-1.0 * (H_R - 0.5));  // Decay from 1.2× to 1.0×
+        M = 1 + 0.2 * Math.exp(-1.0 * (H_R - 0.5));  // Decay from 1.2× to 1.0×
     } else {
         // Very high H/R: Essentially ground burst geometry
         // No Mach enhancement
