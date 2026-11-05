@@ -46,6 +46,67 @@ function yieldStrength(density) {
 }
 
 /**
+ * Effective breakup strength of stony impactors, calibrated on OBSERVED bolides
+ * (v2.1.0). Not a material strength: it absorbs what the model leaves out
+ * (unknown entry angle, taken as 45°; density taken as 3000 kg/m^3; pancake
+ * idealisation).
+ *
+ * Why: with Collins' Eq. 10 (0.33 MPa for 3000 kg/m^3), predicted burst
+ * altitudes of the 360 CNEOS fireballs (JPL/CNEOS, US government sensors) are
+ * +12 km too high on average (MAE 13.3 km).
+ *
+ * How (no circularity): for each CNEOS fireball dated before 2016 (TRAINING set,
+ * n = 125) the strength that reproduces its observed peak-brightness altitude
+ * is found; the median of those values is the nominal strength, the deciles
+ * feed the Monte Carlo. The 2016-2026 fireballs (HOLD-OUT set, n = 235) are
+ * never used to choose anything; they are only scored:
+ *   Collins Eq. 10:        MAE 13.5 km, bias +12.2 km
+ *   calibrated (3.05 MPa): MAE  6.8 km, bias  -1.2 km, 90% band covers 88%
+ * Reproduce with: node scripts/calibrate-stone-strength.js
+ * Data: src/data/validation/cneos_fireballs.csv (retrieved 2026-11-05 from
+ * https://ssd-api.jpl.nasa.gov/fireball.api).
+ */
+const STONE_STRENGTH_PA = 3.05e6;
+// Deciles (p0..p100) of the training-set effective strengths, in Pa
+const STONE_STRENGTH_DECILES_PA = [1.0e4, 3.11e5, 1.03e6, 1.76e6, 2.27e6, 3.05e6, 3.68e6, 4.52e6, 5.65e6, 1.01e7, 4.59e7];
+
+/**
+ * Sample an effective stony strength from the training-set distribution
+ * (log-linear interpolation between deciles, tails clipped to p05-p95).
+ * @param {number} u - uniform random number in [0, 1)
+ */
+function sampleStoneStrength(u) {
+    const q = 0.05 + 0.9 * u;          // clip to p05..p95
+    const pos = q * 10;
+    const i = Math.min(9, Math.floor(pos));
+    const f = pos - i;
+    const a = Math.log(STONE_STRENGTH_DECILES_PA[i]);
+    const b = Math.log(STONE_STRENGTH_DECILES_PA[i + 1]);
+    return Math.exp(a + f * (b - a));
+}
+
+function isIron(composition, density) {
+    const c = (composition || '').toLowerCase();
+    return c === 'iron' || c === 'metal' || (!c && density >= 6000);
+}
+
+/**
+ * Entry model as used by the simulator (v2.1.0):
+ *   - iron: no breakup (NASA PAIR rule, Mathias et al. 2017), drag only
+ *   - stone/ice: Collins (2005) breakup + pancake with the CNEOS-calibrated
+ *     effective strength (or an explicit `strength`, e.g. Monte Carlo sample)
+ */
+function computeImpactorEntry({ diameter, velocity, angle, density, composition = 'rocky', strength = null }) {
+    if (isIron(composition, density)) {
+        return computeEntry({ diameter, velocity, angle, density, breaksUp: false });
+    }
+    return computeEntry({
+        diameter, velocity, angle, density,
+        strength: strength != null ? strength : STONE_STRENGTH_PA
+    });
+}
+
+/**
  * @param {Object} p
  * @param {number} p.diameter - impactor diameter L0 (m)
  * @param {number} p.velocity - atmospheric entry velocity v0 (m/s)
@@ -53,22 +114,26 @@ function yieldStrength(density) {
  * @param {number} p.density  - impactor density rho_i (kg/m^3)
  * @returns {Object} entry result
  */
-function computeEntry({ diameter, velocity, angle, density }) {
+function computeEntry({ diameter, velocity, angle, density, strength = null, breaksUp = true, pancakeFactor = F_P }) {
     const L0 = diameter;
     const v0 = velocity;
     const rho_i = density;
     const theta = Math.max(1, Math.min(90, angle)) * Math.PI / 180;
     const sinT = Math.sin(theta);
 
-    const Y = yieldStrength(rho_i);
+    // Strength: Collins Eq. 10 by default; an explicit value (Pa) can be given
+    // (e.g. sampled in the Monte Carlo, or a population model).
+    const Y = strength != null ? strength : yieldStrength(rho_i);
     const I_f = 4.07 * C_D * H * Y / (rho_i * L0 * v0 * v0 * sinT);
 
     // ---- Intact to the ground --------------------------------------------
-    if (I_f >= 1) {
+    // breaksUp = false: NASA PAIR treats iron impactors as non-breaking
+    // (Mathias et al. 2017); only drag (Eq. 8) applies.
+    if (I_f >= 1 || !breaksUp) {
         // Eq. 8 evaluated at z = 0
         const vGround = v0 * Math.exp(-3 * RHO0 * C_D * H / (4 * rho_i * L0 * sinT));
         return {
-            model: 'Collins et al. (2005) atmospheric entry',
+            model: breaksUp ? 'Collins et al. (2005) atmospheric entry' : 'Collins et al. (2005) drag, no breakup (iron, NASA PAIR rule)',
             strength_Pa: Y,
             I_f,
             breaksUp: false,
@@ -96,7 +161,7 @@ function computeEntry({ diameter, velocity, angle, density }) {
     };
 
     // ---- Airburst altitude (Eq. 18) --------------------------------------
-    const zBurstRaw = zStar - 2 * H * Math.log(1 + (l / (2 * H)) * Math.sqrt(F_P * F_P - 1));
+    const zBurstRaw = zStar - 2 * H * Math.log(1 + (l / (2 * H)) * Math.sqrt(pancakeFactor * pancakeFactor - 1));
     const airburst = zBurstRaw > 0;
     const zEnd = airburst ? zBurstRaw : 0;
 
@@ -131,6 +196,11 @@ function computeEntry({ diameter, velocity, angle, density }) {
 
 module.exports = {
     computeEntry,
+    computeImpactorEntry,
+    sampleStoneStrength,
+    isIron,
+    STONE_STRENGTH_PA,
+    STONE_STRENGTH_DECILES_PA,
     yieldStrength,
     airDensity,
     constants: { RHO0, H, C_D, F_P }
