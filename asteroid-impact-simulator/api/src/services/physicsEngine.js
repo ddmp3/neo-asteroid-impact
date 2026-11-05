@@ -12,6 +12,7 @@ const USGSService = require('./usgsService');
 const AtmosphericFragmentation = require('./atmosphericFragmentation');
 const TerrainAwareBlastService = require('./terrainAwareBlast');
 const AtmosphericTrajectory = require('./atmosphericTrajectory'); // v1.7.1: RK4 integration for rigorous energy calculations
+const collinsEntry = require('./collinsEntry'); // v2.0.6: Collins et al. (2005) atmospheric entry (default path)
 // REMOVED: smallIronCraterPhysics (empirical calibration C=14.10 violates scientific principles)
 const { calculateEffectiveEnergy, calculateCouplingEfficiency } = require('./energyCoupling'); // v2.0.1 Phase 1.4 Task 1.1: Angle-dependent energy coupling
 const { calculateCompleteEnergyBudget } = require('./energyBudget'); // v2.0.1 Phase 1.4 Task 1.2: Complete energy budget
@@ -94,6 +95,71 @@ class PhysicsEngine {
      * @param {number} density - Asteroid density in kg/m³ (default: 3000)
      * @returns {number} Mass in kg
      */
+    /**
+     * Convert a Collins (2005) entry result into the `fragmentation` object
+     * shape the API and UI already consume (impactType, altitude, craterFormed,
+     * details.*), plus the new surface/burst velocities.
+     * @param {Object} entry - result of collinsEntry.computeEntry()
+     * @returns {Object} fragmentation
+     */
+    buildFragmentationFromEntry(entry) {
+        const { RHO0, H } = collinsEntry.constants;
+        const reachesGround = !entry.airburst;
+
+        let impactType;
+        if (entry.airburst) {
+            const km = entry.burstAltitude / 1000;
+            impactType = km > 20 ? 'high_altitude_airburst' : km > 5 ? 'airburst' : 'low_altitude_airburst';
+        } else {
+            impactType = entry.breaksUp ? 'low_airburst_with_impact' : 'ground';
+        }
+
+        // Ram pressure at breakup: rho(z*) v^2 equals the strength by construction;
+        // report it at the breakup altitude when there is one.
+        const v = entry.velocityAtBurst || entry.groundVelocity || 0;
+        const ramPressure = entry.breaksUp
+            ? entry.strength_Pa
+            : RHO0 * v * v;
+
+        const altitude = entry.airburst ? entry.burstAltitude : 0;
+        const breakupKm = entry.breakupAltitude != null ? (entry.breakupAltitude / 1000).toFixed(1) : null;
+
+        let note;
+        if (entry.airburst) {
+            note = `Breaks up at ${breakupKm} km, fragment cloud explodes at ${(altitude / 1000).toFixed(1)} km - no crater`;
+        } else if (entry.breaksUp) {
+            note = `Breaks up at ${breakupKm} km, fragment cloud reaches the ground at ${(entry.groundVelocity / 1000).toFixed(1)} km/s`;
+        } else {
+            note = `Reaches the ground intact at ${(entry.groundVelocity / 1000).toFixed(1)} km/s`;
+        }
+
+        return {
+            willFragment: entry.breaksUp,
+            impactType,
+            altitude,
+            energyDepositionAltitude: altitude,
+            craterFormed: reachesGround,
+            reachesGround,
+            breakupAltitude: entry.breakupAltitude,
+            burstAltitude: entry.burstAltitude,
+            groundVelocity: entry.groundVelocity,
+            velocityAtBurst: entry.velocityAtBurst,
+            strength: entry.strength_Pa,
+            ramPressure,
+            note,
+            model: entry.model,
+            details: {
+                fragmentationCriterion: entry.breaksUp
+                    ? 'Ram pressure exceeds yield strength (Collins 2005 Eq. 11)'
+                    : 'Strength sufficient to reach the ground intact (I_f >= 1)',
+                ramPressureMPa: ramPressure / 1e6,
+                strengthMPa: entry.strength_Pa / 1e6,
+                I_f: entry.I_f,
+                scaleHeight_m: H
+            }
+        };
+    }
+
     calculateMass(diameter, density = this.DEFAULT_ASTEROID_DENSITY) {
         const radius = diameter / 2;
         const volume = (4/3) * Math.PI * Math.pow(radius, 3);
@@ -1121,14 +1187,19 @@ class PhysicsEngine {
             // Note: Legacy mode doesn't use RK4, so thermal ablation = 0
             energy = this.calculateImpactEnergy(mass, finalVelocity, angle, composition, diameter, 0);
 
-            // NEW: Analyze atmospheric fragmentation (Hills-Goda 1993)
-            // Critical for asteroids <100m - determines airburst vs ground impact
-            fragmentation = this.atmosphericFragmentation.analyzeFragmentation(
+            // v2.0.6: Atmospheric entry - Collins, Melosh & Marcus (2005).
+            // One model decides breakup, airburst altitude and surface velocity
+            // (the "Impact Earth!" model). Replaces the Hills-Goda breakup check,
+            // which declared an airburst at the breakup-onset altitude and gave
+            // no surface velocity, so craters used the entry velocity
+            // (Meteor Crater: 1.55 km instead of ~1.2 km).
+            const entry = collinsEntry.computeEntry({
                 diameter,
-                finalVelocity,
-                composition,
+                velocity: finalVelocity,
+                angle,
                 density
-            );
+            });
+            fragmentation = this.buildFragmentationFromEntry(entry);
 
             // v2.0.5: No "atmospheric retention factor". In an airburst the
             // kinetic energy is not lost: it is deposited in the air and drives
@@ -1148,10 +1219,14 @@ class PhysicsEngine {
                 // RK4 mode: Use actual final velocity after atmospheric drag
                 impactVelocity = rk4Result.summary.final_velocity_m_s;
                 console.log(`[PhysicsEngine] Using RK4 final velocity: ${impactVelocity.toFixed(1)} m/s (initial: ${velocity.toFixed(1)} m/s)`);
+            } else if (fragmentation.groundVelocity) {
+                // v2.0.6: surface velocity after atmospheric drag (Collins 2005).
+                // The Collins crater law takes the velocity AT THE SURFACE.
+                impactVelocity = fragmentation.groundVelocity;
+                console.log(`[PhysicsEngine] Using Collins surface velocity: ${impactVelocity.toFixed(1)} m/s (entry: ${finalVelocity.toFixed(1)} m/s)`);
             } else {
-                // Legacy mode: Use simplified calculation
                 impactVelocity = finalVelocity;
-                console.log(`[PhysicsEngine] Using legacy velocity: ${impactVelocity.toFixed(1)} m/s`);
+                console.log(`[PhysicsEngine] Using entry velocity: ${impactVelocity.toFixed(1)} m/s`);
             }
 
             // v2.1.0 Phase 1.4: Use EFFECTIVE CRATER ENERGY (angle-dependent coupling applied)

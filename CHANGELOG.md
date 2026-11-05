@@ -14,6 +14,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.6] - 2026-11-05 (Atmospheric entry - Collins et al. 2005)
+
+### Changed
+- **Default atmospheric entry model is now Collins, Melosh & Marcus (2005)**, the
+  model of the "Impact Earth!" calculator (`src/services/collinsEntry.js`):
+  yield strength from density, breakup altitude (Eq. 11), fragment-cloud
+  ("pancake") spreading (Eqs. 12-13), airburst altitude at 7x spreading (Eq. 18),
+  and drag integrated numerically to get the velocity at burst or at the surface.
+- It replaces the Hills-Goda check in the default path, which declared an airburst
+  at the breakup-onset altitude and gave no surface velocity.
+- **Craters now use the surface velocity**, as the Collins crater law requires
+  (before: entry velocity). Meteor Crater: 1.55 -> 1.42 km (observed ~1.2 km).
+- Monte Carlo uses the same entry model (airburst samples -> crater 0).
+- Response `fragmentation` keeps its fields and adds `breakupAltitude`,
+  `burstAltitude`, `groundVelocity`, `velocityAtBurst`.
+
+### Results
+| Event | v2.0.5 | v2.0.6 | Observed |
+|---|---|---|---|
+| Chelyabinsk burst altitude | 26.3 km | 32.1 km | ~27-30 km |
+| Tunguska burst altitude | 7.1 km | 7.4 km | ~5-10 km |
+| Meteor Crater (45°) | 1.55 km | 1.42 km | ~1.2 km |
+| Iron 30 m, 15 km/s | 1.12 km | 0.67 km (lands at 4.7 km/s) | - |
+
+### Tests
+- Meteor Crater test no longer `test.failing`. Jest 182/182.
+- Monte Carlo tests accept crater = 0 for shallow-angle samples that airburst
+  (at least 80% of the Barringer-like samples must still crater).
+
+### Known limits
+- Blast energy for ground impacts still uses the entry kinetic energy, not the
+  energy left at the surface.
+- The RK4 path (`use_rk4`) is unchanged and still not exposed by the API/UI.
+
+---
+
 ## [2.0.5] - 2026-11-05 (Review fixes - blast, airbursts, craters)
 
 ### Fixed

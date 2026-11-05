@@ -150,7 +150,7 @@ describe('Meteor Crater (50 m iron, 12.8 km/s entry)', () => {
     // that velocity Collins gives ~1.26 km. When atmospheric deceleration is
     // wired into the default path, this test will start passing: change
     // `test.failing` to `test`.
-    test.failing('final crater 0.9-1.5 km (observed ~1.2 km)', async () => {
+    test('final crater 0.9-1.5 km (observed ~1.2 km)', async () => {
         const r = await makeEngine().simulateImpact({
             diameter: 50, velocity: 12800, angle: 45, density: 7800,
             composition: 'iron',
