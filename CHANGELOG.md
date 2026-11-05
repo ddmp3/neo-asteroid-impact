@@ -14,6 +14,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.4] - 2026-11-05 (Review fixes - correctness)
+
+Note: entries for 2.0.0-2.0.3 are missing from this file.
+
+### Fixed
+- **Casualties double-counted (default model).** The four blast zones are concentric
+  discs, but the full population of each disc was summed, counting inner populations
+  up to 4 times (300 m impactor on Paris: 32.0M deaths for 12.7M people in range).
+  Zones are now split into disjoint rings; each ring gets the highest mortality rate
+  among the zones covering it. Totals can no longer exceed the population in range.
+  Response adds `ringPopulation` and `appliedMortalityRate` per zone.
+- **Velocity inflated.** UI (11-72 km/s), Swagger and presets give the atmospheric
+  entry velocity, but escape velocity was added again (11 km/s became 15.7 km/s,
+  energy roughly doubled at low speed). Entry velocity is now used as given, with
+  escape velocity (11.19 km/s) as the physical minimum.
+- **Monte Carlo uncertainty returned 0% successful samples.** `calculateCraterSize`
+  is async and was called without `await`, so every sample failed. The 5 failing
+  Jest tests in `monteCarloSimulation.test.js` now pass (165/165).
+
+### Known follow-ups (not in this release)
+- Crater constant C was calibrated with the inflated velocities and should be refit.
+- Airburst energy retention factor (x0.10 for small bodies) and the x7 altitude blast
+  factor compensate each other; Chelyabinsk still yields ~49k deaths (actual: 0).
+- "fireball" zone is the 70 kPa overpressure radius with 100% mortality.
+
+---
+
 ## [1.7.11] - 2025-10-17 (**LATEST: Phase 1.3 Complete - C Uncertainty Integration**)
 
 ### 🎯 Executive Summary

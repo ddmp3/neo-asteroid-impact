@@ -101,25 +101,26 @@ class PhysicsEngine {
     }
 
     /**
-     * Calculate impact velocity accounting for Earth's gravity
-     * @param {number} initialVelocity - Initial velocity in m/s
-     * @param {number} angle - Impact angle in degrees (0 = horizontal, 90 = vertical)
-     * @returns {number} Final impact velocity in m/s
+     * Resolve the atmospheric entry velocity used by the simulation.
+     *
+     * The UI (11-72 km/s), the Swagger contract ("Impact velocity", 11-72 km/s)
+     * and the historical presets (Chelyabinsk 19 km/s, Barringer 12.8 km/s) all
+     * give the velocity AT ATMOSPHERIC ENTRY, which already includes Earth's
+     * gravitational acceleration. Adding escape velocity again (as done before
+     * v2.0.4) inflated 11 km/s to 15.7 km/s and roughly doubled the energy.
+     *
+     * No object falling from space can enter the atmosphere slower than Earth's
+     * escape velocity (~11.19 km/s), so lower inputs (the API historically
+     * accepts 5-75 km/s) are raised to that physical minimum. The result is
+     * continuous: 5 -> 11.19, 11 -> 11.19, 12 -> 12 km/s.
+     *
+     * @param {number} initialVelocity - Atmospheric entry velocity in m/s
+     * @param {number} angle - Unused; kept for API compatibility
+     * @returns {number} Atmospheric entry velocity in m/s
      */
     calculateImpactVelocity(initialVelocity, angle = 45) {
-        // Earth's escape velocity
         const escapeVelocity = Math.sqrt(2 * this.G * this.EARTH_MASS / this.EARTH_RADIUS);
-
-        // Combine initial velocity with Earth's gravitational acceleration
-        const angleRad = angle * Math.PI / 180;
-        const verticalComponent = initialVelocity * Math.sin(angleRad);
-        const horizontalComponent = initialVelocity * Math.cos(angleRad);
-
-        // Approximate final velocity (simplified model)
-        const finalVertical = Math.sqrt(verticalComponent * verticalComponent + escapeVelocity * escapeVelocity);
-        const finalVelocity = Math.sqrt(finalVertical * finalVertical + horizontalComponent * horizontalComponent);
-
-        return finalVelocity;
+        return Math.max(initialVelocity, escapeVelocity);
     }
 
     /**
@@ -1396,40 +1397,64 @@ class PhysicsEngine {
             }
         };
 
-        // Calcul des victimes par zone avec VRAIE POPULATION
+        // v2.0.4: The zones are concentric discs, so each person must be counted
+        // ONCE. Before v2.0.4 the full population of every disc was summed, which
+        // counted the inner population up to 4 times (e.g. 32M deaths for a
+        // 12.7M-people area around Paris).
+        //
+        // Method: sort the discs by radius, split them into disjoint rings, and
+        // apply to each ring the highest mortality rate among the zones that
+        // cover it. Totals can therefore never exceed the population in range.
         let totalCasualties = 0;
         let totalInjured = 0;
         const detailedZones = {};
         let largestZoneCities = [];
-        let maxRadius = 0;
 
-        for (const [zoneName, zone] of Object.entries(zones)) {
-            // Obtenir la VRAIE population dans ce rayon
+        const sortedZones = Object.entries(zones)
+            .map(([name, zone]) => ({ name, ...zone, radius: Math.max(0, zone.radius || 0) }))
+            .sort((a, b) => a.radius - b.radius);
+
+        let innerPopulation = 0;
+
+        for (let i = 0; i < sortedZones.length; i++) {
+            const zone = sortedZones[i];
+
+            // Population inside this disc
             const popData = await populationService.getPopulationInRadius(
                 impactLocation.lat,
                 impactLocation.lon,
                 zone.radius
             );
+            const discPopulation = popData.totalPopulation || 0;
 
-            const casualties = Math.round(popData.totalPopulation * zone.mortalityRate);
-            const injured = Math.round(popData.totalPopulation * (1 - zone.mortalityRate) * 0.8);
+            // People in the ring between the previous disc and this one
+            const ringPopulation = Math.max(0, discPopulation - innerPopulation);
+            innerPopulation = Math.max(innerPopulation, discPopulation);
 
-            detailedZones[zoneName] = {
+            // This ring is covered by this zone and every larger one:
+            // the most lethal of them applies.
+            const governing = sortedZones
+                .slice(i)
+                .reduce((best, z) => (z.mortalityRate > best.mortalityRate ? z : best), zone);
+
+            const casualties = Math.round(ringPopulation * governing.mortalityRate);
+            const injured = Math.round(ringPopulation * (1 - governing.mortalityRate) * 0.8);
+
+            detailedZones[zone.name] = {
                 radius: zone.radius,
                 area: Math.PI * zone.radius * zone.radius,
-                populationAffected: popData.totalPopulation,
+                populationAffected: discPopulation,
+                ringPopulation: ringPopulation,
                 casualties: casualties,
                 injured: injured,
                 mortalityRate: zone.mortalityRate,
+                appliedMortalityRate: governing.mortalityRate,
                 description: zone.description,
                 affectedCities: popData.affectedCities
             };
 
-            // Garder les villes de la plus grande zone (contient toutes les autres)
-            if (zone.radius > maxRadius) {
-                maxRadius = zone.radius;
-                largestZoneCities = popData.affectedCities || [];
-            }
+            // The last (largest) disc contains all the others
+            largestZoneCities = popData.affectedCities || [];
 
             totalCasualties += casualties;
             totalInjured += injured;
