@@ -170,16 +170,37 @@ class MonteCarloSimulation {
                     // v2.0.6: same atmospheric entry model as the main simulation
                     // (Collins 2005), so uncertainty bands describe the same physics:
                     // airburst -> no crater; ground impact -> surface velocity.
-                    const entry = collinsEntry.computeEntry({
+                    // v2.1.0: MODEL uncertainty, not only input uncertainty.
+                    // Each sample also draws the model parameters that dominate
+                    // real uncertainty, from published or data-derived ranges:
+                    //   - stony effective strength: CNEOS training-set deciles
+                    //     (p05-p95, 0.2-11.7 MPa), see collinsEntry.js
+                    //   - luminous efficiency (ground impacts): log-uniform
+                    //     1e-3..1e-2 around Collins' 3e-3 (Collins range 1e-4..1e-2)
+                    //   - seismic efficiency: log-uniform 1e-5..1e-3 (Collins 2005)
+                    //   - blast fraction: uniform 0.5..1 (nuclear-calibrated
+                    //     Collins Eq. 54 vs full-energy Kinney & Graham)
+                    const rnd = this.rng || Math.random;
+                    const logUniform = (a, b) => Math.exp(Math.log(a) + rnd() * (Math.log(b) - Math.log(a)));
+                    const modelParams = {
+                        strength: collinsEntry.sampleStoneStrength(rnd()),
+                        luminousEfficiency: logUniform(1e-3, 1e-2),
+                        seismicEfficiency: logUniform(1e-5, 1e-3),
+                        blastFraction: 0.5 + 0.5 * rnd()
+                    };
+
+                    const entry = collinsEntry.computeImpactorEntry({
                         diameter: params.diameter,
                         velocity: finalVelocity,
                         angle: params.angle,
-                        density: params.density
+                        density: params.density,
+                        composition: params.composition,
+                        strength: modelParams.strength
                     });
                     const crater = entry.airburst
                         ? { diameter: 0, depth: 0, craterType: 'none' }
                         : await this.physicsEngine.calculateCraterSize(
-                            energy.effective_joules,  // v2.1.0: Use effective crater energy
+                            energy.effective_joules,
                             params.angle,
                             params.composition,
                             params.density,
@@ -187,11 +208,24 @@ class MonteCarloSimulation {
                             params.diameter,
                             entry.groundVelocity
                         );
-                    const seismic = this.physicsEngine.calculateSeismicEffects(energy.joules);
+                    // Same energy convention as the main simulation
+                    const effectsEnergy = entry.airburst
+                        ? energy.joules
+                        : 0.5 * mass * entry.groundVelocity * entry.groundVelocity;
+                    const seismic = entry.airburst
+                        ? { magnitude: 0 }
+                        : this.physicsEngine.calculateSeismicEffects(effectsEnergy, modelParams.seismicEfficiency);
                     const blast = this.physicsEngine.calculateBlastRadius(
-                        energy.joules,
-                        entry.airburst ? entry.burstAltitude : 0
+                        effectsEnergy,
+                        entry.airburst ? entry.burstAltitude : 0,
+                        {
+                            airburst: entry.airburst,
+                            blastFraction: modelParams.blastFraction,
+                            luminousEfficiency: entry.airburst ? undefined : modelParams.luminousEfficiency
+                        }
                     );
+                    // Damage radius driving casualties (NASA PAIR rule)
+                    const damageRadius = Math.max(blast.lethalBlastRadius || 0, blast.thermalRadius || 0);
 
                     // Store results
                     const simResult = {
@@ -199,6 +233,7 @@ class MonteCarloSimulation {
                         crater,
                         seismic,
                         blast,
+                        modelParams,
                         asteroidProperties: {
                             diameter: params.diameter,
                             mass,
@@ -214,7 +249,7 @@ class MonteCarloSimulation {
                     results.craterDepths.push(crater.depth);
                     results.impactEnergies.push(energy.joules);
                     results.seismicMagnitudes.push(seismic.magnitude);
-                    results.blastRadii.push(blast.thermalRadius);
+                    results.blastRadii.push(damageRadius); // v2.1.0: lethal radius max(4 psi, 3rd-degree burns)
                 } catch (error) {
                     // Handle simulation failures gracefully
                     console.warn(`Sample ${i} failed:`, error.message);

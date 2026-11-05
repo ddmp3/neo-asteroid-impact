@@ -290,6 +290,7 @@ function calculateBlastZones(energy, altitude = 0, apply_mach_reflection = true)
         crater_formation: groundRange(200),      // 200 kPa
         total_destruction: groundRange(70),      // 70 kPa
         severe_reinforced: groundRange(35),      // 35 kPa
+        lethal_4psi: groundRange(27.6),          // 27.6 kPa = 4 psi (NASA PAIR damage threshold)
         severe_collapse: groundRange(20),        // 20 kPa
         moderate_structural: groundRange(7),     // 7 kPa
         minor_structural: groundRange(3.5),      // 3.5 kPa

@@ -13,6 +13,7 @@ const AtmosphericFragmentation = require('./atmosphericFragmentation');
 const TerrainAwareBlastService = require('./terrainAwareBlast');
 const AtmosphericTrajectory = require('./atmosphericTrajectory'); // v1.7.1: RK4 integration for rigorous energy calculations
 const collinsEntry = require('./collinsEntry'); // v2.0.6: Collins et al. (2005) atmospheric entry (default path)
+const collinsEffects = require('./collinsEffects'); // v2.1.0: thermal, seismic, ocean (Collins 2005)
 // REMOVED: smallIronCraterPhysics (empirical calibration C=14.10 violates scientific principles)
 const { calculateEffectiveEnergy, calculateCouplingEfficiency } = require('./energyCoupling'); // v2.0.1 Phase 1.4 Task 1.1: Angle-dependent energy coupling
 const { calculateCompleteEnergyBudget } = require('./energyBudget'); // v2.0.1 Phase 1.4 Task 1.2: Complete energy budget
@@ -440,409 +441,131 @@ class PhysicsEngine {
     }
 
     /**
-     * Estimate seismic magnitude from impact energy
-     * Based on empirical relationships
-     * @param {number} energy - Impact energy in Joules
-     * @returns {Object} Seismic information {magnitude, description}
+     * Seismic effects of a GROUND impact (v2.1.0, Collins et al. 2005).
+     *   Magnitude      M = 0.67 log10(eta E / 1e-4) - 5.87   (Eq. 40, eta = 1e-4 nominal)
+     *   Attenuation    M_eff(r) = M - 0.0238 r            (r < 60 km, Eq. 41a)
+     *                  M_eff(r) = M - 0.0048 r - 1.1644   (60 <= r < 700 km, Eq. 41b)
+     *   radiusKm       distance where M_eff falls to 4 (light shaking, felt by
+     *                  most people); beyond 700 km Eq. 41b is extended.
+     * Replaces the former piecewise interpolation anchored on earthquake data.
+     * @param {number} energy - kinetic energy at the surface (J)
+     * @param {number} [efficiency=1e-4] - seismic efficiency
      */
-    calculateSeismicEffects(energy) {
-        // Gutenberg-Richter relationship for impact-generated seismic events
-        // M = (2/3) * log10(E) - 5.87
-        // where E is energy in Joules
-        //
-        // References:
-        // - Gutenberg, B., & Richter, C. F. (1956). Earthquake magnitude, intensity, energy, and acceleration
-        // - Schultz, P. H., & Gault, D. E. (1975). Seismic effects from major basin formations on the moon and mercury
-        //
-        // Validation with real asteroid impacts:
-        // - Chelyabinsk (2013): E=2.1×10¹⁵ J → M3.7 observed, M4.3 calculated (error: 0.6)
-        // - Tunguska (1908): E=6.3×10¹⁶ J → M5.0 estimated, M5.3 calculated (error: 0.3)
-        // Average error: 0.56 magnitude units (acceptable for impacts)
-        const magnitude = (2/3) * Math.log10(energy) - 5.87;
+    calculateSeismicEffects(energy, efficiency = collinsEffects.constants.SEISMIC_EFFICIENCY) {
+        const magnitude = collinsEffects.seismicMagnitude(energy, efficiency);
 
-        let description = '';
-        if (magnitude < 4) {
-            description = 'Minor - Often felt, but rarely causes damage';
-        } else if (magnitude < 5) {
-            description = 'Light - Noticeable shaking, minor damage';
-        } else if (magnitude < 6) {
-            description = 'Moderate - Can cause damage to buildings';
-        } else if (magnitude < 7) {
-            description = 'Strong - Major damage in populated areas';
-        } else if (magnitude < 8) {
-            description = 'Major - Serious damage over large areas';
-        } else {
-            description = 'Great - Catastrophic destruction';
-        }
+        let description;
+        if (magnitude < 4) description = 'Minor - Often felt, but rarely causes damage';
+        else if (magnitude < 5) description = 'Light - Noticeable shaking, minor damage';
+        else if (magnitude < 6) description = 'Moderate - Can cause damage to buildings';
+        else if (magnitude < 7) description = 'Strong - Major damage in populated areas';
+        else if (magnitude < 8) description = 'Major - Serious damage over large areas';
+        else description = 'Great - Catastrophic destruction';
 
-        // Seismic felt radius using HIGH-PRECISION piecewise log-linear interpolation
-        // CORRECTED v1.6.28: Multi-segment approach with <1% average error on real impacts
-        //
-        // METHOD: Piecewise linear interpolation in log-log space between known anchor points
-        // This ensures EXACT fits at calibration points while smooth transitions between them
-        //
-        // ANCHOR POINTS (magnitude calculated, radius observed):
-        // - M3.0 → 100 km (very small, local impact)
-        // - M4.34 → 4,000 km (Chelyabinsk 2013 - airburst with seismoacoustic coupling)
-        // - M5.33 → 1,000 km (Tunguska 1908 - low-altitude airburst, regional detection)
-        // - M7.0 → 500 km (typical M7 earthquake felt radius)
-        // - M8.0 → 2,000 km (M8 earthquake - extensive regional detection)
-        // - M9.0 → 8,000 km (M9 earthquake like Tohoku 2011)
-        // - M9.88 → 20,000 km (Chicxulub 66 Ma - extinction-level, global propagation)
-        //
-        // VALIDATION (average error: 0.28%):
-        // - Chelyabinsk: 3,973 km calc vs 4,000 km obs → 0.67% error ✅
-        // - Tunguska: 1,001 km calc vs 1,000 km obs → 0.06% error ✅
-        // - Chicxulub: 19,976 km calc vs 20,000 km obs → 0.12% error ✅
-        //
-        // INTERPOLATION FORMULA:
-        // For magnitude M between anchor points (M1, R1) and (M2, R2):
-        // log10(R) = log10(R1) + [log10(R2) - log10(R1)] × (M - M1) / (M2 - M1)
-        //
-        // This accounts for:
-        // - Seismoacoustic coupling in airbursts (M < 6)
-        // - Seismic attenuation through Earth's mantle
-        // - Transition from regional to global propagation
-        // - Maximum distance capped at half Earth's circumference (20,000 km)
-        //
-        // References:
-        // - Tauzin, B., et al. (2013). Seismoacoustic coupling induced by the
-        //   breakup of the 15 February 2013 Chelyabinsk meteor. GRL, 40(14), 3522-3526.
-        // - Vasilyev, N. V. (1998). The Tunguska meteorite problem today. Planet. Space Sci., 46(2/3), 129-150.
-        // - USGS earthquake felt reports database
-
-        let radiusKm;
-
-        // Define anchor points (magnitude, felt radius in km)
-        const anchorPoints = [
-            { M: 3.0, R: 100 },      // Very small impact, local only
-            { M: 4.34, R: 4000 },    // Chelyabinsk 2013 (EXACT)
-            { M: 5.33, R: 1000 },    // Tunguska 1908 (EXACT)
-            { M: 7.0, R: 500 },      // M7 earthquake
-            { M: 8.0, R: 2000 },     // M8 earthquake
-            { M: 9.0, R: 8000 },     // M9 earthquake (Tohoku 2011)
-            { M: 9.88, R: 20000 }    // Chicxulub 66 Ma (EXACT, global)
-        ];
-
-        if (magnitude < 3.0) {
-            // Very small impacts, local only
-            radiusKm = 10;
-        } else if (magnitude >= 9.88) {
-            // Extinction-level impacts, global propagation (capped)
-            radiusKm = 20000;
-        } else {
-            // Piecewise log-linear interpolation between anchor points
-            for (let i = 0; i < anchorPoints.length - 1; i++) {
-                const p1 = anchorPoints[i];
-                const p2 = anchorPoints[i + 1];
-
-                if (magnitude >= p1.M && magnitude <= p2.M) {
-                    // Linear interpolation in log10 space
-                    const logR1 = Math.log10(p1.R);
-                    const logR2 = Math.log10(p2.R);
-                    const t = (magnitude - p1.M) / (p2.M - p1.M); // Normalized position [0,1]
-                    const logR = logR1 + (logR2 - logR1) * t;
-                    radiusKm = Math.pow(10, logR);
-                    break;
-                }
-            }
+        const FELT = 4;
+        let radiusKm = 0;
+        if (magnitude > FELT) {
+            radiusKm = (magnitude - FELT) / 0.0238;                 // Eq. 41a
+            if (radiusKm >= 60) radiusKm = (magnitude - FELT - 1.1644) / 0.0048; // Eq. 41b
+            radiusKm = Math.max(radiusKm, 0);
         }
 
         return {
             magnitude: Math.max(0, magnitude),
-            description: description,
-            radiusKm: radiusKm
+            description,
+            radiusKm,
+            seismicEfficiency: efficiency,
+            applicable: true,
+            model: 'Collins et al. (2005) Eqs. 40-41'
         };
     }
 
     /**
-     * Calculate blast radius and overpressure zones
-     *
-     * v1.6.9: Calibrated on Tunguska (1908)
-     * v2.0.1 Task 2.2: Rankine-Hugoniot physics
-     * v2.0.1 Task 3.1: USSA 1976 atmosphere + Mach reflection
-     *
-     * @param {number} energy - Impact energy in Joules
-     * @param {number} altitude - Burst altitude in meters (default 0 = ground burst)
-     * @returns {Object} Blast zones with radii in meters
+     * Blast and thermal zones (v2.1.0). All radii are GROUND ranges in m.
+     *   Overpressure: Kinney & Graham (1985) curve with ground reflection,
+     *     slant range -> ground range (rankineHugoniot.calculateBlastZones).
+     *     For surface bursts it gives radii ~1.33x Collins (2005) Eq. 54 at equal
+     *     energy (blast fraction 100% vs nuclear-calibrated ~50%); the Monte
+     *     Carlo samples a blast fraction in [0.5, 1] to cover both.
+     *   Thermal: Collins (2005) surface fireball (K = 3e-3) for ground impacts;
+     *     Brown et al. (2002) luminous efficiency, full sphere, for airbursts.
+     *     Third-degree burn threshold (Collins Table 1, scaled E^1/6).
+     *   Ionizing radiation does not exist for asteroid impacts: 0.
+     * @param {number} energy - effects energy (J)
+     * @param {number} altitude - burst altitude (m), 0 for a ground impact
+     * @param {Object} [opt] - { airburst, blastFraction, luminousEfficiency }
      */
-    calculateBlastRadius(energy, altitude = 0) {
-        const megatons = energy / (4.184e15);
-
-        // ========== PHYSICS-BASED BLAST CALCULATIONS ==========
-        // Phase 1.4 - Task 2.2: Replace empirical scaling with Rankine-Hugoniot shock physics
-        // Phase 1.4 - Task 3.1: Add USSA 1976 atmosphere + Mach reflection
-        //
-        // PREVIOUS (v1.6.9 - empirical):
-        //   - Power law scaling: R ~ E^0.33 (dimensional analysis)
-        //   - Calibrated to Tunguska (1908): 8.0% average error
-        //   - No physical basis, only statistical fit
-        //
-        // v2.0.1 Task 2.2 (Rankine-Hugoniot):
-        //   - Physics-based shock wave propagation
-        //   - Overpressure thresholds from nuclear test data
-        //   - Sedov-Taylor blast wave solution
-        //
-        // v2.0.1 Task 3.1 (USSA 1976 + Mach Reflection):
-        //   - Atmospheric stratification: P(h), ρ(h), T(h)
-        //   - Mach reflection enhancement for airbursts
-        //   - Optimal burst height calculations
-        //
-        // REFERENCES:
-        //   - Melosh (1989) Chapter 5: Shock wave physics
-        //   - Zel'dovich & Raizer (1966): Blast wave propagation
-        //   - Brode (1955): Overpressure scaling
-        //   - Collins et al. (2005): Impact Effects Program
-        //   - NOAA/NASA/USAF (1976): U.S. Standard Atmosphere
-
+    calculateBlastRadius(energy, altitude = 0, opt = {}) {
         const RankineHugoniot = require('./rankineHugoniot');
-        const energy_joules = megatons * 4.184e15; // Convert MT TNT to Joules
-
-        // Calculate blast zones using Rankine-Hugoniot physics + USSA 1976 + Mach reflection
-        const blast_zones = RankineHugoniot.calculateBlastZones(
-            energy_joules,
-            altitude,  // Task 3.1: Pass actual burst altitude (meters)
-            true       // Task 3.1: Apply Mach reflection correction for airbursts
-        );
-
-        // ZONE DEFINITIONS (from Rankine-Hugoniot damage thresholds):
-        //
-        // 1. FIREBALL (total_destruction): 200+ kPa overpressure
-        //    - Complete vaporization and plasma formation
-        //    - Temperatures >5000 K
-        //    - 100% mortality
-        //
-        // 2. THERMAL RADIATION: Independent calculation (Stefan-Boltzmann law)
-        //    - 3rd degree burns: ~6 cal/cm² (~25 kJ/m²)
-        //    - Depends on fireball temperature and duration
-        //    - Formula: R_thermal ~ (E / σT⁴)^0.5 ~ E^0.41
-        //    - Keep empirical formula (well-validated for thermal effects)
-        //
-        // 3. AIRBLAST (moderate_structural): 20 kPa overpressure
-        //    - Building collapse threshold
-        //    - Most important zone for casualties
-        //    - Now physics-based from R-H equations
-        //
-        // 4. RADIATION: Minor for asteroid impacts
-        //    - Relevant for nuclear explosions, not asteroids
-        //    - Keep minimal estimate
-
-        // v2.0.5: All radii below are GROUND ranges (rankineHugoniot converts
-        // slant range from the burst point to ground range).
-
-        // "fireball" key kept for API/UI compatibility: it is the 70 kPa
-        // total-destruction ground radius, not a vaporization fireball.
-        const fireball = blast_zones.total_destruction;  // 70 kPa
-
-        // Thermal radiation - empirical slant range (5300 m × Mt^0.41),
-        // converted to ground range like the blast zones.
-        const thermalSlant = 5300 * Math.pow(megatons, 0.41); // meters
         const h = Math.max(0, altitude || 0);
-        const thermalRadiation = thermalSlant > h ? Math.sqrt(thermalSlant * thermalSlant - h * h) : 0;
+        const blastFraction = opt.blastFraction != null ? opt.blastFraction : 1;
+        const blast_zones = RankineHugoniot.calculateBlastZones(energy * blastFraction, h, true);
 
-        // v2.0.5: building collapse threshold is 20 kPa (severe_collapse), as the
-        // zone description states. Before v2.0.5 the 7 kPa radius was used with
-        // a 70% mortality rate.
-        const airblast = blast_zones.severe_collapse;  // 20 kPa
-
-        // v2.0.5: Ionizing radiation does not exist for asteroid impacts (no
-        // nuclear reaction). Kept as 0 for API compatibility.
-        const radiation = 0;
+        const thermalRadius = collinsEffects.thermalRadius(energy, h, {
+            airburst: opt.airburst != null ? opt.airburst : h > 0,
+            luminousEfficiency: opt.luminousEfficiency
+        });
 
         return {
-            fireball: fireball,
-            radiationRadius: radiation,
-            airblastRadius: airblast,
-            thermalRadius: thermalRadiation,
-
+            // "fireball" key kept for API/UI compatibility: 70 kPa ground radius
+            fireball: blast_zones.total_destruction,
+            radiationRadius: 0,
+            airblastRadius: blast_zones.severe_collapse,        // 20 kPa
+            thermalRadius,                                       // 3rd-degree burns
+            lethalBlastRadius: blast_zones.lethal_4psi,          // 27.6 kPa (4 psi, PAIR)
             blast_physics: {
                 crater_formation: blast_zones.crater_formation,         // 200 kPa
+                total_destruction: blast_zones.total_destruction,       // 70 kPa
                 severe_reinforced: blast_zones.severe_reinforced,       // 35 kPa
+                lethal_4psi: blast_zones.lethal_4psi,                   // 27.6 kPa
                 severe_collapse: blast_zones.severe_collapse,           // 20 kPa
                 moderate_structural: blast_zones.moderate_structural,   // 7 kPa
                 minor_structural: blast_zones.minor_structural,         // 3.5 kPa
                 window_shattering: blast_zones.window_shattering,       // 0.7 kPa
                 burst_altitude_m: h,
+                blast_fraction: blastFraction,
                 overpressure_model: blast_zones.physics_model,
+                thermal_model: (opt.airburst != null ? opt.airburst : h > 0)
+                    ? 'Brown et al. (2002) luminous efficiency, point source at burst altitude'
+                    : 'Collins et al. (2005) surface fireball, K = 3e-3, horizon correction',
                 validated_against: 'Hiroshima, Chelyabinsk, Tunguska (tests/historicalEvents.test.js)'
             }
         };
     }
 
     /**
-     * Calculate tsunami effects for ocean impacts (Ward & Asphaug 2000)
-     * Based on: Ward, S. N., & Asphaug, E. (2000). Asteroid Impact Tsunami:
-     * A Probabilistic Hazard Assessment. Icarus, 145(1), 64-78.
-     *
-     * @param {number} energy - Impact energy in Joules
-     * @param {number} waterDepth - Ocean depth at impact point in meters (default 4000m)
-     * @param {number} diameter - Impactor diameter in meters (optional, for cavity calc)
-     * @param {number} velocity - Impact velocity in m/s (optional)
-     * @param {number} angle - Impact angle in degrees (default 45)
-     * @returns {Object} Tsunami characteristics with Ward & Asphaug formulas
+     * Ocean-impact tsunami (v2.1.0), order of magnitude:
+     *   cavity: Collins (2005) Eq. 21 with the water constant 1.365, depth D/(2 sqrt 2)
+     *   source amplitude A0 = min(cavity depth, water depth) / 2
+     *   decay A(r) = A0 R_c / r beyond the cavity (Ward 2000)
+     * Replaces formulas that were not dimensionally consistent.
      */
-    calculateTsunamiEffects(energy, waterDepth = 4000, diameter = null, velocity = null, angle = 45) {
-        // AUTO-SELECT appropriate dedicated function based on water depth (v1.6.23)
-        // This ensures different physics for deep ocean vs coastal impacts
-        if (waterDepth >= 1000) {
-            // Deep ocean impact: global propagation, minimal shoaling
-            return this.calculateOceanImpactTsunami(energy, waterDepth, angle);
-        } else {
-            // Coastal/shallow water impact: localized effects, strong shoaling
-            return this.calculateCoastalTsunami(energy, waterDepth, angle);
+    calculateTsunamiEffects(energy, waterDepth = 4000, diameter = null, velocity = null, angle = 45, density = this.DEFAULT_ASTEROID_DENSITY) {
+        if (!diameter || !velocity) {
+            // Diameter from energy if not given
+            const v = velocity || 20000;
+            const mass = 2 * energy / (v * v);
+            diameter = Math.cbrt(6 * mass / (Math.PI * density));
+            velocity = v;
         }
-    }
-
-    /**
-     * DEDICATED: Calculate tsunami for DEEP OCEAN impacts (water depth > 1000m)
-     * Uses Ward & Asphaug (2000) with deep water approximations
-     *
-     * @param {number} energy - Impact energy in Joules
-     * @param {number} waterDepth - Ocean depth in meters (should be > 1000m)
-     * @param {number} angle - Impact angle in degrees
-     * @returns {Object} Deep ocean tsunami characteristics
-     */
-    calculateOceanImpactTsunami(energy, waterDepth, angle = 45) {
-        const angleRad = angle * Math.PI / 180;
-
-        // Schmidt-Holsapple scaling for water
-        const rho_water = 1000;
-        const beta = 0.22;
-        const CT = 1.88;
-
-        const D_cavity = CT * Math.pow(energy / rho_water, beta);
-        const angleFactor = Math.pow(Math.sin(angleRad), 1/3);
-        const D_transient = D_cavity * angleFactor;
-        const R_cavity = D_transient / 2;
-
-        // Deep ocean: initial wave height ≈ 0.1 × R_cavity
-        const H_initial = 0.1 * R_cavity;
-        const H_max = Math.min(H_initial, waterDepth, 500);
-
-        // Deep water propagation speed: v = √(g × h)
-        const speed = Math.sqrt(this.EARTH_SURFACE_GRAVITY * waterDepth);
-
-        // Deep ocean attenuation: geometric spreading 1/r
-        // Waves can travel globally
-        const Y_kilotons = energy / 4.184e12;
-        const affectedRadiusMeters = Math.min(H_max * R_cavity, 10000000); // Can propagate up to 10,000 km
-        const affectedRadiusKm = affectedRadiusMeters / 1000;
-
-        const amplitudeAtDistances = [
-            { distanceKm: 100, amplitude: this.getTsunamiAmplitudeAt(100, waterDepth, Y_kilotons, H_max, R_cavity) },
-            { distanceKm: 500, amplitude: this.getTsunamiAmplitudeAt(500, waterDepth, Y_kilotons, H_max, R_cavity) },
-            { distanceKm: 1000, amplitude: this.getTsunamiAmplitudeAt(1000, waterDepth, Y_kilotons, H_max, R_cavity) },
-            { distanceKm: 2000, amplitude: this.getTsunamiAmplitudeAt(2000, waterDepth, Y_kilotons, H_max, R_cavity) },
-            { distanceKm: 5000, amplitude: this.getTsunamiAmplitudeAt(5000, waterDepth, Y_kilotons, H_max, R_cavity) }
-        ].filter(item => item.amplitude >= 0.5);
-
+        const t = collinsEffects.tsunami(diameter, velocity, density, angle, waterDepth);
+        const distances = [100, 500, 1000, 2000, 5000];
         return {
-            impactType: 'Deep Ocean',
-            cavityDiameter: D_transient,
-            cavityRadius: R_cavity,
-            initialWaveHeight: H_max,
-            wavelength: D_transient,
-            propagationSpeed: speed,
-            speedKmh: speed * 3.6,
-            affectedRadiusKm: Math.round(affectedRadiusKm),
-            amplitudeAtDistances: amplitudeAtDistances,
-            attenuationRate: 'r^-1 (geometric spreading)',
-            method: 'Ward & Asphaug (2000) - Deep Ocean',
-            limitations: 'Deep water approximation; coastal run-up not modeled',
-            note: 'Deep ocean impact - tsunami propagates globally with minimal attenuation'
+            impactType: waterDepth >= 1000 ? 'Deep Ocean' : 'Shallow Water',
+            cavityDiameter: t.cavityDiameter,
+            cavityRadius: t.cavityRadius,
+            cavityDepth: t.cavityDepth,
+            initialWaveHeight: t.initialWaveHeight,
+            wavelength: t.cavityDiameter,
+            propagationSpeed: t.propagationSpeed,
+            speedKmh: t.propagationSpeed * 3.6,
+            affectedRadiusKm: t.radiusFor1mKm,   // open-ocean amplitude >= 1 m
+            amplitudeAtDistances: distances
+                .map(d => ({ distanceKm: d, amplitude: Math.round(t.amplitudeAt(d) * 10) / 10 }))
+                .filter(x => x.amplitude >= 0.5),
+            hazardNote: t.hazardNote,
+            model: 'Collins et al. (2005) water cavity + Ward (2000) 1/r decay'
         };
-    }
-
-    /**
-     * DEDICATED: Calculate tsunami for COASTAL/SHALLOW impacts (water depth < 1000m)
-     * Includes shoaling effects as waves approach coast
-     *
-     * @param {number} energy - Impact energy in Joules
-     * @param {number} waterDepth - Shallow water depth in meters (< 1000m)
-     * @param {number} angle - Impact angle in degrees
-     * @returns {Object} Coastal tsunami characteristics with shoaling
-     */
-    calculateCoastalTsunami(energy, waterDepth, angle = 45) {
-        const angleRad = angle * Math.PI / 180;
-
-        // Schmidt-Holsapple scaling for water
-        const rho_water = 1000;
-        const beta = 0.22;
-        const CT = 1.88;
-
-        const D_cavity = CT * Math.pow(energy / rho_water, beta);
-        const angleFactor = Math.pow(Math.sin(angleRad), 1/3);
-        const D_transient = D_cavity * angleFactor;
-        const R_cavity = D_transient / 2;
-
-        // Shallow water: initial wave height slightly lower
-        // Wave energy is more focused in shallower water
-        const H_initial = 0.08 * R_cavity; // Slightly lower coefficient for shallow water
-        const H_max = Math.min(H_initial, waterDepth * 1.5, 300); // Can exceed depth due to shoaling
-
-        // Shallow water propagation speed: v = √(g × h)
-        // Speed is lower in shallow water
-        const speed = Math.sqrt(this.EARTH_SURFACE_GRAVITY * waterDepth);
-
-        // Shoaling factor: waves amplify as they approach shore
-        // Green's Law: A ∝ h^(-1/4) where h is water depth
-        // Run-up can be 2-5x wave height
-        const shoalingFactor = Math.pow(4000 / waterDepth, 0.25); // Relative to deep ocean
-        const runupMultiplier = 3.5; // Typical run-up is 3-4x wave height
-        const estimatedRunup = H_max * runupMultiplier * shoalingFactor;
-
-        // Coastal impacts have more localized effects
-        const Y_kilotons = energy / 4.184e12;
-        const affectedRadiusMeters = Math.min(H_max * R_cavity * 0.5, 1000000); // More localized, cap at 1000 km
-        const affectedRadiusKm = affectedRadiusMeters / 1000;
-
-        const amplitudeAtDistances = [
-            { distanceKm: 10, amplitude: this.getTsunamiAmplitudeAt(10, waterDepth, Y_kilotons, H_max, R_cavity) },
-            { distanceKm: 50, amplitude: this.getTsunamiAmplitudeAt(50, waterDepth, Y_kilotons, H_max, R_cavity) },
-            { distanceKm: 100, amplitude: this.getTsunamiAmplitudeAt(100, waterDepth, Y_kilotons, H_max, R_cavity) },
-            { distanceKm: 500, amplitude: this.getTsunamiAmplitudeAt(500, waterDepth, Y_kilotons, H_max, R_cavity) }
-        ].filter(item => item.amplitude >= 0.5);
-
-        return {
-            impactType: 'Coastal/Shallow Ocean',
-            cavityDiameter: D_transient,
-            cavityRadius: R_cavity,
-            initialWaveHeight: H_max,
-            estimatedRunup: Math.round(estimatedRunup * 10) / 10,
-            shoalingFactor: Math.round(shoalingFactor * 100) / 100,
-            wavelength: D_transient,
-            propagationSpeed: speed,
-            speedKmh: speed * 3.6,
-            affectedRadiusKm: Math.round(affectedRadiusKm),
-            amplitudeAtDistances: amplitudeAtDistances,
-            attenuationRate: 'r^-1 with shoaling amplification near coast',
-            method: 'Ward & Asphaug (2000) + Green\'s Law (shoaling)',
-            limitations: 'Simplified shoaling model; actual run-up depends on coastal geometry',
-            note: `Shallow water impact - wave amplifies near coast. Estimated coastal run-up: ${Math.round(estimatedRunup)}m`
-        };
-    }
-
-    /**
-     * Calculate tsunami amplitude at a specific distance (Ward & Asphaug 2000)
-     * CORRECTED (v1.6.23): A(r) = H_0 × (R_cavity / r)
-     * Geometric spreading approximation for far-field tsunami
-     *
-     * @param {number} distanceKm - Distance from impact in kilometers
-     * @param {number} waterDepth - Water depth in meters (unused now)
-     * @param {number} Y_kilotons - Impact energy in kilotons TNT
-     * @param {number} H_initial - Initial wave height at cavity (meters)
-     * @param {number} R_cavity - Cavity radius (meters)
-     * @returns {number} Wave amplitude in meters
-     */
-    getTsunamiAmplitudeAt(distanceKm, waterDepth, Y_kilotons, H_initial = 10, R_cavity = 1000) {
-        const r = distanceKm * 1000; // convert to meters
-
-        // Geometric spreading: amplitude ∝ 1/r
-        // A(r) = H_0 × (R_cavity / r)
-        const amplitude = H_initial * (R_cavity / r);
-
-        // Physical minimum: waves below 0.1m are negligible
-        return amplitude >= 0.1 ? Math.round(amplitude * 10) / 10 : 0;
     }
 
     /**
@@ -1193,11 +916,14 @@ class PhysicsEngine {
             // which declared an airburst at the breakup-onset altitude and gave
             // no surface velocity, so craters used the entry velocity
             // (Meteor Crater: 1.55 km instead of ~1.2 km).
-            const entry = collinsEntry.computeEntry({
+            // v2.1.0: irons do not break up (NASA PAIR rule); stones use the
+            // effective strength calibrated on CNEOS bolides (see collinsEntry.js).
+            const entry = collinsEntry.computeImpactorEntry({
                 diameter,
                 velocity: finalVelocity,
                 angle,
-                density
+                density,
+                composition
             });
             fragmentation = this.buildFragmentationFromEntry(entry);
 
@@ -1208,6 +934,33 @@ class PhysicsEngine {
             // radii then compensated. Both are removed; altitude is now handled
             // geometrically in the blast model (slant range -> ground range).
         }
+
+        // ------------------------------------------------------------------
+        // v2.1.0: ONE energy per effect (Collins 2005 / NASA PAIR convention)
+        //   airburst      -> total kinetic energy, released at burst altitude
+        //   ground impact -> kinetic energy LEFT AT THE SURFACE
+        // Before v2.1.0 every effect used the entry energy: for a 100 m stone,
+        // 75 Mt instead of the 11 Mt that actually reach the ground.
+        // ------------------------------------------------------------------
+        let effectsEnergy = energy.joules;
+        if (fragmentation.craterFormed && fragmentation.groundVelocity && !use_rk4) {
+            effectsEnergy = 0.5 * mass * fragmentation.groundVelocity * fragmentation.groundVelocity;
+        }
+        energy.effects_joules = effectsEnergy;
+        energy.effects_megatons = effectsEnergy / 4.184e15;
+        energy.atmospheric_deposition_joules = Math.max(0, energy.joules - effectsEnergy);
+        energy.effects_basis = fragmentation.craterFormed
+            ? 'kinetic energy at the surface (after atmospheric drag)'
+            : 'total kinetic energy, released at burst altitude';
+
+        // Detect ocean BEFORE the crater (v2.1.0): the water layer slows the
+        // impactor before it reaches the sea floor (Collins 2005).
+        const oceanData = this.detectOcean(
+            impactLocation.lat,
+            impactLocation.lon,
+            terrainData.elevation,
+            terrainData.estimated // true if USGS timed out
+        );
 
         // Calculate crater ONLY if object reaches ground
         let baseCrater, crater;
@@ -1229,26 +982,42 @@ class PhysicsEngine {
                 console.log(`[PhysicsEngine] Using entry velocity: ${impactVelocity.toFixed(1)} m/s`);
             }
 
-            // v2.1.0 Phase 1.4: Use EFFECTIVE CRATER ENERGY (angle-dependent coupling applied)
-            // v1.7.8: Pass ALL parameters for Pi-groupe complete physics (async for small iron FCM)
+            // v2.1.0: ocean impact -> the crater forms on the SEA FLOOR with the
+            // velocity left after the water layer (Collins 2005). Replaces the
+            // unsourced terrain multipliers (mountains x1.2, deep ocean x0.5
+            // diameter / x2.5 depth).
+            const waterDepth = oceanData.isOcean ? Math.max(0, oceanData.waterDepth || 0) : 0;
+            const craterVelocity = waterDepth > 0
+                ? collinsEffects.seafloorVelocity(impactVelocity, waterDepth, diameter, density, angle)
+                : impactVelocity;
+
             baseCrater = await this.calculateCraterSize(
-                energy.effective_joules,  // v2.1.0: Use effective energy, not total kinetic energy
+                energy.effective_joules,
                 angle,
                 composition,
                 density,
-                2500, // targetDensity: Earth's average crustal rock density
-                diameter, // impactorDiameter: for Pi-groupe calculation
-                impactVelocity // CORRECTED: Use final velocity from RK4, not initial velocity
-            );
-            crater = await this.terrainAnalysis.calculateTerrainModifiedCrater(
-                { lat: impactLocation.lat, lon: impactLocation.lon },
-                baseCrater.diameter,
-                baseCrater.depth
+                2500, // target density: crustal rock (Collins 2005 default)
+                diameter,
+                craterVelocity
             );
 
-            // Add craterType and transientDiameter to modified crater
-            crater.craterType = baseCrater.craterType;
-            crater.transientDiameter = baseCrater.transientDiameter;
+            crater = {
+                diameter: baseCrater.diameter,
+                depth: baseCrater.depth,
+                volume: baseCrater.volume,
+                craterType: baseCrater.craterType,
+                transientDiameter: baseCrater.transientDiameter,
+                // Kept for API/UI compatibility (no terrain multiplier any more)
+                originalDiameter: baseCrater.diameter,
+                modifiedDiameter: baseCrater.diameter,
+                modifiedDepth: baseCrater.depth,
+                target: waterDepth > 0 ? 'sea floor' : 'land',
+                waterDepth,
+                impactVelocityAtTarget: craterVelocity,
+                note: waterDepth > 0
+                    ? `Sea-floor crater under ${Math.round(waterDepth)} m of water (impactor slowed to ${(craterVelocity / 1000).toFixed(1)} km/s)`
+                    : `Land crater, impact velocity ${(craterVelocity / 1000).toFixed(1)} km/s`
+            };
         } else {
             // Airburst - no crater formed
             crater = {
@@ -1261,34 +1030,37 @@ class PhysicsEngine {
             };
         }
 
-        // Calculate seismic effects
-        const seismic = this.calculateSeismicEffects(energy.joules);
+        // v2.1.0: seismic only for ground impacts (Collins 2005 Eq. 40 is not
+        // defined for airbursts), with the surface energy.
+        const seismic = fragmentation.craterFormed
+            ? this.calculateSeismicEffects(effectsEnergy)
+            : {
+                magnitude: 0,
+                description: 'Airburst: no crater-forming impact, no seismic estimate (Collins 2005 applies to ground impacts)',
+                radiusKm: 0,
+                applicable: false
+            };
 
-        // Task 3.1: Calculate blast effects with altitude-dependent physics (USSA 1976 + Mach reflection)
-        // Extract burst altitude from fragmentation data or RK4 results
+        // Blast and thermal with the effects energy, at the burst altitude
+        // (0 for ground impacts). Altitude is handled geometrically.
         const burstAltitudeForBlast = (fragmentation && fragmentation.altitude) ? fragmentation.altitude : 0;
-
-        // Calculate blast zones with Rankine-Hugoniot + USSA 1976 + Mach reflection
-        // v2.0.5: burst altitude is applied geometrically inside the blast model.
-        // The former empirical altitude multiplier (up to x7) is removed.
-        const blast = this.calculateBlastRadius(energy.joules, fragmentation.craterFormed ? 0 : burstAltitudeForBlast);
-
-        // Detect ocean using hybrid approach (USGS + geographic heuristics)
-        const oceanData = this.detectOcean(
-            impactLocation.lat,
-            impactLocation.lon,
-            terrainData.elevation,
-            terrainData.estimated // true if USGS timed out
+        const blast = this.calculateBlastRadius(
+            effectsEnergy,
+            fragmentation.craterFormed ? 0 : burstAltitudeForBlast,
+            { airburst: !fragmentation.craterFormed }
         );
 
-        // Tsunami calculation for ocean impacts (Ward & Asphaug 2000)
-        const tsunami = oceanData.isOcean ?
+        // v2.1.0: tsunami only for an impactor reaching the water (no notable
+        // tsunami from airbursts, NASA/NOAA 2017), cavity from Collins (2005)
+        // with the velocity at the surface.
+        const tsunami = (oceanData.isOcean && fragmentation.craterFormed) ?
             this.calculateTsunamiEffects(
-                energy.joules,
+                effectsEnergy,
                 oceanData.waterDepth,
                 diameter,
-                velocity,
-                angle
+                fragmentation.groundVelocity || finalVelocity,
+                angle,
+                density
             ) : null;
 
         // Calculate casualties (use legacy model by default for stability)
@@ -1399,112 +1171,66 @@ class PhysicsEngine {
     }
 
     /**
-     * Calculate potential human casualties
-     * @param {Object} blast - Blast zones
-     * @param {Object} impactLocation - Impact coordinates
-     * @param {Object} crater - Crater data
-     * @returns {Object} Casualties estimation
+     * Casualties (v2.1.0) - NASA PAIR rule (Mathias et al. 2017): the population
+     * inside the LARGER of the 4 psi (27.6 kPa) blast area and the third-degree
+     * burn area is counted as killed. People between that radius and the 7 kPa
+     * radius (moderate structural damage) are counted as exposed/injured.
+     * Replaces fixed mortality steps (100/90/70/30 %) that had no source.
+     *
+     * Known limit: population comes from GeoNames cities > 15,000 inhabitants,
+     * treated as points (rural population absent, a city is in or out). Treat
+     * the result as an order of magnitude.
      */
     async calculateCasualties(blast, impactLocation, crater) {
-        // Zones de destruction avec taux de mortalité
+        const bp = blast.blast_physics || {};
+        const lethalBlastKm = (blast.lethalBlastRadius || bp.lethal_4psi || 0) / 1000;
+        const thermalKm = (blast.thermalRadius || 0) / 1000;
+        const lethalKm = Math.max(lethalBlastKm, thermalKm);
+        const exposedKm = Math.max(lethalKm, (bp.moderate_structural || 0) / 1000);
+
+        const inLethal = await populationService.getPopulationInRadius(impactLocation.lat, impactLocation.lon, lethalKm);
+        const inExposed = await populationService.getPopulationInRadius(impactLocation.lat, impactLocation.lon, exposedKm);
+
+        const deaths = inLethal.totalPopulation || 0;
+        const exposed = Math.max(0, (inExposed.totalPopulation || 0) - deaths);
+        const dominant = thermalKm > lethalBlastKm ? 'thermal radiation (3rd-degree burns)' : 'blast (>= 4 psi / 27.6 kPa)';
+
         const zones = {
-            fireball: {
-                radius: blast.fireball / 1000, // km
-                mortalityRate: 1.0, // 100% (>= 70 kPa overpressure)
-                description: 'Total destruction (>= 70 kPa)'
+            lethal: {
+                radius: lethalKm,
+                area: Math.PI * lethalKm * lethalKm,
+                populationAffected: deaths,
+                casualties: deaths,
+                injured: 0,
+                mortalityRate: 1.0,
+                description: `Lethal zone, set by ${dominant} (NASA PAIR rule)`,
+                affectedCities: inLethal.affectedCities
             },
-            thermal: {
-                radius: blast.thermalRadius / 1000, // km
-                mortalityRate: 0.9, // 90% brûlures 3ème degré
-                description: 'Severe burns, fires'
-            },
-            airblast: {
-                radius: blast.airblastRadius / 1000, // km
-                mortalityRate: 0.7, // 70% surpression létale
-                description: 'Building collapse, flying debris'
-            },
-            radiation: {
-                radius: blast.radiationRadius / 1000, // km
-                mortalityRate: 0.3, // 30% radiation + effets secondaires
-                description: 'Radiation sickness, structural damage'
+            moderate: {
+                radius: exposedKm,
+                area: Math.PI * exposedKm * exposedKm,
+                populationAffected: inExposed.totalPopulation || 0,
+                ringPopulation: exposed,
+                casualties: 0,
+                injured: exposed,
+                mortalityRate: 0,
+                description: 'Moderate structural damage (>= 7 kPa): injuries, collapsed light structures',
+                affectedCities: inExposed.affectedCities
             }
         };
 
-        // v2.0.4: The zones are concentric discs, so each person must be counted
-        // ONCE. Before v2.0.4 the full population of every disc was summed, which
-        // counted the inner population up to 4 times (e.g. 32M deaths for a
-        // 12.7M-people area around Paris).
-        //
-        // Method: sort the discs by radius, split them into disjoint rings, and
-        // apply to each ring the highest mortality rate among the zones that
-        // cover it. Totals can therefore never exceed the population in range.
-        let totalCasualties = 0;
-        let totalInjured = 0;
-        const detailedZones = {};
-        let largestZoneCities = [];
-
-        const sortedZones = Object.entries(zones)
-            .map(([name, zone]) => ({ name, ...zone, radius: Math.max(0, zone.radius || 0) }))
-            .sort((a, b) => a.radius - b.radius);
-
-        let innerPopulation = 0;
-
-        for (let i = 0; i < sortedZones.length; i++) {
-            const zone = sortedZones[i];
-
-            // Population inside this disc
-            const popData = await populationService.getPopulationInRadius(
-                impactLocation.lat,
-                impactLocation.lon,
-                zone.radius
-            );
-            const discPopulation = popData.totalPopulation || 0;
-
-            // People in the ring between the previous disc and this one
-            const ringPopulation = Math.max(0, discPopulation - innerPopulation);
-            innerPopulation = Math.max(innerPopulation, discPopulation);
-
-            // This ring is covered by this zone and every larger one:
-            // the most lethal of them applies.
-            const governing = sortedZones
-                .slice(i)
-                .reduce((best, z) => (z.mortalityRate > best.mortalityRate ? z : best), zone);
-
-            const casualties = Math.round(ringPopulation * governing.mortalityRate);
-            const injured = Math.round(ringPopulation * (1 - governing.mortalityRate) * 0.8);
-
-            detailedZones[zone.name] = {
-                radius: zone.radius,
-                area: Math.PI * zone.radius * zone.radius,
-                populationAffected: discPopulation,
-                ringPopulation: ringPopulation,
-                casualties: casualties,
-                injured: injured,
-                mortalityRate: zone.mortalityRate,
-                appliedMortalityRate: governing.mortalityRate,
-                description: zone.description,
-                affectedCities: popData.affectedCities
-            };
-
-            // The last (largest) disc contains all the others
-            largestZoneCities = popData.affectedCities || [];
-
-            totalCasualties += casualties;
-            totalInjured += injured;
-        }
-
-        const severity = this.getCasualtySeverity(totalCasualties);
-
+        const largestZoneCities = inExposed.affectedCities || [];
         return {
-            estimatedCasualties: totalCasualties,
-            estimatedInjured: totalInjured,
-            totalAffected: totalCasualties + totalInjured,
-            zones: detailedZones,
+            estimatedCasualties: deaths,
+            estimatedInjured: exposed,
+            totalAffected: deaths + exposed,
+            zones,
             affectedCities: largestZoneCities,
-            severity: severity,
+            severity: this.getCasualtySeverity(deaths),
+            model: 'NASA PAIR rule (Mathias et al. 2017): max(4 psi, 3rd-degree burn) area; GeoNames cities > 15k as points',
             note: impactLocation.isOcean ?
                 'Ocean impact - tsunami and coastal effects primary concern' :
-                `Direct land impact - ${largestZoneCities.length} major cities affected`
+                `${largestZoneCities.length} cities > 15,000 inhabitants in the damage area (rural population not counted)`
         };
     }
 
@@ -1931,49 +1657,76 @@ class PhysicsEngine {
     }
 
     /**
-     * Calculate deflection delta-v required
-     * @param {Object} params - Deflection parameters
-     * @returns {Object} Deflection analysis
+     * Deflection (v2.1.0), first-order orbital mechanics. Replaces
+     * "delta-v = distance / time" with invented efficiencies (nuclear = 10)
+     * and invented success probabilities.
+     *
+     * Required impulsive delta-v: an along-track delta-v applied t seconds
+     * before impact shifts the arrival point by about 3 delta-v t (secular
+     * drift in the Hill/Clohessy-Wiltshire equations), so delta-v = d / (3 t).
+     *
+     * Kinetic impactor: delta-v = beta m v / M, with a DART-class spacecraft
+     * (580 kg at 6.1 km/s) and beta = 3.6 measured by DART (Cheng et al. 2023,
+     * Nature); success probability = share of beta in [1, 5] (pre-mission range
+     * cited by LLNL) that is enough.
+     * Gravity tractor: acceleration a = G m_sc / d^2 (20 t spacecraft hovering
+     * at d = 2 asteroid radii from the centre), drift x = 1.5 a t^2.
+     * Nuclear stand-off: no validated public model. Treated as a GAME RULE
+     * (up to 100x a kinetic impactor), flagged as such in the response.
      */
     calculateDeflection(params) {
         const {
             asteroidMass,
-            warningTime, // days
-            missDistance, // desired miss distance in km
-            method = 'kinetic' // 'kinetic', 'gravity', 'nuclear'
+            warningTime,            // days
+            missDistance,           // km
+            method = 'kinetic',     // 'kinetic', 'gravity', 'nuclear'
+            asteroidDensity = this.DEFAULT_ASTEROID_DENSITY,
+            impactorMass = 580,     // kg (DART)
+            impactorVelocity = 6100 // m/s (DART)
         } = params;
 
-        const warningTimeSeconds = warningTime * 24 * 3600;
-        const requiredDeltaV = (missDistance * 1000) / warningTimeSeconds; // m/s
+        const t = warningTime * 86400;
+        const d = missDistance * 1000;
+        const requiredDeltaV = d / (3 * t);                       // m/s
+        const BETA = 3.6, BETA_MIN = 1, BETA_MAX = 5;
+        const radius = Math.cbrt(3 * asteroidMass / (4 * Math.PI * asteroidDensity));
 
-        let efficiency = 1;
-        let description = '';
+        let achievedMissKm, successProbability, description, model;
 
-        switch(method) {
-            case 'kinetic':
-                efficiency = 0.5; // Momentum transfer efficiency
-                description = 'Kinetic Impactor: High-speed spacecraft collision';
-                break;
-            case 'gravity':
-                efficiency = 0.01; // Very gradual but precise
-                description = 'Gravity Tractor: Spacecraft gravitational pull';
-                break;
-            case 'nuclear':
-                efficiency = 10; // High energy release
-                description = 'Nuclear Deflection: Standoff nuclear detonation';
-                break;
+        if (method === 'gravity') {
+            const mSc = 20000;
+            const hover = 2 * radius;
+            const a = this.G * mSc / (hover * hover);
+            achievedMissKm = 1.5 * a * t * t / 1000;
+            successProbability = achievedMissKm >= missDistance ? 100 : 0;
+            description = 'Gravity Tractor: 20 t spacecraft hovering at 2 asteroid radii';
+            model = 'G m / d^2, drift 1.5 a t^2';
+        } else {
+            const kineticDv = BETA * impactorMass * impactorVelocity / asteroidMass;
+            const factor = method === 'nuclear' ? 100 : 1;
+            const dv = kineticDv * factor;
+            achievedMissKm = 3 * dv * t / 1000;
+            const betaNeeded = BETA * requiredDeltaV / dv;
+            successProbability = Math.round(100 * Math.min(1, Math.max(0, (BETA_MAX - betaNeeded) / (BETA_MAX - BETA_MIN))));
+            if (method === 'nuclear') {
+                description = 'Nuclear stand-off: GAME RULE, no validated public model (100x a kinetic impactor)';
+                model = 'game rule';
+            } else {
+                description = 'Kinetic Impactor: DART-class (580 kg at 6.1 km/s), beta = 3.6';
+                model = 'beta m v / M (DART, Cheng et al. 2023)';
+            }
         }
-
-        const impactorMass = (asteroidMass * requiredDeltaV) / (efficiency * 1000);
 
         return {
             method,
             description,
-            requiredDeltaV,
-            impactorMass,
-            feasible: warningTime > 30 && impactorMass < 50000,
-            warningTimeNeeded: Math.ceil((missDistance * 1000 * asteroidMass) / (efficiency * 1000 * 100)),
-            successProbability: warningTime > 365 ? 0.9 : warningTime > 180 ? 0.7 : warningTime > 90 ? 0.5 : 0.2
+            model,
+            requiredDeltaV,                 // m/s, impulsive, along-track
+            achievedMissDistanceKm: achievedMissKm,
+            feasible: achievedMissKm >= missDistance,
+            successProbability,             // percent
+            impactorMass: method === 'gravity' ? 20000 : impactorMass,
+            warningTimeNeeded: null
         };
     }
 }

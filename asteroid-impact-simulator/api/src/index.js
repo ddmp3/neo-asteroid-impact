@@ -444,7 +444,8 @@ app.post('/api/simulate/deflection', async (req, res) => {
             asteroidMass,
             warningTime,
             missDistance,
-            method
+            method,
+            asteroidDensity
         });
 
         res.json({
