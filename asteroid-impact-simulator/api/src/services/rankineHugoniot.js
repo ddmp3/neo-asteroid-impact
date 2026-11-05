@@ -290,6 +290,7 @@ function calculateBlastZones(energy, altitude = 0, apply_mach_reflection = true)
         crater_formation: groundRange(200),      // 200 kPa
         total_destruction: groundRange(70),      // 70 kPa
         severe_reinforced: groundRange(35),      // 35 kPa
+        lethal_4psi: groundRange(27.6),          // 27.6 kPa = 4 psi (NASA PAIR damage threshold)
         severe_collapse: groundRange(20),        // 20 kPa
         moderate_structural: groundRange(7),     // 7 kPa
         minor_structural: groundRange(3.5),      // 3.5 kPa
@@ -339,7 +340,34 @@ function validateRankineHugoniot() {
     };
 }
 
+
+/**
+ * Ground overpressure (kPa) at ground range r (m) from a burst of `energy` (J)
+ * at height h (m): sea-level ambient, ground reflection = 2x yield, slant range.
+ * Same assumptions as calculateBlastZones (v2.0.5+).
+ */
+function groundOverpressureKPa(energy, h, r) {
+    const slant = Math.sqrt(r * r + h * h);
+    return calculateBlastOverpressure(2 * energy, Math.max(slant, 0.01)).overpressure_kPa;
+}
+
+/**
+ * Ground range (m) where the overpressure falls to `kPa` (0 if never reached).
+ */
+function groundRangeForOverpressure(energy, h, kPa) {
+    if (groundOverpressureKPa(energy, h, 0) < kPa) return 0;
+    let lo = 0.01, hi = 1e7;
+    for (let i = 0; i < 200; i++) {
+        const mid = Math.sqrt(lo * hi);
+        if (groundOverpressureKPa(energy, h, mid) > kPa) lo = mid; else hi = mid;
+        if (hi / lo < 1 + 1e-6) break;
+    }
+    return Math.sqrt(lo * hi);
+}
+
 module.exports = {
+    groundOverpressureKPa,
+    groundRangeForOverpressure,
     calculateShockJump,
     calculateBlastOverpressure,
     categorizeBlastDamage,

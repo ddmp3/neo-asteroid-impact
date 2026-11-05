@@ -1,0 +1,276 @@
+{
+  "description": "Observed ground footprints used to test the simulator (v2.1.0). Every value comes from the cited source; tolerances come from the stated observational uncertainty, not from the model. Retrieved 2026-11-05.",
+  "cases": [
+    {
+      "id": "halifax-devastation",
+      "event": "Halifax explosion, 6 Dec 1917",
+      "kind": "blast_radius",
+      "energyKt": 2.9,
+      "energyRangeKt": [
+        2.9,
+        2.9
+      ],
+      "burstHeightM": 0,
+      "observation": "Nearly all structures obliterated within ~800 m",
+      "observedKm": 0.8,
+      "modelLevelKPa": 35,
+      "bracketKPa": [
+        70,
+        20
+      ],
+      "source": "Ruffman & Howell 1994 (yield); Armstrong 2002 (radius), via https://en.wikipedia.org/wiki/Halifax_Explosion"
+    },
+    {
+      "id": "halifax-severe",
+      "event": "Halifax explosion, 6 Dec 1917",
+      "kind": "blast_radius",
+      "energyKt": 2.9,
+      "energyRangeKt": [
+        2.9,
+        2.9
+      ],
+      "burstHeightM": 0,
+      "observation": "Every building destroyed or badly damaged within 2.6 km",
+      "observedKm": 2.6,
+      "modelLevelKPa": 7,
+      "bracketKPa": [
+        20,
+        3.5
+      ],
+      "source": "Mac Donald 2005, via https://en.wikipedia.org/wiki/Halifax_Explosion"
+    },
+    {
+      "id": "beirut-593m",
+      "event": "Beirut port explosion, 4 Aug 2020",
+      "kind": "overpressure_at_distance",
+      "energyKt": 0.465,
+      "energyRangeKt": [
+        0.409,
+        0.5
+      ],
+      "burstHeightM": 0,
+      "distanceKm": 0.593,
+      "observation": "Extensive cladding damage and total glazing failure at 593 m",
+      "observedRangeKPa": [
+        7,
+        70
+      ],
+      "source": "Rigby et al. 2024, https://eprints.whiterose.ac.uk/209456/"
+    },
+    {
+      "id": "beirut-1860m",
+      "event": "Beirut port explosion, 4 Aug 2020",
+      "kind": "overpressure_at_distance",
+      "energyKt": 0.465,
+      "energyRangeKt": [
+        0.409,
+        0.5
+      ],
+      "burstHeightM": 0,
+      "distanceKm": 1.86,
+      "observation": "Considerable damage to annealed glazing, toughened glazing mostly intact, at 1.86 km",
+      "observedRangeKPa": [
+        1,
+        10
+      ],
+      "source": "Rigby et al. 2024, https://eprints.whiterose.ac.uk/209456/"
+    },
+    {
+      "id": "tunguska-forestfall",
+      "event": "Tunguska airburst, 30 Jun 1908",
+      "kind": "blast_radius",
+      "energyKt": 5000,
+      "energyRangeKt": [
+        3000,
+        5000
+      ],
+      "burstHeightM": 6000,
+      "burstHeightRangeM": [
+        5000,
+        7000
+      ],
+      "observation": "Radial forest fall over a radius of about 30 km",
+      "observedKm": 30,
+      "modelLevelKPa": 7,
+      "bracketKPa": [
+        20,
+        3.5
+      ],
+      "source": "Kulik 1937 and Kharuk et al. 2006 via Ol'khovatov, https://arxiv.org/abs/2110.15193 ; energy 3-5 Mt, Boslough & Crawford via https://skyandtelescope.org/astronomy-news/tunguskas-blast-less-is-more/"
+    },
+    {
+      "id": "chelyabinsk-ground-zero",
+      "event": "Chelyabinsk airburst, 15 Feb 2013",
+      "kind": "overpressure_at_distance",
+      "energyKt": 440,
+      "energyRangeKt": [
+        300,
+        500
+      ],
+      "burstHeightM": 27000,
+      "burstHeightRangeM": [
+        23300,
+        30000
+      ],
+      "distanceKm": 0,
+      "observation": "Ground overpressure up to ~1.5 kPa (reconstructed from damage)",
+      "observedRangeKPa": [
+        0.5,
+        1.5
+      ],
+      "knownGap": "High-altitude, shallow (18 deg) airburst treated as a point source at sea-level ambient: ground overpressure over-predicted 2-3.5x. Energy was deposited along ~20 km of trajectory (45-25 km); Collins et al. 2017 show a line source gives ~2x lower near-field overpressure",
+      "source": "Artemieva & Shuvalov, EPSC 2013, https://meetingorganizer.copernicus.org/EPSC2013/EPSC2013-1039.pdf ; energy 440 kt and altitude 23.3 km from JPL/CNEOS"
+    },
+    {
+      "id": "chelyabinsk-glass-area",
+      "event": "Chelyabinsk airburst, 15 Feb 2013",
+      "kind": "damage_area",
+      "energyKt": 440,
+      "energyRangeKt": [
+        300,
+        500
+      ],
+      "burstHeightM": 27000,
+      "modelLevelKPa": 0.5,
+      "observation": "Windows destroyed over ~5,000 km2 (about 50 km x 100 km)",
+      "observedKm2": 5000,
+      "observedRangeKm2": [
+        3900,
+        6000
+      ],
+      "knownGap": "Consequence of the point-source over-prediction: window-damage area over-predicted ~16x (radius ~4x)",
+      "source": "Artemieva & Shuvalov, EPSC 2013, https://meetingorganizer.copernicus.org/EPSC2013/EPSC2013-1039.pdf"
+    },
+    {
+      "id": "hiroshima-deaths",
+      "event": "Hiroshima, 6 Aug 1945",
+      "kind": "deaths_by_band",
+      "energyKt": 16,
+      "energyRangeKt": [
+        14,
+        18
+      ],
+      "burstHeightM": 600,
+      "bands": [
+        {
+          "fromKm": 0,
+          "toKm": 1.0,
+          "population": 31200,
+          "killed": 26700
+        },
+        {
+          "fromKm": 1.0,
+          "toKm": 2.5,
+          "population": 144800,
+          "killed": 39600
+        },
+        {
+          "fromKm": 2.5,
+          "toKm": 5.0,
+          "population": 80300,
+          "killed": 1700
+        }
+      ],
+      "observation": "Killed by distance band (Oughterson & Warren 1956)",
+      "caveat": "Nuclear: prompt radiation and nuclear thermal pulse also killed. Tests the order of magnitude of the casualty RULE, not the impact physics.",
+      "source": "Yield/height: RERF DS02, https://www.rerf.or.jp/library/scidata/scids/ds02/pdf/chapter01/cha01-p42-61.pdf ; casualties: https://www.atomicarchive.com/media/maps/hiroshima.html"
+    },
+    {
+      "id": "nagasaki-deaths",
+      "event": "Nagasaki, 9 Aug 1945",
+      "kind": "deaths_by_band",
+      "energyKt": 21,
+      "energyRangeKt": [
+        19,
+        23
+      ],
+      "burstHeightM": 503,
+      "bands": [
+        {
+          "fromKm": 0,
+          "toKm": 1.0,
+          "population": 30900,
+          "killed": 27300
+        },
+        {
+          "fromKm": 1.0,
+          "toKm": 2.5,
+          "population": 27700,
+          "killed": 9500
+        },
+        {
+          "fromKm": 2.5,
+          "toKm": 5.0,
+          "population": 115200,
+          "killed": 1300
+        }
+      ],
+      "observation": "Killed by distance band (Oughterson & Warren 1956)",
+      "caveat": "Nuclear: prompt radiation and nuclear thermal pulse also killed. Tests the order of magnitude of the casualty RULE, not the impact physics.",
+      "source": "Yield/height: RERF DS02 ; casualties: https://www.atomicarchive.com/media/maps/nagasaki.html"
+    },
+    {
+      "id": "kamil-crater",
+      "event": "Kamil crater, Egypt (< 5,000 years)",
+      "kind": "crater_band",
+      "composition": "iron",
+      "densityKgM3": 7800,
+      "massRangeKg": [
+        5000,
+        10000
+      ],
+      "surfaceVelocityRangeMs": [
+        3500,
+        3500
+      ],
+      "angleRangeDeg": [
+        30,
+        45
+      ],
+      "observedM": 45,
+      "observation": "45 m crater; impactor mass 5-10 t from 1.71 t of recovered fragments",
+      "caveat": "The 3.5 km/s surface velocity is an assumption of the authors, not a measurement.",
+      "source": "Folco et al. 2011, Geology, https://scispace.com/pdf/kamil-crater-egypt-ground-truth-for-small-scale-meteorite-4jctz25qo6.pdf"
+    },
+    {
+      "id": "carancas-crater",
+      "event": "Carancas, Peru, 15 Sep 2007",
+      "kind": "crater_band",
+      "composition": "rocky",
+      "densityKgM3": 3400,
+      "massRangeKg": [
+        3000,
+        9000
+      ],
+      "surfaceVelocityRangeMs": [
+        1500,
+        4000
+      ],
+      "angleRangeDeg": [
+        63,
+        63
+      ],
+      "observedM": 13.5,
+      "observation": "13.5 m crater from an H4-5 chondrite observed to fall",
+      "knownGap": "Collins' gravity-regime crater law over-predicts small craters in weak, water-saturated soil (strength regime not modelled)",
+      "source": "Brown et al. 2008, JGR 113 E09007, https://aquarid2.physics.uwo.ca/research/infrasound/infra_pub/2008JE003105-final-inprint.pdf"
+    },
+    {
+      "id": "carancas-entry",
+      "event": "Carancas, Peru, 15 Sep 2007",
+      "kind": "entry_outcome",
+      "composition": "rocky",
+      "densityKgM3": 3400,
+      "massRangeKg": [
+        3000,
+        9000
+      ],
+      "entryVelocityMs": 12000,
+      "angleDeg": 63,
+      "observedOutcome": "ground",
+      "observation": "A coherent mass reached the ground at 1.5-4 km/s and made a crater",
+      "knownGap": "Effective strength calibrated on bolides (median 3 MPa) breaks this unusually strong body up at ~27 km",
+      "source": "Brown et al. 2008, JGR 113 E09007"
+    }
+  ]
+}

@@ -42,7 +42,7 @@ export default function MitigationPanel() {
         asteroidParams.diameter,
         asteroidParams.density,
         warningYears * 365, // Convert years to days
-        100000, // Default 100,000 km miss distance
+        12742, // Miss distance: 2 Earth radii (v2.1.0; 100,000 km was arbitrary)
         selectedMethod
       );
       setDeflectionResult(result);
@@ -209,17 +209,17 @@ export default function MitigationPanel() {
             <div className="p-4 bg-white/5 rounded-lg">
               <h5 className="text-sm font-semibold mb-2 text-white/80">Success Probability:</h5>
               <p className="text-2xl font-bold text-green-400">
-                {(deflectionResult.successProbability * 100).toFixed(1)}%
+                {deflectionResult.successProbability.toFixed(0)}%
               </p>
-              <p className="text-xs text-white/60 mt-1">Based on current technology</p>
+              <p className="text-xs text-white/60 mt-1">{deflectionResult.model ?? 'Based on current technology'}</p>
             </div>
 
             <div className="p-4 bg-white/5 rounded-lg">
-              <h5 className="text-sm font-semibold mb-2 text-white/80">Required Warning Time:</h5>
+              <h5 className="text-sm font-semibold mb-2 text-white/80">Achieved Miss Distance:</h5>
               <p className="text-2xl font-bold text-yellow-400">
-                {deflectionResult.warningTimeNeeded} years
+                {Math.round(deflectionResult.achievedMissDistanceKm ?? 0).toLocaleString()} km
               </p>
-              <p className="text-xs text-white/60 mt-1">Minimum advance notice</p>
+              <p className="text-xs text-white/60 mt-1">Target: 12,742 km (2 Earth radii)</p>
             </div>
 
             {selectedMethod === 'kinetic' && (
@@ -239,10 +239,10 @@ export default function MitigationPanel() {
               <span>💡</span> Recommendations:
             </h5>
             <ul className="text-sm text-white/80 space-y-1">
-              {deflectionResult.successProbability < 0.5 && (
+              {deflectionResult.successProbability < 50 && (
                 <li>⚠️ Low success probability - consider combining multiple methods</li>
               )}
-              {warningYears < deflectionResult.warningTimeNeeded && (
+              {!deflectionResult.feasible && (
                 <li>⚠️ Insufficient warning time - increase detection capabilities</li>
               )}
               {deflectionResult.feasible && (
