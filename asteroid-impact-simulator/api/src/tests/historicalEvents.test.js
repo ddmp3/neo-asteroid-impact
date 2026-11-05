@@ -8,7 +8,7 @@
  * Observations used:
  *   - Hiroshima 1945: 15 kt at ~580 m; heavy damage (~35 kPa / 5 psi) to ~1.3-1.6 km
  *   - Chelyabinsk 2013: ~0.4-0.5 Mt, peak brightness ~27-30 km, no deaths,
- *     no structural collapse, broken glass up to ~100+ km
+ *     no structural collapse, window damage over ~5,000 km² (Artemieva & Shuvalov 2013)
  *       (Popova et al. 2013, Science 342:1069; Brown et al. 2013, Nature 503:238)
  *   - Tunguska 1908: ~3-15 Mt at ~5-10 km, ~2150 km² of trees felled (~26 km radius)
  *       (Boslough & Crawford 2008; Chyba et al. 1993)
@@ -88,12 +88,11 @@ describe('Chelyabinsk 2013 (18 m stony, 19 km/s, 18°)', () => {
         expect(r.fragmentation.altitude / 1000).toBeLessThan(40);
     });
 
-    test('no building-collapse zone on the ground, glass breakage 50-200 km', () => {
+    test('no building-collapse zone on the ground', () => {
         expect(r.blast.airblastRadius).toBe(0);
         expect(r.blast.fireball).toBe(0);
-        const glassKm = r.blast.blast_physics.window_shattering / 1000;
-        expect(glassKm).toBeGreaterThan(50);
-        expect(glassKm).toBeLessThan(200);
+        // Window-damage extent is over-predicted (~16x in area): known gap,
+        // tested against observations in validation.test.js (ground_truth.json).
     });
 
     test('no deaths (observed: 0)', () => {

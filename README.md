@@ -26,9 +26,13 @@ It is an educational and research tool, **not** an operational planetary-defense
 | --- | --- | --- |
 | Airburst altitude | 235 JPL/CNEOS fireballs (2016-2026) never used for calibration | MAE 6.8 km, bias -1.2 km |
 | Large stony craters | 5 well-studied craters (consistency check, see below) | 4/5 inside the model band, nominal MAE 13 % |
-| Chelyabinsk 2013 | Energy, burst altitude, glass breakage, deaths | Within observed ranges |
+| Chelyabinsk 2013 | Energy, burst altitude, deaths | Within observed ranges (glass damage: see below) |
 | Tunguska 1908 | Burst altitude, 7 kPa radius vs tree fall | Within observed ranges |
 | Small iron craters | 2 single craters (Meteor Crater, Wolfe Creek) | Outside the model band: known limitation |
+| Blast footprints | Halifax 1917 (2.9 kt), Beirut 2020 (0.47 kt), Tunguska forest fall | 5/5 inside the model range, factor x0.92-x1.46 |
+| Casualty rule | Hiroshima, Nagasaki deaths by distance (nuclear: order-of-magnitude check) | 67,763 vs 68,000; 41,275 vs 38,100 |
+| Small craters with recovered impactor | Kamil (iron), Carancas (stone) | Kamil x1.01; Carancas x2.8 (known gap) |
+| High-altitude airburst blast | Chelyabinsk damage area and ground overpressure | Over-predicted 2-16x: known gap (point source vs line source) |
 
 **Why craters are only a consistency check.** The impactor that made a natural crater is almost never observed: its size is estimated with crater scaling laws. Scoring a scaling law on those craters is circular. Earlier versions reported "MAE 13-21 % on 61 craters"; 52 of those 61 impactors were sized from their craters, and the figure was not reproducible. The independent test is now the CNEOS fireball set, split by date into calibration and hold-out.
 
@@ -55,6 +59,7 @@ cd asteroid-impact-simulator/api
 npm ci
 npx jest                                   # 200+ tests, incl. validation suite
 node scripts/calibrate-stone-strength.js   # CNEOS calibration / hold-out scores
+node scripts/ground-truth.js               # observed footprints: factor, difference, pass
 node scripts/validation-report.js          # regenerates docs/VALIDATION.md
 ```
 
@@ -148,6 +153,8 @@ dev-meteormadness/
 
 ## ⚠️ Known Limitations
 
+- **High-altitude, shallow airbursts** (Chelyabinsk): the blast is a point source at sea-level ambient; ground overpressure is over-predicted 2-3.5x and the window-damage area ~16x. A line-source model (Collins et al. 2017) is needed.
+- **Small craters in weak soil** (Carancas): the gravity-regime crater law over-predicts (x2.8); the strength regime is not modelled, and the calibrated strength breaks such strong bodies up too early.
 - **Small iron craters**: irons are treated as non-breaking (PAIR rule, no ablation). Meteor Crater is over-predicted (~1.5-1.7 km vs 1.2 km) and Wolfe Creek under-predicted. Crater fields (Sikhote-Alin, Henbury, Wabar...) are outside the single-body model.
 - **Entry angle and density** of CNEOS fireballs are unknown; calibration assumes 45° and 3,000 kg/m³. The calibrated strength is an *effective* parameter, not a material strength.
 - **Blast**: for surface bursts the Kinney & Graham curve gives radii ~1.33x Collins Eq. 54; the Monte Carlo samples a blast fraction between both.

@@ -23,6 +23,7 @@
 const fs = require('fs');
 const path = require('path');
 const { calibrate } = require('./calibrate-stone-strength');
+const { evaluate: evaluateGroundTruth } = require('./ground-truth');
 const db = require('../src/data/earthCraterDatabase');
 const { computeImpactorEntry } = require('../src/services/collinsEntry');
 const PhysicsEngine = require('../src/services/physicsEngine');
@@ -101,10 +102,11 @@ async function buildReport() {
     const cal = calibrate();
     const rows = await craterChecks();
     const groups = summarise(rows);
-    return { cal, rows, groups };
+    const ground = await evaluateGroundTruth();
+    return { cal, rows, groups, ground };
 }
 
-function toMarkdown({ cal, rows, groups }) {
+function toMarkdown({ cal, rows, groups, ground }) {
     const pct = x => `${(100 * x).toFixed(0)} %`;
     const km = x => `${x.toFixed(1)} km`;
     const signed = x => `${x >= 0 ? '+' : ''}${x.toFixed(1)}`;
@@ -143,6 +145,23 @@ function toMarkdown({ cal, rows, groups }) {
     for (const r of rows.filter(x => x.confidence === 'HIGH')) {
         L.push(`| ${r.name}${r.field ? ' (crater field, excluded)' : ''} | ${r.observed.toLocaleString('en-US')} | ${Math.round(r.nominal).toLocaleString('en-US')} | ${Math.round(r.bandLow).toLocaleString('en-US')}-${Math.round(r.bandHigh).toLocaleString('en-US')} | ${r.inBand ? 'yes' : 'no'} |`);
     }
+    L.push('');
+    L.push('## 3. Observed ground footprints (blast, casualties, small craters)');
+    L.push('');
+    L.push('What matters to people is the damage footprint, not the crater. Each case is an observation with a cited source (`src/data/validation/ground_truth.json`). Three measures: **factor** (is the physics right? 1.00 = exact), **difference** (is the map / toll right?, in the unit of the observation) and **pass** (observation inside the model range obtained from the published input uncertainty).');
+    L.push('');
+    L.push('| Case | Observation | Model | Observed | Factor | Difference | Result |');
+    L.push('| --- | --- | --- | --- | --- | --- | --- |');
+    const fmt = x => (typeof x === 'number' ? (Math.abs(x) >= 100 ? Math.round(x).toLocaleString('en-US') : x.toFixed(2)) : x);
+    for (const g of ground) {
+        const res = g.pass ? 'pass' : (g.knownGap ? 'known gap' : 'FAIL');
+        const diff = g.absolute != null ? `${g.absolute >= 0 ? '+' : ''}${fmt(g.absolute)} ${g.unit}` : '-';
+        L.push(`| ${g.event} | ${g.observation} | ${fmt(g.model)} ${g.unit} | ${fmt(g.observed)} ${g.unit} | ${g.factor != null ? 'x' + g.factor.toFixed(2) : '-'} | ${diff} | ${res} |`);
+    }
+    L.push('');
+    L.push('Caveats: Hiroshima and Nagasaki are nuclear (prompt radiation and nuclear thermal pulse also killed); they test the order of magnitude of the casualty rule, not the impact physics. Kamil uses the authors\' assumed surface velocity.');
+    L.push('');
+    L.push('Known gaps: ' + ground.filter(g => g.knownGap).map(g => `**${g.id}**: ${g.knownGap}`).join('; ') + '.');
     L.push('');
     L.push('## Known limitations');
     L.push('');

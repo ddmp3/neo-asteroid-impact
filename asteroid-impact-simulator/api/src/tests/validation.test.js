@@ -61,3 +61,30 @@ describe('Craters (consistency checks, no parameter fitted on craters)', () => {
         expect(sikhote.field).toBe(true);
     });
 });
+
+describe('Observed ground footprints (src/data/validation/ground_truth.json)', () => {
+    const { evaluate } = require('../../scripts/ground-truth');
+    let results;
+    beforeAll(async () => { results = await evaluate(); }, 120000);
+    const byId = id => results.find(r => r.id === id);
+
+    // Cases the model reproduces within the observational uncertainty
+    test.each([
+        'halifax-devastation', 'halifax-severe', 'beirut-593m', 'beirut-1860m',
+        'tunguska-forestfall', 'hiroshima-deaths', 'nagasaki-deaths', 'kamil-crater'
+    ])('%s: observation inside the model range', (id) => {
+        expect(byId(id).pass).toBe(true);
+    });
+
+    // Known gaps: documented in ground_truth.json (`knownGap`). When the model
+    // is improved and one of these passes, Jest reports it: move it up.
+    test.failing.each([
+        'chelyabinsk-ground-zero', 'chelyabinsk-glass-area', 'carancas-crater', 'carancas-entry'
+    ])('%s (known gap)', (id) => {
+        expect(byId(id).pass).toBe(true);
+    });
+
+    test('every case cites a source', () => {
+        for (const r of results) expect(r.source).toMatch(/\S/);
+    });
+});

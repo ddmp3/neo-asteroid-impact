@@ -40,6 +40,29 @@ The impactor of a natural crater is almost never observed: its size is mostly es
 | Bosumtwi | 10,500 | 9,124 | 5,981-12,500 | yes |
 | Haughton | 23,000 | 22,713 | 14,730-31,393 | yes |
 
+## 3. Observed ground footprints (blast, casualties, small craters)
+
+What matters to people is the damage footprint, not the crater. Each case is an observation with a cited source (`src/data/validation/ground_truth.json`). Three measures: **factor** (is the physics right? 1.00 = exact), **difference** (is the map / toll right?, in the unit of the observation) and **pass** (observation inside the model range obtained from the published input uncertainty).
+
+| Case | Observation | Model | Observed | Factor | Difference | Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| Halifax explosion, 6 Dec 1917 | Nearly all structures obliterated within ~800 m | 0.82 km | 0.80 km | x1.02 | +0.02 km | pass |
+| Halifax explosion, 6 Dec 1917 | Every building destroyed or badly damaged within 2.6 km | 2.39 km | 2.60 km | x0.92 | -0.21 km | pass |
+| Beirut port explosion, 4 Aug 2020 | Extensive cladding damage and total glazing failure at 593 m | 20.83 kPa | 22.14 kPa | x0.94 | -1.30 kPa | pass |
+| Beirut port explosion, 4 Aug 2020 | Considerable damage to annealed glazing, toughened glazing mostly intact, at 1.86 km | 4.63 kPa | 3.16 kPa | x1.46 | +1.47 kPa | pass |
+| Tunguska airburst, 30 Jun 1908 | Radial forest fall over a radius of about 30 km | 27.97 km | 30.00 km | x0.93 | -2.03 km | pass |
+| Chelyabinsk airburst, 15 Feb 2013 | Ground overpressure up to ~1.5 kPa (reconstructed from damage) | 3.05 kPa | 0.87 kPa | x3.52 | +2.18 kPa | known gap |
+| Chelyabinsk airburst, 15 Feb 2013 | Windows destroyed over ~5,000 km2 (about 50 km x 100 km) | 78,927 km2 | 5,000 km2 | x15.79 | +73,927 km2 | known gap |
+| Hiroshima, 6 Aug 1945 | Killed by distance band (Oughterson & Warren 1956) | 67,763 people | 68,000 people | x1.00 | -237 people | pass |
+| Nagasaki, 9 Aug 1945 | Killed by distance band (Oughterson & Warren 1956) | 41,275 people | 38,100 people | x1.08 | +3,175 people | pass |
+| Kamil crater, Egypt (< 5,000 years) | 45 m crater; impactor mass 5-10 t from 1.71 t of recovered fragments | 45.48 m | 45.00 m | x1.01 | +0.48 m | pass |
+| Carancas, Peru, 15 Sep 2007 | 13.5 m crater from an H4-5 chondrite observed to fall | 38.33 m | 13.50 m | x2.84 | +24.83 m | known gap |
+| Carancas, Peru, 15 Sep 2007 | A coherent mass reached the ground at 1.5-4 km/s and made a crater | airburst/airburst outcome | ground outcome | - | - | known gap |
+
+Caveats: Hiroshima and Nagasaki are nuclear (prompt radiation and nuclear thermal pulse also killed); they test the order of magnitude of the casualty rule, not the impact physics. Kamil uses the authors' assumed surface velocity.
+
+Known gaps: **chelyabinsk-ground-zero**: High-altitude, shallow (18 deg) airburst treated as a point source at sea-level ambient: ground overpressure over-predicted 2-3.5x. Energy was deposited along ~20 km of trajectory (45-25 km); Collins et al. 2017 show a line source gives ~2x lower near-field overpressure; **chelyabinsk-glass-area**: Consequence of the point-source over-prediction: window-damage area over-predicted ~16x (radius ~4x); **carancas-crater**: Collins' gravity-regime crater law over-predicts small craters in weak, water-saturated soil (strength regime not modelled); **carancas-entry**: Effective strength calibrated on bolides (median 3 MPa) breaks this unusually strong body up at ~27 km.
+
 ## Known limitations
 
 - Irons follow the NASA PAIR rule (no breakup, no ablation). The two single iron craters are both outside the model band, in opposite directions (Meteor Crater over-predicted, Wolfe Creek under-predicted): iron fragmentation and ablation are not modelled. Melosh & Collins (2005) explain Meteor Crater with breakup and mass loss.

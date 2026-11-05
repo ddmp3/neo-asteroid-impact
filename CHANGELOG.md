@@ -58,6 +58,20 @@ the one calibrated parameter states its data and its hold-out score.
 - **Monte Carlo**: samples model parameters too (strength from CNEOS deciles,
   luminous efficiency, seismic efficiency, blast fraction).
 
+### Observed ground footprints (added after review)
+- New `src/data/validation/ground_truth.json` (12 cases, each with its source) and
+  `scripts/ground-truth.js`, scored with three measures: factor (physics),
+  difference in km / kPa / people (map and human toll), pass/fail against the
+  published input uncertainty.
+- Pass: Halifax 1917 (x1.02, x0.92), Beirut 2020 (x0.94, x1.46), Tunguska forest
+  fall (x0.93), Hiroshima deaths 67,763 vs 68,000, Nagasaki 41,275 vs 38,100
+  (nuclear: order-of-magnitude check of the casualty rule), Kamil crater (x1.01).
+- Known gaps (`test.failing`): Chelyabinsk ground overpressure (2-3.5x) and
+  window-damage area (~16x) - point source vs line source; Carancas crater (x2.8,
+  strength regime) and entry outcome (breaks up at ~27 km, reached the ground).
+- Removed the Chelyabinsk "glass breakage 50-200 km" test: it was too lenient
+  and contradicted by the observed ~5,000 km² damage area.
+
 ### Known limitations
 See README. Meteor Crater stays over-predicted (~1.5 km vs 1.2 km, test marked
 `test.failing`): iron fragmentation and ablation are not modelled.
