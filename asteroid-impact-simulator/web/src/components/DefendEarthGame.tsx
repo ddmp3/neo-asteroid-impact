@@ -172,17 +172,18 @@ export default function DefendEarthGame() {
         gameState.currentThreat.diameter,
         3000,
         warningYears * 365,
-        100000,
+        12742, // miss distance: 2 Earth radii
         selectedMethod
       );
 
       setDeflectionResult(result);
 
-      // Check if deflection succeeded
-      const requiredDeltaV = gameState.currentThreat.minDeltaV;
-      const achievedDeltaV = result.requiredDeltaV / 1000; // Convert m/s to km/s
-
-      if (result.successProbability >= 70 && achievedDeltaV >= requiredDeltaV) {
+      // v2.1.0: success comes from the physics model: the chosen method must
+      // move the impact point by the required miss distance in the warning time
+      // (successProbability is in percent; kinetic impactor accounts for the
+      // uncertainty on the DART momentum factor beta).
+      // Before v2.1.0 a 0-1 probability was compared to 70, so every attempt failed.
+      if (result.feasible && result.successProbability >= 70) {
         // Success!
         const timeBonus = gameState.timeRemaining * 10;
         const methodBonus = selectedMethod === 'gravity' ? 50 : selectedMethod === 'nuclear' ? 20 : 30;

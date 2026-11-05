@@ -174,8 +174,10 @@ export interface DeflectionResult {
   requiredDeltaV: number;
   impactorMass: number;
   feasible: boolean;
-  warningTimeNeeded: number;
-  successProbability: number;
+  warningTimeNeeded: number | null;
+  successProbability: number; // percent
+  achievedMissDistanceKm?: number;
+  model?: string;
 }
 
 // NASA NEO types

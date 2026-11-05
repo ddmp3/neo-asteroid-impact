@@ -1,3 +1,7 @@
+> **Superseded (v2.1.0, 2026-11-05).** This file describes v1.6 and is kept for history.
+> Current limitations: [README - Known Limitations](README.md#-known-limitations).
+> Current validation: [docs/VALIDATION.md](docs/VALIDATION.md).
+
 # Simulator Limitations & Design Decisions
 
 **Project:** Asteroid Impact Simulator - NASA Space Apps Challenge 2025

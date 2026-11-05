@@ -14,6 +14,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.1.0] - 2026-11-05 (Scientific review: validation and physics)
+
+Follows the critical review of November 2026. Every formula now cites a source;
+the one calibrated parameter states its data and its hold-out score.
+
+### Validation (no circularity)
+- **New independent validation set**: 360 JPL/CNEOS fireballs with measured
+  energy, peak-brightness altitude and velocity
+  (`src/data/validation/cneos_fireballs.csv`). Calibration on events before
+  2016 (n=125), scoring on 2016+ only (n=235).
+- Collins (2005) strength gave burst altitudes +12.2 km too high (MAE 13.5 km).
+  With the calibrated effective strength (3.05 MPa): **MAE 6.8 km, bias -1.2 km**
+  on the hold-out; the Monte Carlo band (p05-p95) covers 88% of hold-out events.
+- **Craters downgraded to consistency checks**: impactors of natural craters are
+  mostly sized with scaling laws, so they cannot validate a scaling law. The
+  former "MAE 13.3% / 20.7% on 61 craters" (not reproducible, 55% measured) is
+  removed. Large stony HIGH craters: 4/5 inside the model band, nominal MAE 13%.
+  Crater fields are excluded (single-body model).
+- `scripts/calibrate-stone-strength.js`, `scripts/validation-report.js` and
+  `src/tests/validation.test.js` reproduce and guard every published number;
+  `docs/VALIDATION.md` is generated.
+
+### Physics
+- **Irons do not break up** (NASA PAIR rule): restores small single iron craters
+  that v2.0.6 destroyed in flight (Wolfe Creek 0 -> 598 m, observed 892 m).
+- **One energy per effect**: surface energy for impacts (100 m stone: 15 Mt
+  instead of 75 Mt), total energy at burst altitude for airbursts.
+- **Seismic**: Collins Eqs. 40-41 (magnitude + attenuation), ground impacts only.
+- **Thermal**: Collins surface fireball (K = 3e-3, E^1/6 thresholds, horizon)
+  replaces "5300 m x Mt^0.41" (no source, 2-4.5x too large); airbursts use the
+  Brown et al. (2002) bolide luminous efficiency.
+- **Ocean**: sea-floor crater with the Collins water-layer slowdown replaces the
+  terrain multipliers (mountains x1.2, deep ocean x0.5 / x2.5, no source).
+- **Tsunami**: Collins water cavity + Ward (2000) 1/r decay replaces formulas
+  that were not dimensionally consistent; none for airbursts (NASA/NOAA 2017).
+- **Casualties**: NASA PAIR rule, lethal area = max(4 psi blast, 3rd-degree
+  burns), replacing fixed 100/90/70/30% steps without source.
+- **Deflection**: along-track drift 3 Δv t, kinetic impactor with DART β = 3.6
+  and β uncertainty 1-5; gravity tractor from G m / d². Nuclear is a labelled
+  game rule. The Defend Earth game compared a 0-1 probability to 70 (always
+  failed): fixed. Target miss distance 2 Earth radii instead of 100,000 km.
+- **Monte Carlo**: samples model parameters too (strength from CNEOS deciles,
+  luminous efficiency, seismic efficiency, blast fraction).
+
+### Known limitations
+See README. Meteor Crater stays over-predicted (~1.5 km vs 1.2 km, test marked
+`test.failing`): iron fragmentation and ablation are not modelled.
+
+---
+
 ## [2.0.7] - 2026-11-05 (CI, Docker, reproducible builds)
 
 ### Added
